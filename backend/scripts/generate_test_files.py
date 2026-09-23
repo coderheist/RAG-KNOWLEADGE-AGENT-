@@ -1,22 +1,23 @@
 import fitz
+from docx import Document
+from openpyxl import Workbook
+from pptx import Presentation
+
 doc = fitz.open()
 page = doc.new_page()
 page.insert_text((50,50), 'Test PDF')
 doc.save('/tmp/test.pdf')
 doc.close()
 
-from docx import Document
 d = Document()
 d.add_paragraph('Test DOCX')
 d.save('/tmp/test.docx')
 
-from pptx import Presentation
 p = Presentation()
 slide = p.slides.add_slide(p.slide_layouts[0])
 slide.shapes.title.text = 'Test PPTX'
 p.save('/tmp/test.pptx')
 
-from openpyxl import Workbook
 wb = Workbook()
 ws = wb.active
 ws['A1'] = 'Test XLSX'

@@ -1,6 +1,7 @@
 import json
-import urllib.request
 import os
+import urllib.request
+
 import fitz
 
 BASE_URL = "http://localhost:8000"

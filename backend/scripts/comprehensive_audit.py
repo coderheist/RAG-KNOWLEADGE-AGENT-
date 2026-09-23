@@ -2,9 +2,8 @@ import asyncio
 import io
 import time
 import zipfile
-import json
+
 import httpx
-import xml.etree.ElementTree as ET
 
 API_BASE = "http://localhost:8000"
 
@@ -28,15 +27,31 @@ def create_xml_bomb():
     
     out = io.BytesIO()
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr('[Content_Types].xml', b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
-        zf.writestr('_rels/.rels', b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>')
+        zf.writestr(
+            '[Content_Types].xml',
+            b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            b'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            b'<Default Extension="xml" ContentType="application/xml"/>'
+            b'<Override PartName="/word/document.xml" '
+            b'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+            b'</Types>',
+        )
+        zf.writestr(
+            '_rels/.rels',
+            b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            b'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            b'<Relationship Id="rId1" '
+            b'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
+            b'Target="word/document.xml"/></Relationships>',
+        )
         zf.writestr('word/document.xml', xml_bomb)
     return out.getvalue()
 
 async def check_xml_bomb(client):
     print("Testing XML Bomb (Billion Laughs)...")
     bomb_bytes = create_xml_bomb()
-    files = [("files", ("bomb.docx", bomb_bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))]
+    content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    files = [("files", ("bomb.docx", bomb_bytes, content_type))]
     resp = await client.post(f"{API_BASE}/upload", files=files)
     # The zip itself is small, it passes validate_document_upload.
     # The vulnerability occurs during parsing.
@@ -107,13 +122,15 @@ async def main():
         async def make_req():
             start = time.time()
             resp = await client.post(f"{API_BASE}/query", json={"query": "test query", "top_k": 3})
-            async for line in resp.aiter_lines(): pass
+            async for _line in resp.aiter_lines():
+                pass
             return time.time() - start
 
         tasks = [make_req() for _ in range(10)]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for r in results:
-            if isinstance(r, float): times.append(r)
+            if isinstance(r, float):
+                times.append(r)
         
         if times:
             times.sort()

@@ -1,8 +1,10 @@
+import io
+
 import fitz  # PyMuPDF
 from PIL import Image
-import io
-from app.services.parsers.base import DocumentParser, ExtractionResult, ExtractedPage
+
 from app.services.ocr import get_ocr_service
+from app.services.parsers.base import DocumentParser, ExtractedPage, ExtractionResult
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)

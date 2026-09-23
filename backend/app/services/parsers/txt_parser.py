@@ -1,4 +1,4 @@
-from app.services.parsers.base import DocumentParser, ExtractionResult, ExtractedPage
+from app.services.parsers.base import DocumentParser, ExtractedPage, ExtractionResult
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)

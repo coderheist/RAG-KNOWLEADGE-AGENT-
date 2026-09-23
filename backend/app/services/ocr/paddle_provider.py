@@ -1,6 +1,8 @@
 import numpy as np
 from PIL import Image
+
 from app.services.ocr.base import OCRProvider
+
 
 class PaddleOCRProvider(OCRProvider):
     def __init__(self):

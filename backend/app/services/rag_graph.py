@@ -27,7 +27,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 
 from app.config import get_settings
-from app.schemas.query import SourceCitation
 from app.services.conversation_service import save_turn
 from app.services.retrieval_service import RetrievedChunk, retrieve_chunks
 from app.utils.logging import get_logger

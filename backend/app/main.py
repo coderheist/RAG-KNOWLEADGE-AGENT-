@@ -22,10 +22,11 @@ from app.api.documents import router as documents_router
 from app.api.health import router as health_router
 from app.api.query import router as query_router
 from app.config import get_settings
-from app.db import models  # noqa: F401 — registers Phase 2 tables with Base.metadata
-from app.db import conversation_models  # noqa: F401 — registers Phase 4 tables
-from app.db.postgres import dispose_engine, get_engine
-from app.db.postgres import Base
+from app.db import (
+    conversation_models,  # noqa: F401 — registers Phase 4 tables
+    models,  # noqa: F401 — registers Phase 2 tables with Base.metadata
+)
+from app.db.postgres import Base, dispose_engine, get_engine
 from app.db.qdrant import close_qdrant_client
 from app.services.vector_service import ensure_collection
 from app.utils.logging import get_logger, setup_logging

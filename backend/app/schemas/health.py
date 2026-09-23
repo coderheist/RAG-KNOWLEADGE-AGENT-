@@ -3,8 +3,8 @@ Health-check response schemas.
 """
 
 from typing import Literal
-from pydantic import BaseModel
 
+from pydantic import BaseModel
 
 ServiceStatus = Literal["connected", "not_connected"]
 

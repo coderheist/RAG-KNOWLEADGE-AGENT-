@@ -1,7 +1,9 @@
-from app.services.ocr.base import OCRService, OCRProvider
+import logging
+
+from app.services.ocr.base import OCRProvider as OCRProvider
+from app.services.ocr.base import OCRService
 from app.services.ocr.paddle_provider import PaddleOCRProvider
 from app.services.ocr.tesseract_provider import TesseractProvider
-import logging
 
 logger = logging.getLogger(__name__)
 

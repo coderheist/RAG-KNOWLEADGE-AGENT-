@@ -1,5 +1,6 @@
-import google.generativeai as genai
 from typing import Any
+
+import google.generativeai as genai
 
 from app.config import get_settings
 from app.services.embeddings.base import BaseEmbeddingProvider

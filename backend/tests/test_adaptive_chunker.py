@@ -1,8 +1,9 @@
-import fitz
 import json
-import urllib.request
 import time
+import urllib.request
 from urllib.error import HTTPError
+
+import fitz
 
 BASE_URL = "http://localhost:8000"
 
@@ -84,7 +85,10 @@ def upload_file(path, filename):
         with urllib.request.urlopen(req, timeout=300) as resp:
             result = json.loads(resp.read())
             doc_result = result["documents"][0]
-            print(f"✅ {filename} uploaded in {time.time()-t0:.1f}s — {doc_result['chunk_count']} chunks, {doc_result['page_count']} pages")
+            print(
+                f"✅ {filename} uploaded in {time.time()-t0:.1f}s — "
+                f"{doc_result['chunk_count']} chunks, {doc_result['page_count']} pages"
+            )
             return doc_result["document_id"]
     except HTTPError as e:
         print(f"❌ Failed {filename}: {e.read().decode()}")
@@ -138,6 +142,9 @@ if __name__ == "__main__":
     time.sleep(30)
     id3 = upload_file(book, "tech_book.pdf")
     
-    if id1: check_qdrant(id1, "resume.pdf")
-    if id2: check_qdrant(id2, "research_paper.pdf")
-    if id3: check_qdrant(id3, "tech_book.pdf")
+    if id1:
+        check_qdrant(id1, "resume.pdf")
+    if id2:
+        check_qdrant(id2, "research_paper.pdf")
+    if id3:
+        check_qdrant(id3, "tech_book.pdf")

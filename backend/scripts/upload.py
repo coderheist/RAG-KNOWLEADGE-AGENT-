@@ -1,7 +1,6 @@
-import urllib.request
-import urllib.error
-import mimetypes
 import os
+import urllib.error
+import urllib.request
 
 boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW'
 file_path = 'test_large.txt'

@@ -78,9 +78,11 @@ async def retrieve_chunks(
     
     if search_results:
         import uuid
+
         from sqlalchemy import select
-        from app.db.postgres import get_db_session
+
         from app.db.models import Document
+        from app.db.postgres import get_db_session
         
         doc_ids = set()
         for hit in search_results:
@@ -126,7 +128,12 @@ async def retrieve_chunks(
             valid_candidates.sort(key=lambda c: c.score, reverse=True)
             top_score = valid_candidates[0].score
             gap_cutoff = top_score - settings.RETRIEVAL_MAX_GAP
-            logger.info("Top score for query is %.4f. Gap threshold (max_gap=%.4f) cutoff is %.4f", top_score, settings.RETRIEVAL_MAX_GAP, gap_cutoff)
+            logger.info(
+                "Top score for query is %.4f. Gap threshold (max_gap=%.4f) cutoff is %.4f",
+                top_score,
+                settings.RETRIEVAL_MAX_GAP,
+                gap_cutoff,
+            )
             
             for c in valid_candidates:
                 # Apply absolute score floor

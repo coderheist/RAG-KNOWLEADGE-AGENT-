@@ -10,9 +10,9 @@ Requires:
   - Backend running at http://localhost:8000.
 """
 import json
-import urllib.request
-import urllib.error
 import sys
+import urllib.error
+import urllib.request
 
 BASE_URL = "http://localhost:8000"
 
@@ -66,8 +66,8 @@ def query(question: str, conversation_id: str | None = None, top_k: int = 5) -> 
 
 def upload_resume_pdf():
     """Create and upload a minimal resume PDF. Returns document_id."""
+
     import fitz  # PyMuPDF — available inside Docker
-    import tempfile, os
 
     resume_text = """John Smith
 Software Engineer | New York, NY | john.smith@email.com
@@ -179,8 +179,9 @@ def run_verification():
 
     print(f"\n  Turn 4 answer has bullet points : {'✅ YES' if has_bullet else '⚠️  NO (may be numbered list)'}")
     print(f"  Location keywords in Turn 3    : {location_keywords or '(none detected)'}")
-    print(f"  Location keywords bleed into   ")
-    print(f"  Turn 4                         : {'❌ YES — location bleed detected' if location_bleed else '✅ NO — clean'}")
+    print("  Location keywords bleed into   ")
+    verdict = "❌ YES — location bleed detected" if location_bleed else "✅ NO — clean"
+    print(f"  Turn 4                         : {verdict}")
 
     if not location_bleed:
         print("\n✅ PASS — Turn 4 focuses only on technical skills, no location repetition")

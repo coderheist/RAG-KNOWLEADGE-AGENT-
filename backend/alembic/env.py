@@ -7,11 +7,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from alembic import context
 
+from alembic import context
 from app.config import get_settings
 from app.db.models import Base
-from app.db.conversation_models import Conversation, Message  # Ensure Alembic sees these models
 
 config = context.config
 

@@ -1,9 +1,9 @@
 import asyncio
-import urllib.request
-import urllib.error
 import json
 import subprocess
 import time
+import urllib.error
+import urllib.request
 from datetime import datetime
 
 API_BASE = "http://localhost:8000"
@@ -62,7 +62,12 @@ async def main():
     report.append("\n```\n")
 
     report.append("## 5. Security Mitigations\n")
-    report.append("Magic bytes validation, Path Traversal sanitation, and XML Zip Bomb rejection have been verified via unit scripts previously in this session. The container handles Billion Laughs with an internal parse failure, and concurrent duplicate uploads gracefully recover via SQLAlchemy `IntegrityError`.\n")
+    report.append(
+        "Magic bytes validation, Path Traversal sanitation, and XML Zip Bomb rejection have been "
+        "verified via unit scripts previously in this session. The container handles Billion Laughs "
+        "with an internal parse failure, and concurrent duplicate uploads gracefully recover via "
+        "SQLAlchemy `IntegrityError`.\n"
+    )
 
     report.append("## 6. Performance Benchmarks\n")
     report.append("```\n")

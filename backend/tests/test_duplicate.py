@@ -1,15 +1,16 @@
-import fitz
+import asyncio
 import json
-import urllib.request
 import time
+import urllib.request
+
+import fitz
 from qdrant_client import QdrantClient
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 
 BASE_URL = "http://localhost:8000"
 DB_URL = "postgresql://raguser:ragpass@localhost:5432/ragdb" # Assuming defaults in .env or exposed via localhost
 
 def create_pdf(path):
-    import time
     doc = fitz.open()
     page = doc.new_page()
     page.insert_text((50, 50), f"Duplicate Detection Test {time.time()}", fontsize=12)
@@ -44,15 +45,11 @@ def get_vector_count():
     client = QdrantClient("http://qdrant:6333")
     return client.count(collection_name="documents").count
 
-import subprocess
-
-import asyncio
 
 async def get_pg_doc_count():
-    import sys
     import os
+    import sys
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-    from sqlalchemy import text
     from app.db.postgres import get_db_session
     async with get_db_session() as session:
         result = await session.execute(text("SELECT count(*) FROM documents;"))

@@ -34,7 +34,7 @@ from app.schemas.document import DocumentResult, UploadResponse
 from app.services.chunker import build_chunks
 from app.services.embedding_service import embed_batch_with_retry
 from app.services.parsers import get_parser_for_file
-from app.services.vector_service import VectorPoint, upsert_vectors, generate_point_id, get_existing_point_ids
+from app.services.vector_service import VectorPoint, generate_point_id, get_existing_point_ids, upsert_vectors
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -132,7 +132,9 @@ async def _process_single_file(
                         created_at=existing_doc.created_at,
                     )
                 else:
-                    logger.info("Resuming partial document id=%s from state %s", existing_doc.id, existing_doc.status.value)
+                    logger.info(
+                        "Resuming partial document id=%s from state %s", existing_doc.id, existing_doc.status.value
+                    )
                     doc = existing_doc
                     is_resume = True
 
@@ -347,5 +349,8 @@ async def recover_stuck_documents() -> None:
             )
         )
         if result.rowcount > 0:
-            logger.info("Recovered %d stuck documents from previous crash. Marked as FAILED to allow resume.", result.rowcount)
+            logger.info(
+                "Recovered %d stuck documents from previous crash. Marked as FAILED to allow resume.",
+                result.rowcount,
+            )
 

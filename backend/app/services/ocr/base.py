@@ -1,5 +1,7 @@
 import abc
+
 from PIL import Image
+
 
 class OCRProvider(abc.ABC):
     """

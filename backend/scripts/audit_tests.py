@@ -1,8 +1,5 @@
 import asyncio
-import os
-import io
-import time
-import json
+
 import httpx
 
 API_BASE = "http://localhost:8000"

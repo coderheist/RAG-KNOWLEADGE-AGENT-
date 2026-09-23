@@ -8,8 +8,9 @@ Endpoints:
   DELETE /collections/{name}    — delete a collection (primary collection protected)
 """
 
-from fastapi import APIRouter, HTTPException, Path, status
 from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Path, status
 
 from app.schemas.collection import (
     CollectionCreate,

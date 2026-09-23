@@ -1,13 +1,14 @@
 import mimetypes
+
 from app.services.parsers.base import DocumentParser
-from app.services.parsers.pdf_parser import PDFParser
-from app.services.parsers.docx_parser import DocxParser
-from app.services.parsers.pptx_parser import PptxParser
-from app.services.parsers.xlsx_parser import XlsxParser
 from app.services.parsers.csv_parser import CsvParser
-from app.services.parsers.txt_parser import TxtParser
-from app.services.parsers.markdown_parser import MarkdownParser
+from app.services.parsers.docx_parser import DocxParser
 from app.services.parsers.image_parser import ImageParser
+from app.services.parsers.markdown_parser import MarkdownParser
+from app.services.parsers.pdf_parser import PDFParser
+from app.services.parsers.pptx_parser import PptxParser
+from app.services.parsers.txt_parser import TxtParser
+from app.services.parsers.xlsx_parser import XlsxParser
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)

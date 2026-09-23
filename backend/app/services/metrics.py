@@ -1,5 +1,6 @@
 import threading
 
+
 class EmbeddingMetrics:
     """
     In-memory metrics tracking for the embedding pipeline.

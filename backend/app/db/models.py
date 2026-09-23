@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import BigInteger, DateTime, Enum, Integer, String, Text, Boolean
+from sqlalchemy import BigInteger, Boolean, DateTime, Enum, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -60,7 +60,9 @@ class Document(Base):
     total_chunks: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     embedded_chunks: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     failed_chunks: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
-    current_stage: Mapped[str | None] = mapped_column(String(64), default="pending", server_default="pending", nullable=True)
+    current_stage: Mapped[str | None] = mapped_column(
+        String(64), default="pending", server_default="pending", nullable=True
+    )
 
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     
@@ -69,7 +71,9 @@ class Document(Base):
     parser_used: Mapped[str] = mapped_column(String(64), default="PyMuPDF", server_default="PyMuPDF", nullable=False)
     ocr_used: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
     ocr_engine: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    extraction_method: Mapped[str] = mapped_column(String(64), default="native", server_default="native", nullable=False)
+    extraction_method: Mapped[str] = mapped_column(
+        String(64), default="native", server_default="native", nullable=False
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

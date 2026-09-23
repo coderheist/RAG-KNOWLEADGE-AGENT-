@@ -43,7 +43,7 @@ import json
 import uuid
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
 from app.schemas.query import QueryRequest, SSEThinking

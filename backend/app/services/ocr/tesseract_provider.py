@@ -1,6 +1,8 @@
 import pytesseract
 from PIL import Image
+
 from app.services.ocr.base import OCRProvider
+
 
 class TesseractProvider(OCRProvider):
     def name(self) -> str:

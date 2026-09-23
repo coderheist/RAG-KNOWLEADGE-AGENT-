@@ -4,17 +4,20 @@ Used to start fresh before re-uploading documents into the adaptive chunking sys
 """
 
 import asyncio
-import sys
 
 # Ensure backend root is in PYTHONPATH
 import os
+import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy import text
+
+from app.config import get_settings
 from app.db.postgres import get_db_session
 from app.db.qdrant import get_qdrant_client
-from app.config import get_settings
 from app.services.vector_service import ensure_collection
+
 
 async def wipe_database(force=False):
     print("⚠️  WARNING: This will permanently delete all vector and document metadata.")
@@ -38,7 +41,7 @@ async def wipe_database(force=False):
                 # If this fails, the postgres truncation will rollback!
                 try:
                     await q_client.delete_collection(settings.QDRANT_COLLECTION)
-                except Exception as e:
+                except Exception:
                     # Ignore if it doesn't exist
                     pass
                 

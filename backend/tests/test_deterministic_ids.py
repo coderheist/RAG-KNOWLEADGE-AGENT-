@@ -1,7 +1,8 @@
-import fitz
 import json
-import urllib.request
 import time
+import urllib.request
+
+import fitz
 from qdrant_client import QdrantClient
 
 BASE_URL = "http://localhost:8000"
@@ -64,6 +65,9 @@ if __name__ == "__main__":
     print("Vector Count after Upload 2:", count2)
     
     if count1 == count2 and doc_id1 != doc_id2:
-        print("\n✅ SUCCESS: Vector count remained the same! Existing vectors were updated with the new document_id instead of duplicating.")
+        print(
+            "\n✅ SUCCESS: Vector count remained the same! "
+            "Existing vectors were updated with the new document_id instead of duplicating."
+        )
     else:
         print("\n❌ FAILURE: Vector count increased or document IDs matched.")

@@ -1,5 +1,6 @@
-from dataclasses import dataclass, field
 import abc
+from dataclasses import dataclass, field
+
 
 @dataclass
 class ExtractedPage:

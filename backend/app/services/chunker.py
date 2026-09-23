@@ -14,7 +14,7 @@ Algorithm:
 """
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from app.utils.logging import get_logger
 
@@ -223,8 +223,10 @@ def _adaptive_chunk(
             current_text += "\n\n" + block.text
             # We keep the heading/section of the *start* of the chunk
             # but if it was None, we adopt the new one
-            if not current_section: current_section = block.section
-            if not current_heading: current_heading = block.heading
+            if not current_section:
+                current_section = block.section
+            if not current_heading:
+                current_heading = block.heading
 
         # If current chunk has reached a healthy size, flush it
         if len(current_text) >= min_chunk_size:

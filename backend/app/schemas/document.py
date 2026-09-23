@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field
 
 from app.db.models import DocumentStatus
 
-
 # ── Per-document result ────────────────────────────────────────────────────────
 
 class DocumentResult(BaseModel):
