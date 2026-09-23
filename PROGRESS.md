@@ -86,3 +86,48 @@ resume at 0.2: `docker compose up -d`, `pip install -r backend/requirements-dev.
 full gate list, upload every fixture format, run one query end to end, record documents
 indexed / chunks created / median query latency, then tag `phase-0-complete` and move to
 Phase 1 (eval harness).
+
+### Phase 0 · Iteration 3 · 2026-09-23
+
+**Changed:**
+- Docker Desktop installed and started; owner supplied a working `GOOGLE_API_KEY` (verified
+  directly against the Gemini API's `/v1beta/models` endpoint before trusting it).
+- `docker compose up -d --build` brought up Postgres (healthy), Qdrant, and the FastAPI
+  backend (health check passing, `/health` reports gemini/postgres/qdrant all connected).
+- **Smoke gate passed**: uploaded all 7 fixture formats (pdf, docx, pptx, xlsx, csv, txt, md) —
+  each indexed with 1 page / 1 chunk; re-uploading the same PDF correctly returned
+  `already_exists`. Ran 3 queries end-to-end; each streamed a cited answer referencing the
+  correct source files. Median query latency ~8.7s (6.0s / 8.7s / 15.2s) — first-query
+  cold-start likely explains the high end; worth re-measuring once Phase 1's eval harness
+  gives a real sample size instead of 3 manual queries.
+- **Lint gate passed**: `ruff check backend/` was 128 errors under ruff's unpinned defaults
+  (no `pyproject.toml` existed). Added `backend/pyproject.toml` selecting `[E, F, I]` at
+  `line-length=120` — a standard baseline, not a weakened one — which cut it to 48 real
+  findings; auto-fixed 37 (import sorting, unused imports), manually fixed the remaining 11
+  in `app/` with zero behaviour change (dead-variable removal, explicit re-export syntax,
+  line wraps), then found and fixed 16 more of the same kind in `scripts/` and `tests/`.
+  `ruff check backend/` now passes clean.
+- **Types gate in progress**: `mypy backend/app` found 22 errors in 5 files — real
+  pre-existing issues, not lint noise: unguarded `Optional[Document]` attribute access in
+  `document_service.py` (11 occurrences), two missing required args to `DocumentResult`,
+  a wrong exception attribute in `embedding_service.py` (`GoogleAPIError` has no `.code`),
+  a `list + str` type mismatch in `rag_graph.py`, and a missing var annotation in
+  `chunker.py`. Not yet fixed — paused here to check in with the owner given session cost.
+
+**Incident:** the app's session-directory-move file sync (from earlier when this session
+relocated out of the scratch workspace) silently restored every file Phase 0.1 had already
+deleted/moved, since it only fills in files missing at the destination and never overwrites.
+Caught via `git status` showing ~25 unexpected untracked files identical to the pre-cleanup
+originals; deleted them again. No data was lost — `git status` is now clean of anything
+unexpected. Lesson for future iterations: verify `git status` before each commit, not just
+after big directory-tool operations.
+
+**Gates:** lint ✓ · types (in progress, 22 known errors) · unit — not yet run · integration —
+not yet run (needs the container rebuilt with the pyproject.toml + lint fixes first) · build —
+not applicable yet (frontend untouched) · smoke ✓.
+
+**Threshold:** NOT MET — 2 of 6 gates fully green.
+
+**Next:** fix the 22 mypy errors (all real, no behaviour change required — they're narrowing
+issues, not design flaws), rebuild the container, run the unit + integration pytest suites,
+then tag `phase-0-complete`.
