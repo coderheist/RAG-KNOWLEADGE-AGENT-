@@ -219,3 +219,116 @@ REVENUE: list[tuple] = [
 HEADCOUNT: list[tuple] = [
     ("Engineering", 184), ("Sales", 76), ("Customer Support", 63), ("Finance", 21), ("People Operations", 17),
 ]
+
+
+# ── Generated look-alike distractors ──────────────────────────────────────────────────────────
+# Deterministic (seeded). Values are drawn from pools that exclude everything a gold evidence string
+# relies on, so labels stay unambiguous while retrieval faces near-identical documents.
+
+_A = ["Garnet", "Harbor", "Indigo", "Juniper", "Kestrel", "Lumen", "Meridian", "Nimbus", "Onyx", "Prism",
+      "Quartz", "Raven", "Sable", "Tundra", "Umber", "Vertex", "Willow", "Xenon", "Yarrow", "Zephyr"]
+_B = ["Sync", "Relay", "Queue", "Cache", "Gateway", "Stream", "Vault", "Mesh", "Bus", "Lens", "Ledger", "Registry"]
+_OWNERS = ["Data Reliability Team", "Storage Platform Team", "Identity Services Team", "Observability Team",
+           "Core Runtime Team", "Integration Services Team", "Developer Experience Team", "Traffic Engineering Team"]
+_PURPOSES = ["batch export of audit records", "scheduling recurring maintenance jobs", "tracking feature flag rollouts",
+             "compressing archived telemetry", "mirroring configuration between clusters",
+             "brokering long-running background tasks", "indexing internal documentation",
+             "validating incoming partner payloads"]
+_AUTHS = ["OAuth 2.0 authorization code flow", "mutual TLS", "HMAC-signed requests", "JWT bearer tokens",
+          "API keys with an IP allowlist", "SAML assertions"]
+_MEANINGS = ["the access token has expired", "the target shard is temporarily unavailable",
+             "the per-key rate limit was exceeded", "the request signature could not be verified",
+             "the delivery queue is full", "the client certificate was rejected", "the partition leader is unavailable",
+             "the producer exceeded its quota", "no healthy upstream was available", "the ingestion shard is backpressured"]
+_REGIONS = ["us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-west-2", "eu-central-1", "eu-north-1",
+            "ap-southeast-1", "ap-northeast-1", "sa-east-1", "ca-central-1"]
+
+
+def generated_products(n: int = 24, seed: int = 7) -> list[dict]:
+    import random
+
+    rng = random.Random(seed)
+    taken = {p["name"] for p in PRODUCTS} | {"Fjord Search"}
+    names = [f"{a} {b}" for a in _A for b in _B if f"{a} {b}" not in taken]
+    rng.shuffle(names)
+    products = []
+    for i, name in enumerate(names[:n]):
+        primary, dr = rng.sample(_REGIONS, 2)
+        products.append({
+            "slug": name.lower().replace(" ", "_"), "name": name,
+            "version": f"{rng.randint(0, 6)}.{rng.randint(0, 9)}.{rng.randint(0, 9)}",
+            "release": f"202{rng.choice([4, 5])}-{rng.randint(1, 12):02d}-{rng.randint(1, 28):02d}",
+            "owner": rng.choice(_OWNERS), "purpose": rng.choice(_PURPOSES),
+            "rate_limit": rng.choice([100, 250, 300, 800, 1500, 2000, 4000, 5000, 7500]),
+            "max_payload_mb": rng.choice([3, 4, 6, 12, 15, 20, 50]),
+            "retention_days": rng.choice([3, 5, 10, 28, 35, 45, 120, 180]),
+            "auth": rng.choice(_AUTHS), "token_ttl_min": rng.choice([5, 10, 25, 35, 50, 90, 120]),
+            "sla": rng.choice(["99.00", "99.30", "99.60", "99.80", "99.85", "99.97"]),
+            "primary_region": primary, "dr_region": dr,
+            "errors": {
+                f"E-{4027 + i}": rng.choice(_MEANINGS),
+                f"E-{5113 + i}": rng.choice(_MEANINGS),
+                f"E-{4296 + i}": rng.choice(_MEANINGS),
+            },
+        })
+    return products
+
+
+_FIRST = ["Elena", "Ravi", "Sofia", "Jonas", "Mei", "Omar", "Lucia", "Kenji", "Nadia", "Felix", "Ana", "Viktor",
+          "Hana", "Marco", "Ingrid"]
+_LAST = ["Okafor", "Lindqvist", "Moreau", "Castillo", "Novak", "Haddad", "Fischer", "Silva", "Kowalski", "Ivanov",
+         "Nakamura", "Duarte", "Bianchi", "Petrov", "Oyelaran"]
+_CITIES = ["Seattle, WA", "Denver, CO", "Chicago, IL", "Boston, MA", "Dublin, Ireland", "Amsterdam, Netherlands",
+           "Warsaw, Poland", "Lisbon, Portugal", "Sydney, Australia", "Singapore", "Bengaluru, India", "Sao Paulo, Brazil"]
+_TITLES = ["Backend Engineer", "Platform Engineer", "Data Engineer", "Site Reliability Engineer", "Software Engineer",
+           "DevOps Engineer", "Security Engineer"]
+_SKILLS = ["Python", "Go", "Java", "Rust", "PostgreSQL", "MySQL", "Redis", "Apache Kafka", "Kubernetes", "Docker",
+           "Terraform", "AWS", "GCP", "Azure", "Prometheus", "Grafana", "Airflow", "Spark", "gRPC", "GraphQL"]
+_COMPANIES = ["Redwood Systems", "Bluepeak Labs", "Corvus Networks", "Halcyon Software", "Ironbridge Data",
+              "Kilo Cloud", "Marlin Payments", "Orchid Health", "Pinecrest Media", "Quill Analytics",
+              "Stonefield Energy", "Talon Security", "Vantage Retail", "Wren Logistics"]
+_ACHIEVEMENTS = ["Reduced infrastructure cost by 22%.", "Cut deployment time from 40 minutes to 9 minutes.",
+                 "Mentored 6 junior engineers.", "Introduced automated canary releases.",
+                 "Migrated the billing service to a new database.", "Improved test coverage from 51% to 83%.",
+                 "Led the on-call rotation redesign.", "Built the internal developer portal."]
+_UNIS = ["University of Washington", "Georgia Tech", "University of Illinois", "Trinity College Dublin",
+         "Delft University of Technology", "University of Warsaw", "University of Sydney", "IIT Bombay"]
+_CERTS = ["HashiCorp Terraform Associate (2021)", "AWS Certified Developer - Associate (2020)",
+          "Certified Kubernetes Application Developer (2022)", "Azure Administrator Associate (2021)",
+          "CompTIA Security+ (2019)", "Google Associate Cloud Engineer (2022)"]
+
+
+def generated_resumes(n: int = 15, seed: int = 11) -> list[dict]:
+    import random
+
+    rng = random.Random(seed)
+    resumes = []
+    for i in range(n):
+        name = f"{_FIRST[i % len(_FIRST)]} {_LAST[(i * 7) % len(_LAST)]}"
+        start = rng.randint(2014, 2019)
+        c1, c2 = rng.sample(_COMPANIES, 2)
+        resumes.append({
+            "slug": f"resume_{name.lower().replace(' ', '_')}", "name": name, "title": rng.choice(_TITLES),
+            "city": rng.choice(_CITIES), "years": rng.randint(4, 14), "skills": rng.sample(_SKILLS, 6),
+            "jobs": [
+                (c1, rng.choice(_TITLES), str(start + 3), "present", rng.choice(_ACHIEVEMENTS)),
+                (c2, rng.choice(_TITLES), str(start), str(start + 3), rng.choice(_ACHIEVEMENTS)),
+            ],
+            "education": f"B.S. Computer Science, {rng.choice(_UNIS)}, {start - 2}", "cert": rng.choice(_CERTS),
+        })
+    return resumes
+
+
+def generated_skus(n: int = 30, seed: int = 5) -> list[tuple]:
+    """A second price list with similar SKU codes; prices avoid every gold price string."""
+    import random
+
+    rng = random.Random(seed)
+    series = ["RT", "AP", "UP", "LB", "FW", "OS"]
+    rows = []
+    for i in range(n):
+        code = f"HW-{series[i % len(series)]}-{8800 + i * 3:04d}"
+        price = f"{rng.randint(12, 900)}.{rng.choice([15, 35, 55, 65, 85, 95])}"
+        rows.append((code, f"Access Module {i + 1}", rng.choice(["Compute", "Networking", "Storage", "Power"]),
+                     price, rng.choice([2, 4, 8, 12, 24, 48])))
+    return rows

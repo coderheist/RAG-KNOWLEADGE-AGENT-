@@ -131,3 +131,68 @@ not applicable yet (frontend untouched) · smoke ✓.
 **Next:** fix the 22 mypy errors (all real, no behaviour change required — they're narrowing
 issues, not design flaws), rebuild the container, run the unit + integration pytest suites,
 then tag `phase-0-complete`.
+
+### Phase 0 · Iteration 4 · 2026-09-24
+
+**Changed:**
+- mypy: 22 → 0. Enabled the pydantic mypy plugin (fixes false "missing argument" errors on
+  `Field(None, ...)` defaults); asserted the `doc is not None` invariant in
+  `_process_single_file`; stopped reusing the `doc` name for a differently-typed value in the
+  IntegrityError fallback; annotated `current_lines` and the health `overall` Literal; read
+  `GoogleAPIError.code` via `getattr`; guarded AIMessage truncation on `str` content.
+- Tests: `tests/test_upload.py` was a module-level script that opened `test.pdf` relative to the
+  cwd — the Phase 0.1 fixture move broke it and it broke pytest collection; rewritten as a proper
+  integration test. `test_memory.py` now stops at the SSE `[DONE]` sentinel. `test_concurrent_dup.py`
+  uses unique content per run so it is repeatable.
+- Pytest runs in a throwaway container from the same image with `backend/` mounted and the
+  backend's network namespace shared (the runtime image only contains `app/` and `alembic/`).
+
+**Finding (not fixed — Phase 0 allows no behaviour changes):** when 5 identical uploads race, all 5
+report `completed` for the same document id: the IntegrityError fallback attaches every request to
+the winner's row and each re-runs ingestion. No duplicate data (vector ids are deterministic, the
+upsert is idempotent) but embedding work is repeated up to N times. Belongs in "Known limitations".
+
+**Baseline (0.2):** 7 fixture formats indexed, 1 page / 1 chunk each; re-uploading the same PDF returned
+`already_exists`; 3 manual queries streamed cited answers, latencies 6.0s / 8.7s / 15.2s (median 8.7s).
+These 3 samples are replaced by real percentiles once the eval harness has a baseline.
+
+**Gates:** lint ✓ · types ✓ (55 files) · unit ✓ (1) · integration ✓ (13) · frontend build ✓
+(`next build`, 9 routes) · smoke ✓.
+
+**Threshold:** MET. Tagged `phase-0-complete`.
+
+### Phase 1 · Iteration 1 · 2026-09-24
+
+**Changed:**
+- Built the harness under `backend/evals/`: synthetic corpus with look-alike distractors
+  (`corpus_data.py`, `build_corpus.py`), `golden_v1.jsonl` (62 cases: 17 factual_lookup, 8 multi_hop,
+  12 exact_term, 10 follow_up, 8 unanswerable, 7 chitchat), retrieval metrics (pure), generation
+  judges (Gemini, temperature 0, hash-cached), `setup_corpus.py` (index through the API, derive
+  `relevant_chunk_ids` from real chunks), `run_eval.py` (real `/query`, `--compare`, `--fail-under`,
+  `--limit`, `--no-judge`).
+- Ground truth is by construction: every case carries `evidence` strings and a test proves each exists
+  in exactly one document. Chunk ids are derived, so re-running `setup_corpus` re-labels after any
+  chunking change.
+- Additive backend changes for testability: SSE `sources` now carry the deterministic `chunk_id`, and
+  `/query` accepts an optional stateless `history` (used instead of stored history when no
+  `conversation_id` is given) so follow-up evals inject the dataset's history deterministically.
+
+**Eval (retrieval-only probe, 22-chunk corpus, `evals/results/probe_20260924_044901.json`):**
+recall@5 0.978 | MRR 0.869 | nDCG@5 0.895 | hit-rate@5 0.978 | precision@5 0.209. Chitchat cases
+retrieved on 5 of 5 scored (the baseline has no router).
+
+**Threshold:** NOT MET.
+**Diagnosis:**
+1. *Golden set too easy.* recall@5 0.978 > the spec's 0.9 ceiling: the corpus is 22 chunks, so the
+   top 5 is close to "retrieve everything". This is the spec's pause point; remedy applied — added 24
+   generated products, 15 resumes and a second price list, all seeded and deterministic, with
+   near-identical identifiers (error codes, SKUs, names) that never collide with gold evidence (the
+   dataset test enforces it). Baseline must be re-measured on the hardened corpus.
+2. *Gemini free-tier quota is far below what the loop needs.* The key allows 5 requests/minute and
+   20 requests/day per model. A full judged run needs ~60 generation calls plus ~120 judge calls, so
+   it cannot complete on this key even once; 58 of 62 cases hit 429 on generation. Retrieval still
+   works (sources arrive before generation), so retrieval metrics are measurable; judged metrics
+   (faithfulness, citation accuracy, refusal correctness) are not until the quota changes.
+
+**Next:** re-index the hardened corpus, record the retrieval baseline, then continue with the phases
+whose exit gates are retrieval metrics (2, 3) while flagging the quota blocker for the owner.

@@ -4,22 +4,38 @@
 """
 from pathlib import Path
 
-from evals.corpus_data import HEADCOUNT, PRODUCTS, RESUMES, REVENUE, SKUS, render_product_spec, render_resume
+from evals.corpus_data import (
+    HEADCOUNT,
+    PRODUCTS,
+    RESUMES,
+    REVENUE,
+    SKUS,
+    generated_products,
+    generated_resumes,
+    generated_skus,
+    render_product_spec,
+    render_resume,
+)
 
 CORPUS_DIR = Path(__file__).parent / "corpus"
 
 # Resumes rendered as .docx vs .pdf to exercise both parsers.
 _DOCX_RESUMES = {"resume_marcus_bell"}
 
+ALL_PRODUCTS = PRODUCTS + generated_products()
+ALL_RESUMES = RESUMES + generated_resumes()
+APAC_SKUS = generated_skus()
+
 
 def corpus_texts() -> dict[str, str]:
     """filename -> plain text, used to prove gold evidence exists in exactly one document."""
     texts: dict[str, str] = {}
-    for p in PRODUCTS:
+    for p in ALL_PRODUCTS:
         texts[f"spec_{p['slug']}.md"] = render_product_spec(p)
-    for r in RESUMES:
+    for r in ALL_RESUMES:
         ext = "docx" if r["slug"] in _DOCX_RESUMES else "pdf"
         texts[f"{r['slug']}.{ext}"] = render_resume(r)
+    texts["pricing_apac.xlsx"] = " ".join(" ".join(str(c) for c in row) for row in APAC_SKUS)
     q3 = " ".join(" ".join(str(c) for c in row) for row in SKUS)
     q2 = " ".join(f"{sku} {name} {cat} {q2c} {moq}" for sku, name, cat, _q3, q2c, moq in SKUS)
     texts["pricing.xlsx"] = f"Q3 Pricing {q3} Q2 Pricing {q2}"
@@ -37,12 +53,12 @@ def build() -> list[Path]:
     CORPUS_DIR.mkdir(parents=True, exist_ok=True)
     paths: list[Path] = []
 
-    for p in PRODUCTS:
+    for p in ALL_PRODUCTS:
         path = CORPUS_DIR / f"spec_{p['slug']}.md"
         path.write_text(render_product_spec(p), encoding="utf-8")
         paths.append(path)
 
-    for r in RESUMES:
+    for r in ALL_RESUMES:
         text = render_resume(r)
         if r["slug"] in _DOCX_RESUMES:
             path = CORPUS_DIR / f"{r['slug']}.docx"
@@ -69,6 +85,16 @@ def build() -> list[Path]:
         q3.append([sku, name, cat, q3c, moq])
         q2.append([sku, name, cat, q2c, moq])
     path = CORPUS_DIR / "pricing.xlsx"
+    wb.save(path)
+    paths.append(path)
+
+    wb = Workbook()
+    apac = wb.active
+    apac.title = "APAC Pricing"
+    apac.append(["SKU", "Product", "Category", "Unit Cost (USD)", "MOQ"])
+    for row in APAC_SKUS:
+        apac.append(list(row))
+    path = CORPUS_DIR / "pricing_apac.xlsx"
     wb.save(path)
     paths.append(path)
 

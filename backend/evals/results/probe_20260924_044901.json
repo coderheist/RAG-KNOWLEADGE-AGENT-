@@ -1,0 +1,1587 @@
+{
+  "tag": "probe",
+  "timestamp": "20260924_044901",
+  "config": {
+    "dataset": "golden_v1",
+    "top_k": 5,
+    "judge_model": null,
+    "base_url": "http://localhost:8000",
+    "limit": null,
+    "note": "retrieval-only probe on the 22-chunk corpus"
+  },
+  "aggregates": {
+    "overall": {
+      "hit_rate@5": 0.9782608695652174,
+      "mrr": 0.8692028985507246,
+      "ndcg@5": 0.8945178690429672,
+      "no_retrieval": 0.0,
+      "precision@5": 0.2086956521739131,
+      "recall@5": 0.9782608695652174
+    },
+    "by_category": {
+      "chitchat": {
+        "no_retrieval": 0.0
+      },
+      "exact_term": {
+        "hit_rate@5": 0.9090909090909091,
+        "mrr": 0.7909090909090909,
+        "ndcg@5": 0.8197984146187273,
+        "precision@5": 0.18181818181818182,
+        "recall@5": 0.9090909090909091
+      },
+      "factual_lookup": {
+        "hit_rate@5": 1.0,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "precision@5": 0.2,
+        "recall@5": 1.0
+      },
+      "follow_up": {
+        "hit_rate@5": 1.0,
+        "mrr": 0.6283333333333333,
+        "ndcg@5": 0.7210318626022307,
+        "precision@5": 0.2,
+        "recall@5": 1.0
+      },
+      "multi_hop": {
+        "hit_rate@5": 1.0,
+        "mrr": 1.0,
+        "ndcg@5": 0.9899650986435234,
+        "precision@5": 0.275,
+        "recall@5": 1.0
+      }
+    },
+    "latency_ms": {
+      "p50": 4095.140564999838,
+      "p95": 5750.375523000002,
+      "ttft_p50": null
+    },
+    "n_cases": 62,
+    "n_errors": 4,
+    "n_generation_errors": 58,
+    "warnings": [
+      "no_retrieval: zero variance (0.000 on all 5 cases) - check the metric"
+    ]
+  },
+  "cases": [
+    {
+      "id": "q_001",
+      "category": "factual_lookup",
+      "question": "What is the default rate limit for Atlas Sync?",
+      "ground_truth": "600 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "59a6278e-3604-5cf5-910a-3d8ec665a564"
+      ],
+      "latency_ms": 6118.838435999805,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_002",
+      "category": "factual_lookup",
+      "question": "How long is data retained in Boreal Queue?",
+      "ground_truth": "14 days",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "273b7636-4c54-5bcb-bfde-05ca2032c58a",
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098"
+      ],
+      "latency_ms": 5750.375523000002,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_003",
+      "category": "factual_lookup",
+      "question": "Which team owns Drift Gateway?",
+      "ground_truth": "The API Platform Team",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2"
+      ],
+      "latency_ms": 6193.154520000007,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_004",
+      "category": "factual_lookup",
+      "question": "Which authentication method does Cinder Cache use?",
+      "ground_truth": "Static API keys",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a"
+      ],
+      "latency_ms": 3587.280986999758,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_005",
+      "category": "factual_lookup",
+      "question": "What is the contractual SLA for Ember Stream?",
+      "ground_truth": "99.70% monthly uptime",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "30618d90-a284-564d-99aa-ec2a2507539e",
+        "348c17ce-7c1c-50e1-a889-8f479f8e4a9f"
+      ],
+      "latency_ms": 4912.209516000075,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_006",
+      "category": "factual_lookup",
+      "question": "When was Atlas Relay version 2.9.0 released?",
+      "ground_truth": "2025-01-27",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "59a6278e-3604-5cf5-910a-3d8ec665a564",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8"
+      ],
+      "latency_ms": 4177.031070999874,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_007",
+      "category": "factual_lookup",
+      "question": "Which city is Marcus Bell based in?",
+      "ground_truth": "Austin, TX",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 1944.4411419999597,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_008",
+      "category": "factual_lookup",
+      "question": "What certification does Priya Raman hold?",
+      "ground_truth": "Google Professional Data Engineer (2021)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 1884.3711449999319,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_009",
+      "category": "factual_lookup",
+      "question": "Where did Tomas Weber study?",
+      "ground_truth": "TU Berlin (Dipl.-Ing. Informatik, 2012)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "9140ce6f-b390-5132-abcc-5016e7c30ecf"
+      ],
+      "latency_ms": 4189.72341000017,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_010",
+      "category": "factual_lookup",
+      "question": "What is the Q3 unit cost of SKU HW-ND-2201?",
+      "ground_truth": "$184.50",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 3797.5370870003644,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_011",
+      "category": "factual_lookup",
+      "question": "What was Europe's revenue in Q3?",
+      "ground_truth": "3,620 thousand USD",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 4352.871756000241,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_012",
+      "category": "factual_lookup",
+      "question": "How many people work in Customer Support?",
+      "ground_truth": "63",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 1705.4833880001752,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_013",
+      "category": "factual_lookup",
+      "question": "What is the maximum request payload for Ember Stream?",
+      "ground_truth": "8 MB",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "348c17ce-7c1c-50e1-a889-8f479f8e4a9f",
+        "30618d90-a284-564d-99aa-ec2a2507539e"
+      ],
+      "latency_ms": 3822.5829969996994,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_014",
+      "category": "factual_lookup",
+      "question": "Which region is the disaster recovery region for Atlas Sync?",
+      "ground_truth": "us-east-1",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912"
+      ],
+      "latency_ms": 4242.260044000432,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_015",
+      "category": "factual_lookup",
+      "question": "How old is Alice?",
+      "ground_truth": "25",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "aa4d8eb2-2563-5c60-b596-64c40324fbbb"
+      ],
+      "latency_ms": 4465.611660999912,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_016",
+      "category": "factual_lookup",
+      "question": "Which word is bold in the markdown test file?",
+      "ground_truth": "bold",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "c138d255-160d-5eb6-8b09-33608a7b847a"
+      ],
+      "latency_ms": 3842.7825690000645,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_017",
+      "category": "factual_lookup",
+      "question": "What is the simple text file used for?",
+      "ground_truth": "Testing TXT parsing",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "3611bfcf-6694-51be-acba-859f4f2a08c9"
+      ],
+      "latency_ms": 4468.304308999905,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_018",
+      "category": "multi_hop",
+      "question": "Who owns Atlas Sync and what is its default rate limit?",
+      "ground_truth": "The Platform Data Team owns it; the default rate limit is 600 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 4034.936054999889,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_019",
+      "category": "multi_hop",
+      "question": "Compare the default rate limits of Atlas Sync and Atlas Relay.",
+      "ground_truth": "Atlas Sync allows 600 requests per minute; Atlas Relay allows 1200 requests per minute, twice as many",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "59a6278e-3604-5cf5-910a-3d8ec665a564",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 4102.319996999995,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_020",
+      "category": "multi_hop",
+      "question": "Which has the longer data retention, Cinder Cache or Drift Gateway?",
+      "ground_truth": "Drift Gateway (60 days versus 7 days for Cinder Cache)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "ndcg@5": 0.9197207891481876,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5",
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a",
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2"
+      ],
+      "latency_ms": 4058.494953999798,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_021",
+      "category": "multi_hop",
+      "question": "By how much did the Q3 unit cost of HW-ND-2210 exceed its Q2 unit cost?",
+      "ground_truth": "$14.65 (412.75 in Q3 versus 398.10 in Q2)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 3891.371496999909,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_022",
+      "category": "multi_hop",
+      "question": "What was the combined Q3 revenue of North America and Europe?",
+      "ground_truth": "9,210 thousand USD (5,590 + 3,620)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 4180.088022999826,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_023",
+      "category": "multi_hop",
+      "question": "Which certification does Marcus Bell hold and where did he study?",
+      "ground_truth": "AWS Certified Solutions Architect - Professional (2022); University of Texas at Austin",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 4180.781933000162,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_024",
+      "category": "multi_hop",
+      "question": "Which error code does Atlas Sync return when a shard is unavailable, and what is its primary region?",
+      "ground_truth": "E-5107; the primary region is eu-west-2",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 4578.44752300025,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_025",
+      "category": "multi_hop",
+      "question": "How long are Drift Gateway access tokens valid and what is its default rate limit?",
+      "ground_truth": "30 minutes; 450 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2",
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da"
+      ],
+      "latency_ms": 4276.922433999971,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_026",
+      "category": "exact_term",
+      "question": "What does error code E-5107 mean?",
+      "ground_truth": "The target shard is temporarily unavailable",
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0,
+        "hit_rate@5": 0.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54044a2f-6aaa-5a5c-a9f0-6cb59d39520f",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2",
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098",
+        "456a2f0a-f40a-51d1-88f2-487b5dd6eedf"
+      ],
+      "latency_ms": 4476.115784000285,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_027",
+      "category": "exact_term",
+      "question": "What does error code E-5108 mean?",
+      "ground_truth": "The delivery queue is full",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "54044a2f-6aaa-5a5c-a9f0-6cb59d39520f",
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a",
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098",
+        "456a2f0a-f40a-51d1-88f2-487b5dd6eedf"
+      ],
+      "latency_ms": 3823.6053659998106,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_028",
+      "category": "exact_term",
+      "question": "What does error code E-4292 mean?",
+      "ground_truth": "The producer exceeded its quota",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098",
+        "54044a2f-6aaa-5a5c-a9f0-6cb59d39520f",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a"
+      ],
+      "latency_ms": 1719.5770110001831,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_029",
+      "category": "exact_term",
+      "question": "Which product returns error E-4025?",
+      "ground_truth": "Drift Gateway (the JWT audience claim is invalid)",
+      "metrics": {},
+      "reasons": {},
+      "error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m"
+    },
+    {
+      "id": "q_030",
+      "category": "exact_term",
+      "question": "What is error E-4021?",
+      "ground_truth": "The access token has expired",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.5,
+        "ndcg@5": 0.6309297535714575,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54044a2f-6aaa-5a5c-a9f0-6cb59d39520f",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a"
+      ],
+      "latency_ms": 3710.5713619998824,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_031",
+      "category": "exact_term",
+      "question": "What does error code E-5112 indicate?",
+      "ground_truth": "The ingestion shard is backpressured",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.2,
+        "ndcg@5": 0.38685280723454163,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "30618d90-a284-564d-99aa-ec2a2507539e"
+      ],
+      "latency_ms": 4553.870963999998,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_032",
+      "category": "exact_term",
+      "question": "What is the product name for SKU HW-SW-3310?",
+      "ground_truth": "Rack Switch 48P",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f",
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "59a6278e-3604-5cf5-910a-3d8ec665a564",
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912"
+      ],
+      "latency_ms": 4187.337609999759,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_033",
+      "category": "exact_term",
+      "question": "What is the minimum order quantity for SKU HW-PW-4401?",
+      "ground_truth": "20",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f",
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da"
+      ],
+      "latency_ms": 4343.390267999894,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_034",
+      "category": "exact_term",
+      "question": "What is the Q3 unit cost for SKU HW-FN-7701?",
+      "ground_truth": "$27.90",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 4087.0977209997363,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_035",
+      "category": "exact_term",
+      "question": "What was the Q2 unit cost of SKU HW-ST-5501?",
+      "ground_truth": "$355.60",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 4095.140564999838,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_036",
+      "category": "exact_term",
+      "question": "Which product is at version 4.4.2?",
+      "ground_truth": "Drift Gateway",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "348c17ce-7c1c-50e1-a889-8f479f8e4a9f",
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5"
+      ],
+      "latency_ms": 1637.2612000000117,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_037",
+      "category": "exact_term",
+      "question": "Which version of Cinder Cache was released on 2025-02-14?",
+      "ground_truth": "1.7.3",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5"
+      ],
+      "latency_ms": 3800.684301000274,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_038",
+      "category": "follow_up",
+      "question": "How long are its access tokens valid?",
+      "ground_truth": "45 minutes",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.5,
+        "ndcg@5": 0.6309297535714575,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "30618d90-a284-564d-99aa-ec2a2507539e",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2"
+      ],
+      "latency_ms": 3812.6023220002025,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_039",
+      "category": "follow_up",
+      "question": "What are his technical skills?",
+      "ground_truth": "Python, Go, PostgreSQL, Apache Kafka, Kubernetes, Terraform",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094",
+        "9140ce6f-b390-5132-abcc-5016e7c30ecf",
+        "d9961e01-072a-5883-b769-67895b8c2c1b",
+        "7513e872-a95e-5b49-ac5a-5bf4f4dff729",
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 3813.7879340001746,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_040",
+      "category": "follow_up",
+      "question": "What is its default rate limit?",
+      "ground_truth": "3000 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.2,
+        "ndcg@5": 0.38685280723454163,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "59a6278e-3604-5cf5-910a-3d8ec665a564",
+        "348c17ce-7c1c-50e1-a889-8f479f8e4a9f",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "273b7636-4c54-5bcb-bfde-05ca2032c58a"
+      ],
+      "latency_ms": 4245.952192999994,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_041",
+      "category": "follow_up",
+      "question": "Which company does she work for now?",
+      "ground_truth": "Lakeview Analytics",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.5,
+        "ndcg@5": 0.6309297535714575,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "7513e872-a95e-5b49-ac5a-5bf4f4dff729",
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f",
+        "d9961e01-072a-5883-b769-67895b8c2c1b"
+      ],
+      "latency_ms": 4178.238598999997,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_042",
+      "category": "follow_up",
+      "question": "Which region is it primarily hosted in?",
+      "ground_truth": "us-east-2",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.25,
+        "ndcg@5": 0.43067655807339306,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a",
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 2773.5953810001774,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_043",
+      "category": "follow_up",
+      "question": "How long does it retain data?",
+      "ground_truth": "7 days",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.5,
+        "ndcg@5": 0.6309297535714575,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "348c17ce-7c1c-50e1-a889-8f479f8e4a9f",
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "273b7636-4c54-5bcb-bfde-05ca2032c58a",
+        "30618d90-a284-564d-99aa-ec2a2507539e"
+      ],
+      "latency_ms": 5661.512353000035,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_044",
+      "category": "follow_up",
+      "question": "What did he improve at his current employer?",
+      "ground_truth": "Service availability from 99.5% to 99.95%",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.3333333333333333,
+        "ndcg@5": 0.5,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094",
+        "d9961e01-072a-5883-b769-67895b8c2c1b",
+        "9140ce6f-b390-5132-abcc-5016e7c30ecf",
+        "7513e872-a95e-5b49-ac5a-5bf4f4dff729",
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 4547.413508999853,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_045",
+      "category": "follow_up",
+      "question": "And what is the minimum order quantity for it?",
+      "ground_truth": "2",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f",
+        "273b7636-4c54-5bcb-bfde-05ca2032c58a",
+        "59a6278e-3604-5cf5-910a-3d8ec665a564",
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da"
+      ],
+      "latency_ms": 1830.8217480002895,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_046",
+      "category": "follow_up",
+      "question": "Which authentication does that use?",
+      "ground_truth": "OAuth 2.0 device flow",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "30618d90-a284-564d-99aa-ec2a2507539e",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2",
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098",
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a"
+      ],
+      "latency_ms": 4887.009054999908,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_047",
+      "category": "follow_up",
+      "question": "What certification does she have?",
+      "ground_truth": "TensorFlow Developer Certificate (2020)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "7513e872-a95e-5b49-ac5a-5bf4f4dff729",
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f",
+        "9140ce6f-b390-5132-abcc-5016e7c30ecf",
+        "d9961e01-072a-5883-b769-67895b8c2c1b",
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 4642.604241999834,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_048",
+      "category": "unanswerable",
+      "question": "What is the pricing tier for Atlas Sync?",
+      "ground_truth": "REFUSAL - the documents do not contain any pricing tier for Atlas Sync",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 3713.035559000218,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_049",
+      "category": "unanswerable",
+      "question": "What is Marcus Bell's salary?",
+      "ground_truth": "REFUSAL - salary is not stated in the resume",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 4375.286844000129,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_050",
+      "category": "unanswerable",
+      "question": "Who is the CEO of the company?",
+      "ground_truth": "REFUSAL - no CEO is mentioned in any document",
+      "metrics": {},
+      "reasons": {},
+      "error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m"
+    },
+    {
+      "id": "q_051",
+      "category": "unanswerable",
+      "question": "What is the default rate limit for Fjord Search?",
+      "ground_truth": "REFUSAL - Fjord Search is not a documented product",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "273b7636-4c54-5bcb-bfde-05ca2032c58a",
+        "348c17ce-7c1c-50e1-a889-8f479f8e4a9f",
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5",
+        "59a6278e-3604-5cf5-910a-3d8ec665a564"
+      ],
+      "latency_ms": 1902.342654000222,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_052",
+      "category": "unanswerable",
+      "question": "What was Africa's revenue in Q3?",
+      "ground_truth": "REFUSAL - the financials list no Africa region",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 1966.311062999921,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_053",
+      "category": "unanswerable",
+      "question": "What is the Q3 unit cost of SKU HW-ND-9999?",
+      "ground_truth": "REFUSAL - HW-ND-9999 is not in the price list",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 1658.5116749997724,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_054",
+      "category": "unanswerable",
+      "question": "What is Priya Raman's phone number?",
+      "ground_truth": "REFUSAL - no phone number in the resume",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 4746.677169000122,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_055",
+      "category": "unanswerable",
+      "question": "Which programming language is Atlas Sync written in?",
+      "ground_truth": "REFUSAL - the specification does not say",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912"
+      ],
+      "latency_ms": 2321.8388390000655,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_056",
+      "category": "chitchat",
+      "question": "Hello!",
+      "ground_truth": "A short friendly greeting; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 0.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "bc106506-d464-50a4-8018-e71de3549e06",
+        "c138d255-160d-5eb6-8b09-33608a7b847a",
+        "3611bfcf-6694-51be-acba-859f4f2a08c9",
+        "6e47afb8-8e04-5adf-93d9-c8268f106d01",
+        "433053d6-a656-59f7-a3b3-8ebb5a401e01"
+      ],
+      "latency_ms": 1620.7448190002651,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_057",
+      "category": "chitchat",
+      "question": "Thanks, that was helpful.",
+      "ground_truth": "A short polite acknowledgement; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 0.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "3611bfcf-6694-51be-acba-859f4f2a08c9",
+        "433053d6-a656-59f7-a3b3-8ebb5a401e01",
+        "bc106506-d464-50a4-8018-e71de3549e06"
+      ],
+      "latency_ms": 3997.9378430002726,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_058",
+      "category": "chitchat",
+      "question": "Who are you?",
+      "ground_truth": "A short description of the assistant; no document lookup",
+      "metrics": {},
+      "reasons": {},
+      "error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m"
+    },
+    {
+      "id": "q_059",
+      "category": "chitchat",
+      "question": "Good morning",
+      "ground_truth": "A short friendly greeting; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 0.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "bc106506-d464-50a4-8018-e71de3549e06"
+      ],
+      "latency_ms": 4595.058496000092,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_060",
+      "category": "chitchat",
+      "question": "Can you help me with something?",
+      "ground_truth": "Offers help and asks what is needed; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 0.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "3611bfcf-6694-51be-acba-859f4f2a08c9"
+      ],
+      "latency_ms": 1919.674514000235,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_061",
+      "category": "chitchat",
+      "question": "Goodbye!",
+      "ground_truth": "A short farewell; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 0.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m",
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "bc106506-d464-50a4-8018-e71de3549e06",
+        "3611bfcf-6694-51be-acba-859f4f2a08c9"
+      ],
+      "latency_ms": 4104.597840000224,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_062",
+      "category": "chitchat",
+      "question": "How are you today?",
+      "ground_truth": "A short friendly reply; no document lookup",
+      "metrics": {},
+      "reasons": {},
+      "error": "Generation failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To m"
+    }
+  ]
+}

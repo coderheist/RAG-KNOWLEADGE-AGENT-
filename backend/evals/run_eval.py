@@ -13,6 +13,7 @@ import asyncio
 import json
 import math
 import os
+import re
 import sys
 import time
 from collections import defaultdict
@@ -36,11 +37,11 @@ def percentile(values: list[float], pct: float) -> float | None:
 
 
 async def stream_query(
-    client: httpx.AsyncClient, base_url: str, question: str, top_k: int, conversation_id: str | None = None
+    client: httpx.AsyncClient, base_url: str, question: str, top_k: int, history: list[dict] | None = None
 ) -> dict:
     payload: dict = {"query": question, "top_k": top_k}
-    if conversation_id:
-        payload["conversation_id"] = conversation_id
+    if history:
+        payload["history"] = history
     start = time.perf_counter()
     out: dict = {"answer": "", "sources": [], "conversation_id": None, "ttft_ms": None, "error": None, "rewrite": None}
     async with client.stream("POST", f"{base_url}/query", json=payload) as resp:
@@ -69,6 +70,23 @@ async def stream_query(
     return out
 
 
+async def query_with_retry(
+    client: httpx.AsyncClient, base_url: str, question: str, top_k: int,
+    history: list[dict] | None = None, need_answer: bool = True, attempts: int = 3,
+) -> dict:
+    """stream_query, retrying per-minute 429s. Daily-quota 429s cannot recover, so they are returned as-is."""
+    run: dict = {}
+    for attempt in range(attempts):
+        run = await stream_query(client, base_url, question, top_k, history)
+        err = run["error"] or ""
+        retryable = "429" in err and "PerDay" not in err and (need_answer or not run["sources"])
+        if not retryable or attempt == attempts - 1:
+            return run
+        match = re.search(r"retry in ([\d.]+)s", err)
+        await asyncio.sleep(min(65.0, float(match.group(1)) + 1) if match else 15.0)
+    return run
+
+
 async def fetch_chunk_texts(
     client: httpx.AsyncClient, qdrant_url: str, collection: str, ids: list[str]
 ) -> dict[str, str]:
@@ -88,18 +106,18 @@ async def run_case(row: dict, args: argparse.Namespace, client: httpx.AsyncClien
         "ground_truth": row["ground_truth"], "metrics": {}, "reasons": {}, "error": None,
     }
     try:
-        conversation_id = None
-        for turn in row["conversation_history"]:
-            if turn["role"] == "user":
-                prior = await stream_query(client, args.base_url, turn["content"], k, conversation_id)
-                conversation_id = prior["conversation_id"]
-        run = await stream_query(client, args.base_url, row["question"], k, conversation_id)
+        run = await query_with_retry(
+            client, args.base_url, row["question"], k, history=row["conversation_history"] or None,
+            need_answer=not args.no_judge,
+        )
     except Exception as exc:
         result["error"] = f"{type(exc).__name__}: {exc}"
         return result
-    if run["error"]:
-        result["error"] = run["error"]
+    if run["error"] and not run["sources"]:
+        result["error"] = run["error"][:200]
         return result
+    # Sources arrive before generation, so retrieval is still scorable when generation fails (e.g. a 429).
+    result["generation_error"] = run["error"][:200] if run["error"] else None
 
     retrieved = [s.get("chunk_id", "") for s in run["sources"]]
     relevant = set(row["relevant_chunk_ids"])
@@ -116,7 +134,7 @@ async def run_case(row: dict, args: argparse.Namespace, client: httpx.AsyncClien
         rewrite=run["rewrite"],
     )
 
-    if not args.no_judge:
+    if not args.no_judge and not run["error"]:
         texts = await fetch_chunk_texts(client, args.qdrant_url, args.collection, retrieved)
         contexts = [
             {
@@ -178,7 +196,8 @@ def aggregate(cases: list[dict]) -> dict:
             "p95": percentile(latencies, 95),
             "ttft_p50": percentile(ttfts, 50),
         },
-        "n_cases": len(cases), "n_errors": sum(1 for c in cases if c["error"]), "warnings": warnings,
+        "n_cases": len(cases), "n_errors": sum(1 for c in cases if c["error"]),
+        "n_generation_errors": sum(1 for c in cases if c.get("generation_error")), "warnings": warnings,
     }
 
 
@@ -280,19 +299,26 @@ async def main_async(args: argparse.Namespace) -> int:
     path.write_text(json.dumps(payload, indent=2))
 
     baseline = load_results(args.compare) if args.compare else None
-    print(f"\n{agg['n_cases']} cases, {agg['n_errors']} errors -> {path.name}\n")
+    print(
+        f"\n{agg['n_cases']} cases, {agg['n_errors']} errors, "
+        f"{agg['n_generation_errors']} generation errors -> {path.name}\n"
+    )
     print_summary(agg, args.tag, baseline, args.compare)
     print_by_category(agg)
     for w in agg["warnings"]:
         print(f"WARNING: {w}")
     for c in cases:
         if c["error"]:
-            print(f"ERROR {c['id']}: {c['error']}")
+            print(f"ERROR {c['id']}: {c['error'].splitlines()[0]}")
+    gen_errors = [c for c in cases if c.get("generation_error")]
+    if gen_errors:
+        print(f"GENERATION FAILED on {len(gen_errors)} cases, e.g. {gen_errors[0]['generation_error'].splitlines()[0]}")
 
     failures = check_fail_under(agg, args.fail_under or [])
     for f in failures:
         print(f"FAIL: {f}")
-    return 1 if failures or agg["n_errors"] else 0
+    generation_broke_judging = agg["n_generation_errors"] and not args.no_judge
+    return 1 if failures or agg["n_errors"] or generation_broke_judging else 0
 
 
 def parse_args() -> argparse.Namespace:
