@@ -165,7 +165,7 @@ async def _generate_node(state: RAGState) -> dict:
     # 400 chars preserves coreference ability without inviting copy-paste.
     trimmed_history: list[BaseMessage] = []
     for msg in state["history_messages"]:
-        if isinstance(msg, AIMessage) and len(msg.content) > 400:
+        if isinstance(msg, AIMessage) and isinstance(msg.content, str) and len(msg.content) > 400:
             trimmed_history.append(AIMessage(content=msg.content[:400] + " …[truncated]"))
         else:
             trimmed_history.append(msg)

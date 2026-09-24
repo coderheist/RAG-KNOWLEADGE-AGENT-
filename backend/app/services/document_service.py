@@ -76,12 +76,12 @@ async def _create_document_record(
         # Fall back to fetching the newly inserted document.
         async with get_db_session() as session:
             from sqlalchemy import select
-            doc = await session.scalar(
+            existing = await session.scalar(
                 select(Document).where(Document.file_hash == file_hash).limit(1)
             )
-            if not doc:
+            if not existing:
                 raise RuntimeError("IntegrityError caught but document not found on fallback.")
-            return doc
+            return existing
 
 
 async def _update_document(
@@ -141,7 +141,8 @@ async def _process_single_file(
         # ── 1. Persist metadata record (if not resuming) ──────────────────────
         if not is_resume:
             doc = await _create_document_record(filename, file_size, file_hash)
-        
+
+        assert doc is not None, "doc is set by either the resume path or _create_document_record"
         doc_id_str = str(doc.id)
 
         # ── 2. Mark PARSING ───────────────────────────────────────────────────

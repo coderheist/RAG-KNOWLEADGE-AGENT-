@@ -8,6 +8,7 @@ Performs real connectivity checks against:
 """
 
 import asyncio
+from typing import Literal
 
 import asyncpg
 import google.generativeai as genai
@@ -92,7 +93,7 @@ async def get_health() -> HealthResponse:
         _check_qdrant(),
     )
 
-    overall = (
+    overall: Literal["ok", "degraded"] = (
         "ok"
         if all(
             s == "connected"
