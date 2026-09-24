@@ -1,0 +1,1628 @@
+{
+  "tag": "rc_hybrid_rerank",
+  "timestamp": "20260924_073215",
+  "config": {
+    "dataset": "golden_v1",
+    "top_k": 5,
+    "judge_model": null,
+    "base_url": "http://rag_cfg:8000",
+    "limit": null,
+    "note": "rc_hybrid_rerank: hybrid=true rerank=true rewrite=false collection=documents_hybrid"
+  },
+  "aggregates": {
+    "overall": {
+      "hit_rate@5": 0.8297872340425532,
+      "mrr": 0.8021276595744682,
+      "ndcg@5": 0.8088889906554467,
+      "no_retrieval": 0.8571428571428571,
+      "precision@5": 0.17872340425531916,
+      "recall@5": 0.8297872340425532
+    },
+    "by_category": {
+      "chitchat": {
+        "no_retrieval": 0.8571428571428571
+      },
+      "exact_term": {
+        "hit_rate@5": 0.9166666666666666,
+        "mrr": 0.9166666666666666,
+        "ndcg@5": 0.9166666666666666,
+        "precision@5": 0.18333333333333335,
+        "recall@5": 0.9166666666666666
+      },
+      "factual_lookup": {
+        "hit_rate@5": 1.0,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "precision@5": 0.2,
+        "recall@5": 1.0
+      },
+      "follow_up": {
+        "hit_rate@5": 0.3,
+        "mrr": 0.16999999999999998,
+        "ndcg@5": 0.20177825608059993,
+        "precision@5": 0.06000000000000001,
+        "recall@5": 0.3
+      },
+      "multi_hop": {
+        "hit_rate@5": 1.0,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "precision@5": 0.275,
+        "recall@5": 1.0
+      }
+    },
+    "latency_ms": {
+      "p50": 4434.279088000039,
+      "p95": 24473.635296000793,
+      "ttft_p50": null
+    },
+    "n_cases": 62,
+    "n_errors": 0,
+    "n_generation_errors": 0,
+    "n_judge_errors": 0,
+    "warnings": []
+  },
+  "cases": [
+    {
+      "id": "q_001",
+      "category": "factual_lookup",
+      "question": "What is the default rate limit for Atlas Sync?",
+      "ground_truth": "600 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "59a6278e-3604-5cf5-910a-3d8ec665a564",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 2197.473492999052,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_002",
+      "category": "factual_lookup",
+      "question": "How long is data retained in Boreal Queue?",
+      "ground_truth": "14 days",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "273b7636-4c54-5bcb-bfde-05ca2032c58a",
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098"
+      ],
+      "latency_ms": 1925.3660920003313,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_003",
+      "category": "factual_lookup",
+      "question": "Which team owns Drift Gateway?",
+      "ground_truth": "The API Platform Team",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2"
+      ],
+      "latency_ms": 2697.1640520005167,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_004",
+      "category": "factual_lookup",
+      "question": "Which authentication method does Cinder Cache use?",
+      "ground_truth": "Static API keys",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a"
+      ],
+      "latency_ms": 3837.115874999654,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_005",
+      "category": "factual_lookup",
+      "question": "What is the contractual SLA for Ember Stream?",
+      "ground_truth": "99.70% monthly uptime",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "30618d90-a284-564d-99aa-ec2a2507539e"
+      ],
+      "latency_ms": 3451.942568999584,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_006",
+      "category": "factual_lookup",
+      "question": "When was Atlas Relay version 2.9.0 released?",
+      "ground_truth": "2025-01-27",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "59a6278e-3604-5cf5-910a-3d8ec665a564"
+      ],
+      "latency_ms": 3612.8323350003484,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_007",
+      "category": "factual_lookup",
+      "question": "Which city is Marcus Bell based in?",
+      "ground_truth": "Austin, TX",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 2932.9023619993677,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_008",
+      "category": "factual_lookup",
+      "question": "What certification does Priya Raman hold?",
+      "ground_truth": "Google Professional Data Engineer (2021)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 2988.7085760001355,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_009",
+      "category": "factual_lookup",
+      "question": "Where did Tomas Weber study?",
+      "ground_truth": "TU Berlin (Dipl.-Ing. Informatik, 2012)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "9140ce6f-b390-5132-abcc-5016e7c30ecf"
+      ],
+      "latency_ms": 3073.129387001245,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_010",
+      "category": "factual_lookup",
+      "question": "What is the Q3 unit cost of SKU HW-ND-2201?",
+      "ground_truth": "$184.50",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 33773.09101300125,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_011",
+      "category": "factual_lookup",
+      "question": "What was Europe's revenue in Q3?",
+      "ground_truth": "3,620 thousand USD",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 62970.08222899967,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_012",
+      "category": "factual_lookup",
+      "question": "How many people work in Customer Support?",
+      "ground_truth": "63",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 17312.84689899985,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_013",
+      "category": "factual_lookup",
+      "question": "What is the maximum request payload for Ember Stream?",
+      "ground_truth": "8 MB",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "348c17ce-7c1c-50e1-a889-8f479f8e4a9f"
+      ],
+      "latency_ms": 4090.124566000668,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_014",
+      "category": "factual_lookup",
+      "question": "Which region is the disaster recovery region for Atlas Sync?",
+      "ground_truth": "us-east-1",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "00f98397-5c63-5fda-9e6b-e1f978694504"
+      ],
+      "latency_ms": 5078.733778000242,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_015",
+      "category": "factual_lookup",
+      "question": "How old is Alice?",
+      "ground_truth": "25",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "aa4d8eb2-2563-5c60-b596-64c40324fbbb"
+      ],
+      "latency_ms": 3196.914629001185,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_016",
+      "category": "factual_lookup",
+      "question": "Which word is bold in the markdown test file?",
+      "ground_truth": "bold",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "c138d255-160d-5eb6-8b09-33608a7b847a"
+      ],
+      "latency_ms": 2792.249277999872,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_017",
+      "category": "factual_lookup",
+      "question": "What is the simple text file used for?",
+      "ground_truth": "Testing TXT parsing",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "3611bfcf-6694-51be-acba-859f4f2a08c9"
+      ],
+      "latency_ms": 4716.677382999478,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_018",
+      "category": "multi_hop",
+      "question": "Who owns Atlas Sync and what is its default rate limit?",
+      "ground_truth": "The Platform Data Team owns it; the default rate limit is 600 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 3077.919645998918,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_019",
+      "category": "multi_hop",
+      "question": "Compare the default rate limits of Atlas Sync and Atlas Relay.",
+      "ground_truth": "Atlas Sync allows 600 requests per minute; Atlas Relay allows 1200 requests per minute, twice as many",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "59a6278e-3604-5cf5-910a-3d8ec665a564",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8"
+      ],
+      "latency_ms": 2969.8357460001716,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_020",
+      "category": "multi_hop",
+      "question": "Which has the longer data retention, Cinder Cache or Drift Gateway?",
+      "ground_truth": "Drift Gateway (60 days versus 7 days for Cinder Cache)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2",
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a"
+      ],
+      "latency_ms": 7636.64491399868,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_021",
+      "category": "multi_hop",
+      "question": "By how much did the Q3 unit cost of HW-ND-2210 exceed its Q2 unit cost?",
+      "ground_truth": "$14.65 (412.75 in Q3 versus 398.10 in Q2)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 24473.635296000793,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_022",
+      "category": "multi_hop",
+      "question": "What was the combined Q3 revenue of North America and Europe?",
+      "ground_truth": "9,210 thousand USD (5,590 + 3,620)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 14150.726239000505,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_023",
+      "category": "multi_hop",
+      "question": "Which certification does Marcus Bell hold and where did he study?",
+      "ground_truth": "AWS Certified Solutions Architect - Professional (2022); University of Texas at Austin",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 8229.061430000002,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_024",
+      "category": "multi_hop",
+      "question": "Which error code does Atlas Sync return when a shard is unavailable, and what is its primary region?",
+      "ground_truth": "E-5107; the primary region is eu-west-2",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 4434.279088000039,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_025",
+      "category": "multi_hop",
+      "question": "How long are Drift Gateway access tokens valid and what is its default rate limit?",
+      "ground_truth": "30 minutes; 450 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2",
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da"
+      ],
+      "latency_ms": 3482.0143510005437,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_026",
+      "category": "exact_term",
+      "question": "What does error code E-5107 mean?",
+      "ground_truth": "The target shard is temporarily unavailable",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "bc636163-4fb2-5131-b391-8598a556c1e6",
+        "4128de5f-04cb-536c-8268-6f8110f2e9be"
+      ],
+      "latency_ms": 3396.1705030014855,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_027",
+      "category": "exact_term",
+      "question": "What does error code E-5108 mean?",
+      "ground_truth": "The delivery queue is full",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098",
+        "a25b2752-32fc-5c00-be92-49e7addb4ae1",
+        "ad1c1788-673c-5001-b79a-2f1ad74d95b8",
+        "b000c1f8-a43d-5d04-ba32-1253c7158d57"
+      ],
+      "latency_ms": 6454.239431001042,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_028",
+      "category": "exact_term",
+      "question": "What does error code E-4292 mean?",
+      "ground_truth": "The producer exceeded its quota",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098",
+        "ad1c1788-673c-5001-b79a-2f1ad74d95b8",
+        "1ef11373-5f65-5901-afbe-f0e058c2d050"
+      ],
+      "latency_ms": 4506.415808999009,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_029",
+      "category": "exact_term",
+      "question": "Which product returns error E-4025?",
+      "ground_truth": "Drift Gateway (the JWT audience claim is invalid)",
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0,
+        "hit_rate@5": 0.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "a3f6df08-de04-5b5f-a525-90515c9e03a5"
+      ],
+      "latency_ms": 6659.881159999713,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_030",
+      "category": "exact_term",
+      "question": "What is error E-4021?",
+      "ground_truth": "The access token has expired",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8",
+        "1ef11373-5f65-5901-afbe-f0e058c2d050"
+      ],
+      "latency_ms": 3723.171473000548,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_031",
+      "category": "exact_term",
+      "question": "What does error code E-5112 indicate?",
+      "ground_truth": "The ingestion shard is backpressured",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "30618d90-a284-564d-99aa-ec2a2507539e",
+        "b000c1f8-a43d-5d04-ba32-1253c7158d57",
+        "1ef11373-5f65-5901-afbe-f0e058c2d050",
+        "4b7342f7-33f9-52fa-ba9f-c084d8e1fa3a",
+        "d71f0c6c-e011-58d8-b8d6-f968be435519"
+      ],
+      "latency_ms": 3463.6612989997957,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_032",
+      "category": "exact_term",
+      "question": "What is the product name for SKU HW-SW-3310?",
+      "ground_truth": "Rack Switch 48P",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f",
+        "9afbe85e-f6cd-5e6c-96f2-9ceb52899f49",
+        "280b7187-aeca-51f4-8105-185a51f2a447",
+        "29c07018-887d-5679-86ee-08e7290f7016",
+        "235eb4ec-ee6d-5810-a499-50feb2c9480f"
+      ],
+      "latency_ms": 17196.52786000006,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_033",
+      "category": "exact_term",
+      "question": "What is the minimum order quantity for SKU HW-PW-4401?",
+      "ground_truth": "20",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f",
+        "9afbe85e-f6cd-5e6c-96f2-9ceb52899f49"
+      ],
+      "latency_ms": 10337.929726998482,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_034",
+      "category": "exact_term",
+      "question": "What is the Q3 unit cost for SKU HW-FN-7701?",
+      "ground_truth": "$27.90",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f",
+        "9afbe85e-f6cd-5e6c-96f2-9ceb52899f49"
+      ],
+      "latency_ms": 9550.765986999977,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_035",
+      "category": "exact_term",
+      "question": "What was the Q2 unit cost of SKU HW-ST-5501?",
+      "ground_truth": "$355.60",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f",
+        "9afbe85e-f6cd-5e6c-96f2-9ceb52899f49"
+      ],
+      "latency_ms": 11249.243780001052,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_036",
+      "category": "exact_term",
+      "question": "Which product is at version 4.4.2?",
+      "ground_truth": "Drift Gateway",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "1162d86b-2e1e-58a5-b83f-c61c49420223",
+        "2944cc2a-a61a-5269-9f31-2248cebed9db",
+        "fdacea55-9bc4-5a98-b1f7-79ae9f04d4cb",
+        "aa7df459-bfaa-57af-bad3-13a96181e240"
+      ],
+      "latency_ms": 10638.099920999593,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_037",
+      "category": "exact_term",
+      "question": "Which version of Cinder Cache was released on 2025-02-14?",
+      "ground_truth": "1.7.3",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5"
+      ],
+      "latency_ms": 3851.524427000186,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_038",
+      "category": "follow_up",
+      "question": "How long are its access tokens valid?",
+      "ground_truth": "45 minutes",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "525e567b-db7f-50f6-8ea3-f6fddf360a42",
+        "1ef11373-5f65-5901-afbe-f0e058c2d050",
+        "76930321-68b3-5a8e-91a6-d741ccd114ed",
+        "10fdad38-a422-5450-8bfd-198685b4765f"
+      ],
+      "latency_ms": 4376.211796999996,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_039",
+      "category": "follow_up",
+      "question": "What are his technical skills?",
+      "ground_truth": "Python, Go, PostgreSQL, Apache Kafka, Kubernetes, Terraform",
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0,
+        "hit_rate@5": 0.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "4e598c8a-0cbe-568c-8383-69023cd1baa4",
+        "886fa2e9-6ae2-51e2-a7c3-546e0b9996ca",
+        "074b55fd-e87c-587b-9a1c-35b9e2104746",
+        "2590e64c-5908-51a5-b26b-3f2b50c02cb9",
+        "b4193a05-697a-5ee4-a271-9596f7f1f825"
+      ],
+      "latency_ms": 4658.282008998867,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_040",
+      "category": "follow_up",
+      "question": "What is its default rate limit?",
+      "ground_truth": "3000 requests per minute per API key",
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0,
+        "hit_rate@5": 0.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "2944cc2a-a61a-5269-9f31-2248cebed9db",
+        "5bbcae60-8027-562c-85bc-d919925e4ab3",
+        "a9631d95-f7e5-535e-814a-afadbd6bf81a",
+        "1162d86b-2e1e-58a5-b83f-c61c49420223",
+        "a2087e66-2779-5ce6-868c-24a35a9e8fbe"
+      ],
+      "latency_ms": 3486.6503260000172,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_041",
+      "category": "follow_up",
+      "question": "Which company does she work for now?",
+      "ground_truth": "Lakeview Analytics",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.2,
+        "ndcg@5": 0.38685280723454163,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "7eda8271-ce70-5dfa-a38b-6f54745a1edc",
+        "c343ac04-8ab5-5a1f-81c4-b19e48d14c27",
+        "074b55fd-e87c-587b-9a1c-35b9e2104746",
+        "5565cd4c-ba30-5c84-bdc1-3c164178d34a",
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 2700.036389000161,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_042",
+      "category": "follow_up",
+      "question": "Which region is it primarily hosted in?",
+      "ground_truth": "us-east-2",
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0,
+        "hit_rate@5": 0.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "0cd2151d-42bf-5a85-a210-000d4fd99599",
+        "bc636163-4fb2-5131-b391-8598a556c1e6",
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a",
+        "ad1c1788-673c-5001-b79a-2f1ad74d95b8",
+        "4b7342f7-33f9-52fa-ba9f-c084d8e1fa3a"
+      ],
+      "latency_ms": 3295.286382000995,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_043",
+      "category": "follow_up",
+      "question": "How long does it retain data?",
+      "ground_truth": "7 days",
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0,
+        "hit_rate@5": 0.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "9487bde8-9760-5879-b951-81f2e1ee8c60",
+        "963c1e07-230f-52ea-bbb1-afb7833d9d3b",
+        "ac07d795-a854-5691-8a47-8481f76b5fd1",
+        "aa7df459-bfaa-57af-bad3-13a96181e240",
+        "1162d86b-2e1e-58a5-b83f-c61c49420223"
+      ],
+      "latency_ms": 3154.5258250007464,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_044",
+      "category": "follow_up",
+      "question": "What did he improve at his current employer?",
+      "ground_truth": "Service availability from 99.5% to 99.95%",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.5,
+        "ndcg@5": 0.6309297535714575,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "4d5fb836-cd85-5736-9711-4584f61c3b36",
+        "9140ce6f-b390-5132-abcc-5016e7c30ecf",
+        "b64d40a4-6168-5a6d-9bcd-a7beb2116c91",
+        "154f66d0-1d07-557e-83ca-2002ee3f5094",
+        "4e598c8a-0cbe-568c-8383-69023cd1baa4"
+      ],
+      "latency_ms": 3328.0330280013004,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_045",
+      "category": "follow_up",
+      "question": "And what is the minimum order quantity for it?",
+      "ground_truth": "2",
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0,
+        "hit_rate@5": 0.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "273b7636-4c54-5bcb-bfde-05ca2032c58a",
+        "a9631d95-f7e5-535e-814a-afadbd6bf81a",
+        "ad6b2483-cb12-57d2-ae78-dec879be7aa3",
+        "a2087e66-2779-5ce6-868c-24a35a9e8fbe",
+        "9487bde8-9760-5879-b951-81f2e1ee8c60"
+      ],
+      "latency_ms": 10449.810785999944,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_046",
+      "category": "follow_up",
+      "question": "Which authentication does that use?",
+      "ground_truth": "OAuth 2.0 device flow",
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0,
+        "hit_rate@5": 0.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "10fdad38-a422-5450-8bfd-198685b4765f",
+        "4128de5f-04cb-536c-8268-6f8110f2e9be",
+        "0cd2151d-42bf-5a85-a210-000d4fd99599",
+        "ad1c1788-673c-5001-b79a-2f1ad74d95b8",
+        "a25b2752-32fc-5c00-be92-49e7addb4ae1"
+      ],
+      "latency_ms": 8558.567030999257,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_047",
+      "category": "follow_up",
+      "question": "What certification does she have?",
+      "ground_truth": "TensorFlow Developer Certificate (2020)",
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "ndcg@5": 0.0,
+        "hit_rate@5": 0.0,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "7eda8271-ce70-5dfa-a38b-6f54745a1edc",
+        "c343ac04-8ab5-5a1f-81c4-b19e48d14c27",
+        "4d5fb836-cd85-5736-9711-4584f61c3b36",
+        "5565cd4c-ba30-5c84-bdc1-3c164178d34a",
+        "074b55fd-e87c-587b-9a1c-35b9e2104746"
+      ],
+      "latency_ms": 5726.466308999079,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_048",
+      "category": "unanswerable",
+      "question": "What is the pricing tier for Atlas Sync?",
+      "ground_truth": "REFUSAL - the documents do not contain any pricing tier for Atlas Sync",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 9446.547258001374,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_049",
+      "category": "unanswerable",
+      "question": "What is Marcus Bell's salary?",
+      "ground_truth": "REFUSAL - salary is not stated in the resume",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 8316.916009000124,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_050",
+      "category": "unanswerable",
+      "question": "Who is the CEO of the company?",
+      "ground_truth": "REFUSAL - no CEO is mentioned in any document",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 9746.50563599971,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_051",
+      "category": "unanswerable",
+      "question": "What is the default rate limit for Fjord Search?",
+      "ground_truth": "REFUSAL - Fjord Search is not a documented product",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "a9631d95-f7e5-535e-814a-afadbd6bf81a",
+        "9487bde8-9760-5879-b951-81f2e1ee8c60",
+        "ad6b2483-cb12-57d2-ae78-dec879be7aa3",
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "ac07d795-a854-5691-8a47-8481f76b5fd1"
+      ],
+      "latency_ms": 6683.224824999343,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_052",
+      "category": "unanswerable",
+      "question": "What was Africa's revenue in Q3?",
+      "ground_truth": "REFUSAL - the financials list no Africa region",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 26261.9031109989,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_053",
+      "category": "unanswerable",
+      "question": "What is the Q3 unit cost of SKU HW-ND-9999?",
+      "ground_truth": "REFUSAL - HW-ND-9999 is not in the price list",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 10957.977205000134,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_054",
+      "category": "unanswerable",
+      "question": "What is Priya Raman's phone number?",
+      "ground_truth": "REFUSAL - no phone number in the resume",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 7642.740638999385,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_055",
+      "category": "unanswerable",
+      "question": "Which programming language is Atlas Sync written in?",
+      "ground_truth": "REFUSAL - the specification does not say",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 5719.7319170009,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_056",
+      "category": "chitchat",
+      "question": "Hello!",
+      "ground_truth": "A short friendly greeting; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 0.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [
+        "bc106506-d464-50a4-8018-e71de3549e06",
+        "fdacea55-9bc4-5a98-b1f7-79ae9f04d4cb"
+      ],
+      "latency_ms": 5226.180252000631,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_057",
+      "category": "chitchat",
+      "question": "Thanks, that was helpful.",
+      "ground_truth": "A short polite acknowledgement; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 7706.561431999944,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_058",
+      "category": "chitchat",
+      "question": "Who are you?",
+      "ground_truth": "A short description of the assistant; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 3257.710395000686,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_059",
+      "category": "chitchat",
+      "question": "Good morning",
+      "ground_truth": "A short friendly greeting; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 3860.831500000131,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_060",
+      "category": "chitchat",
+      "question": "Can you help me with something?",
+      "ground_truth": "Offers help and asks what is needed; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 3675.4525269989244,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_061",
+      "category": "chitchat",
+      "question": "Goodbye!",
+      "ground_truth": "A short farewell; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 3101.8808469998476,
+      "ttft_ms": null,
+      "rewrite": null
+    },
+    {
+      "id": "q_062",
+      "category": "chitchat",
+      "question": "How are you today?",
+      "ground_truth": "A short friendly reply; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0
+      },
+      "reasons": {},
+      "error": null,
+      "generation_error": null,
+      "answer": "",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 3566.857940999398,
+      "ttft_ms": null,
+      "rewrite": null
+    }
+  ]
+}
