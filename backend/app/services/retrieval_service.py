@@ -8,11 +8,19 @@ Reuses the existing embed_texts() from Phase 2 — task_type is the only
 difference between document ingestion and query embedding.
 """
 
+import asyncio
+import math
+import time
 from dataclasses import dataclass
+
+from qdrant_client.http import models as qmodels
 
 from app.config import get_settings
 from app.db.qdrant import get_qdrant_client
+from app.services import sparse
 from app.services.embedding_service import embed_batch_with_retry
+from app.services.fusion import reciprocal_rank_fusion
+from app.services.reranking import get_reranker
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -29,6 +37,94 @@ class RetrievedChunk:
     text: str
     score: float   # cosine similarity (0 – 1)
     chunk_id: str = ""   # deterministic Qdrant point id (see vector_service.generate_point_id)
+    rerank_score: float | None = None   # cross-encoder score, set only when reranking is enabled
+    heading: str | None = None
+    section: str | None = None
+
+
+@dataclass
+class _Hit:
+    """A candidate in the hybrid pipeline, shaped like a Qdrant ScoredPoint for the shared downstream code."""
+
+    id: str
+    payload: dict
+    score: float                       # dense cosine similarity
+    rerank_score: float | None = None
+
+
+async def _cosine_scores(client, coll: str, ids: list[str], query_vector: list[float]) -> dict[str, float]:
+    """Dense cosine for candidates that only the sparse retriever found (they have no dense score yet)."""
+    records = await client.retrieve(collection_name=coll, ids=ids, with_vectors=True, with_payload=False)
+    q_norm = math.sqrt(sum(x * x for x in query_vector)) or 1.0
+    scores: dict[str, float] = {}
+    for rec in records:
+        vec = rec.vector
+        if isinstance(vec, dict):
+            vec = vec.get("") or next((v for v in vec.values() if isinstance(v, list)), None)
+        if not vec:
+            continue
+        v_norm = math.sqrt(sum(x * x for x in vec)) or 1.0
+        scores[str(rec.id)] = sum(a * b for a, b in zip(query_vector, vec, strict=False)) / (q_norm * v_norm)
+    return scores
+
+
+async def _hybrid_candidates(
+    client, coll: str, query: str, query_vector: list[float], top_k: int, settings
+) -> list[_Hit]:
+    """Dense (+ optional BM25) retrieval, Reciprocal Rank Fusion, then optional cross-encoder rerank."""
+    n = top_k * settings.CANDIDATE_MULTIPLIER
+    t0 = time.perf_counter()
+
+    async def sparse_search() -> list:
+        sparse_query = await sparse.embed_query(query)
+        return await client.search(
+            collection_name=coll,
+            query_vector=qmodels.NamedSparseVector(name=sparse.SPARSE_VECTOR_NAME, vector=sparse_query),
+            limit=n,
+            with_payload=True,
+        )
+
+    dense_task = client.search(collection_name=coll, query_vector=query_vector, limit=n, with_payload=True)
+    if settings.ENABLE_HYBRID_SEARCH:
+        dense_hits, sparse_hits = await asyncio.gather(dense_task, sparse_search())
+    else:
+        dense_hits, sparse_hits = await dense_task, []
+    t_search = time.perf_counter()
+
+    payloads = {str(h.id): (h.payload or {}) for h in [*sparse_hits, *dense_hits]}
+    dense_scores = {str(h.id): float(h.score) for h in dense_hits}
+    dense_ids = [str(h.id) for h in dense_hits]
+    if settings.ENABLE_HYBRID_SEARCH:
+        rankings = [dense_ids, [str(h.id) for h in sparse_hits]]
+        fused_ids = [i for i, _ in reciprocal_rank_fusion(rankings, settings.RRF_K)]
+    else:
+        fused_ids = dense_ids
+    candidate_ids = fused_ids[: max(settings.RERANK_CANDIDATE_COUNT if settings.ENABLE_RERANKING else top_k, top_k)]
+
+    missing = [i for i in candidate_ids if i not in dense_scores]
+    if missing:
+        dense_scores.update(await _cosine_scores(client, coll, missing, query_vector))
+    hits = [_Hit(id=i, payload=payloads[i], score=dense_scores.get(i, 0.0)) for i in candidate_ids]
+    t_fuse = time.perf_counter()
+
+    if settings.ENABLE_RERANKING and hits:
+        try:
+            scores = await asyncio.to_thread(
+                get_reranker().rerank, query, [h.payload.get("text", "") for h in hits]
+            )
+            for hit, score in zip(hits, scores, strict=True):
+                hit.rerank_score = score
+            hits.sort(key=lambda h: h.rerank_score if h.rerank_score is not None else float("-inf"), reverse=True)
+        except Exception as exc:  # a reranker failure must degrade to the fused order, never break retrieval
+            logger.warning("Reranking failed, keeping fused order: %s", exc)
+    t_rerank = time.perf_counter()
+
+    logger.info(
+        "hybrid_retrieval: search=%.0fms fuse=%.0fms rerank=%.0fms candidates=%d hybrid=%s rerank=%s",
+        (t_search - t0) * 1000, (t_fuse - t_search) * 1000, (t_rerank - t_fuse) * 1000, len(hits),
+        settings.ENABLE_HYBRID_SEARCH, settings.ENABLE_RERANKING,
+    )
+    return hits[:top_k]
 
 
 async def retrieve_chunks(
@@ -58,12 +154,16 @@ async def retrieve_chunks(
     vectors = await embed_batch_with_retry([query], task_type="RETRIEVAL_QUERY")
     query_vector = vectors[0]
 
-    search_results = await client.search(
-        collection_name=coll,
-        query_vector=query_vector,
-        limit=top_k,
-        with_payload=True,
-    )
+    reordered = settings.ENABLE_HYBRID_SEARCH or settings.ENABLE_RERANKING
+    if reordered:
+        search_results = await _hybrid_candidates(client, coll, query, query_vector, top_k, settings)
+    else:
+        search_results = await client.search(
+            collection_name=coll,
+            query_vector=query_vector,
+            limit=top_k,
+            with_payload=True,
+        )
 
     # Log all raw candidate scores before filtering
     if search_results:
@@ -123,12 +223,16 @@ async def retrieve_chunks(
                 text=payload.get("text", ""),
                 score=float(hit.score),
                 chunk_id=str(hit.id),
+                rerank_score=getattr(hit, "rerank_score", None),
+                heading=payload.get("heading"),
+                section=payload.get("section"),
             ))
-            
+
         if valid_candidates:
-            # Ensure descending order
-            valid_candidates.sort(key=lambda c: c.score, reverse=True)
-            top_score = valid_candidates[0].score
+            # Dense-only results are ordered by cosine; fused/reranked results keep the pipeline's order.
+            if not reordered:
+                valid_candidates.sort(key=lambda c: c.score, reverse=True)
+            top_score = max(c.score for c in valid_candidates)
             gap_cutoff = top_score - settings.RETRIEVAL_MAX_GAP
             logger.info(
                 "Top score for query is %.4f. Gap threshold (max_gap=%.4f) cutoff is %.4f",

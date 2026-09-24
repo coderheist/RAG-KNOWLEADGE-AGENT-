@@ -35,3 +35,6 @@ langgraph==0.2.60
 langchain-google-genai==2.0.7
 langchain-community==0.3.13
 python-multipart==0.0.20
+
+# ── Hybrid search + reranking (Phase 3) — local CPU models, no API key ─────────
+fastembed==0.7.4

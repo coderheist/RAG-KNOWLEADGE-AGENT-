@@ -2,7 +2,7 @@
 LangGraph RAG agent (Phase 4).
 
 Graph topology:
-    START → retrieve → generate → save_history → END
+    START → rewrite_query → retrieve → generate → save_history → END
 
 Streaming:
     The graph is executed via ``graph.astream_events(input, version="v2")``.
@@ -28,6 +28,7 @@ from langgraph.graph import END, START, StateGraph
 
 from app.config import get_settings
 from app.services.conversation_service import save_turn
+from app.services.query_rewriter import gemini_rewrite_llm, rewrite_query
 from app.services.retrieval_service import RetrievedChunk, retrieve_chunks
 from app.utils.logging import get_logger
 
@@ -78,6 +79,8 @@ class RAGState(TypedDict):
     """Shared mutable state threaded through every node in the graph."""
 
     query: str
+    search_query: str              # standalone query used for retrieval (== query when no rewrite)
+    rewrite_applied: bool          # for tracing and evals
     conversation_id: str           # always a str; uuid.UUID is not JSON-serialisable
     history_messages: list[BaseMessage]
     top_k: int
@@ -101,15 +104,36 @@ def _build_llm(settings) -> ChatGoogleGenerativeAI:
 
 # ── Graph nodes ───────────────────────────────────────────────────────────────
 
+async def _rewrite_query_node(state: RAGState) -> dict:
+    """
+    Turn a follow-up into a standalone search query before retrieval.
+
+    With no history (or the flag off) this is a pure passthrough: no LLM call, no added latency.
+    """
+    settings = get_settings()
+    query = state["query"]
+    if not settings.ENABLE_QUERY_REWRITE or not state["history_messages"]:
+        return {"search_query": query, "rewrite_applied": False}
+
+    llm = gemini_rewrite_llm(
+        settings.QUERY_REWRITE_MODEL, settings.GOOGLE_API_KEY, settings.QUERY_REWRITE_MAX_TOKENS
+    )
+    search_query, applied = await rewrite_query(
+        query, state["history_messages"], llm, settings.QUERY_REWRITE_HISTORY_TURNS
+    )
+    logger.info("rewrite_query_node: original=%r rewritten=%r applied=%s", query[:80], search_query[:80], applied)
+    return {"search_query": search_query, "rewrite_applied": applied}
+
+
 async def _retrieve_node(state: RAGState) -> dict:
     """
-    Embed the query and fetch the top-k chunks from Qdrant.
+    Embed the standalone search query and fetch the top-k chunks from Qdrant.
 
     Produces:
         chunks  — list[RetrievedChunk] for the generate node
         sources — serialisable list[dict] emitted in the SSE sources event
     """
-    chunks = await retrieve_chunks(query=state["query"], top_k=state["top_k"])
+    chunks = await retrieve_chunks(query=state["search_query"], top_k=state["top_k"])
 
     sources = [
         {
@@ -120,6 +144,9 @@ async def _retrieve_node(state: RAGState) -> dict:
             "text_snippet": c.text[:300],
             "score": round(c.score, 4),
             "chunk_id": c.chunk_id,
+            "rerank_score": None if c.rerank_score is None else round(c.rerank_score, 4),
+            "heading": c.heading,
+            "section": c.section,
         }
         for c in chunks
     ]
@@ -150,10 +177,10 @@ async def _generate_node(state: RAGState) -> dict:
     if state["chunks"]:
         context_parts: list[str] = []
         for i, chunk in enumerate(state["chunks"], start=1):
-            header = (
-                f"[Source {i}] {chunk.filename}, page {chunk.page_number} "
-                f"(relevance: {chunk.score:.2f})"
-            )
+            where = chunk.filename
+            if settings.INCLUDE_CHUNK_METADATA_IN_PROMPT:
+                where = " › ".join(p for p in (chunk.filename, chunk.section, chunk.heading) if p)
+            header = f"[Source {i}] {where}, page {chunk.page_number} (relevance: {chunk.score:.2f})"
             context_parts.append(f"{header}\n{chunk.text}")
         context = "\n\n---\n\n".join(context_parts)
     else:
@@ -222,10 +249,12 @@ def _compile_graph():
     graph: StateGraph = StateGraph(RAGState)
 
     graph.add_node("retrieve", _retrieve_node)
+    graph.add_node("rewrite_query", _rewrite_query_node)
     graph.add_node("generate", _generate_node)
     graph.add_node("save_history", _save_history_node)
 
-    graph.add_edge(START, "retrieve")
+    graph.add_edge(START, "rewrite_query")
+    graph.add_edge("rewrite_query", "retrieve")
     graph.add_edge("retrieve", "generate")
     graph.add_edge("generate", "save_history")
     graph.add_edge("save_history", END)
@@ -273,6 +302,8 @@ async def stream_rag(
 
     initial_state: RAGState = {
         "query": query,
+        "search_query": query,
+        "rewrite_applied": False,
         "conversation_id": conversation_id,
         "history_messages": history_messages,
         "top_k": top_k,
@@ -289,8 +320,14 @@ async def stream_rag(
             kind: str = event["event"]
             name: str = event.get("name", "")
 
+            # ── After rewrite node: tell the client what was actually searched ──
+            if kind == "on_chain_end" and name == "rewrite_query":
+                output = event["data"].get("output", {})
+                if output.get("rewrite_applied"):
+                    yield {"type": "query_rewrite", "original": query, "rewritten": output["search_query"]}
+
             # ── After retrieve node: emit sources ──────────────────────────────
-            if kind == "on_chain_end" and name == "retrieve" and not sources_emitted:
+            elif kind == "on_chain_end" and name == "retrieve" and not sources_emitted:
                 output = event["data"].get("output", {})
                 sources: list[dict] = output.get("sources", [])
                 yield {
@@ -300,8 +337,8 @@ async def stream_rag(
                 }
                 sources_emitted = True
 
-            # ── LLM token streaming ────────────────────────────────────────────
-            elif kind == "on_chat_model_stream":
+            # ── LLM token streaming (answer tokens only, never helper models) ───
+            elif kind == "on_chat_model_stream" and event.get("metadata", {}).get("langgraph_node") == "generate":
                 chunk = event["data"].get("chunk")
                 if chunk is None:
                     continue

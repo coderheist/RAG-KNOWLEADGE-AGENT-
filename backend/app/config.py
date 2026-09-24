@@ -36,6 +36,23 @@ class Settings(BaseSettings):
     RETRIEVAL_MAX_GAP: float = 0.05          # maximum score difference from top score to keep a candidate
     MAX_HISTORY_PAIRS: int = 3             # conversation turns kept in context window
 
+    # ── Query rewriting (Phase 2) ─────────────────────────────────────────────
+    ENABLE_QUERY_REWRITE: bool = False       # off = old behaviour; enabled once the eval shows it helps
+    QUERY_REWRITE_MODEL: str = "gemini-flash-lite-latest"
+    QUERY_REWRITE_HISTORY_TURNS: int = 3     # most recent user/assistant turns shown to the rewriter
+    QUERY_REWRITE_MAX_TOKENS: int = 96
+
+    # ── Hybrid search + reranking (Phase 3) — all off by default = old dense-only behaviour ──
+    ENABLE_HYBRID_SEARCH: bool = False       # dense + BM25 sparse, merged with Reciprocal Rank Fusion
+    ENABLE_RERANKING: bool = False           # cross-encoder rerank of the fused candidates
+    INCLUDE_CHUNK_METADATA_IN_PROMPT: bool = False   # heading/section in each context block header
+    SPARSE_MODEL: str = "Qdrant/bm25"
+    RERANKER_PROVIDER: str = "local"
+    RERANKER_MODEL: str = "Xenova/ms-marco-MiniLM-L-6-v2"
+    RERANK_CANDIDATE_COUNT: int = 20         # fused candidates handed to the cross-encoder
+    RRF_K: int = 60
+    CANDIDATE_MULTIPLIER: int = 4            # each retriever fetches top_k * this many candidates
+
     # ── Embedding Resiliency ──────────────────────────────────────────────────
     MAX_EMBED_RETRIES: int = 5
     INITIAL_BACKOFF: float = 1.0

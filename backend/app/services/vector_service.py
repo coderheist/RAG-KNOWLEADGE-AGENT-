@@ -14,9 +14,14 @@ from qdrant_client.http import models as qmodels
 
 from app.config import get_settings
 from app.db.qdrant import get_qdrant_client
+from app.services import sparse
+from app.services.sparse import SPARSE_VECTOR_NAME
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+# IDF is applied by Qdrant at query time; fastembed's BM25 emits term-frequency weights only.
+_SPARSE_CONFIG = {SPARSE_VECTOR_NAME: qmodels.SparseVectorParams(modifier=qmodels.Modifier.IDF)}
 
 NAMESPACE_RAG = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
@@ -57,6 +62,10 @@ async def ensure_collection() -> None:
 
     if collection_name in names:
         logger.debug("Qdrant collection '%s' already exists", collection_name)
+        info = await client.get_collection(collection_name)
+        if SPARSE_VECTOR_NAME not in (info.config.params.sparse_vectors or {}):
+            await client.update_collection(collection_name=collection_name, sparse_vectors_config=_SPARSE_CONFIG)
+            logger.info("Added sparse vector '%s' to existing collection '%s'", SPARSE_VECTOR_NAME, collection_name)
         return
 
     await client.create_collection(
@@ -65,6 +74,8 @@ async def ensure_collection() -> None:
             size=settings.EMBEDDING_DIMENSION,
             distance=qmodels.Distance.COSINE,
         ),
+        # BM25 sparse vector for hybrid search (Phase 3); harmless while unused
+        sparse_vectors_config=_SPARSE_CONFIG,
         # Optimiser settings tuned for read-heavy RAG workloads
         optimizers_config=qmodels.OptimizersConfigDiff(
             indexing_threshold=20_000,
@@ -134,12 +145,40 @@ async def upsert_vectors(points: list[VectorPoint]) -> int:
         wait=True,          # wait for WAL flush — guarantees durability
     )
 
+    if settings.ENABLE_HYBRID_SEARCH:
+        await attach_sparse_vectors([(str(qp.id), p.text) for qp, p in zip(qdrant_points, points, strict=True)])
+
     logger.info(
         "Upserted %d vectors into '%s'",
         len(qdrant_points),
         settings.QDRANT_COLLECTION,
     )
     return len(qdrant_points)
+
+
+async def attach_sparse_vectors(id_text_pairs: list[tuple[str, str]], batch_size: int = 64) -> int:
+    """
+    Compute BM25 sparse vectors locally and attach them to existing points, leaving the dense vector
+    and payload untouched. Used at ingest time and by scripts/reindex_hybrid.py (no re-embedding).
+    """
+    if not id_text_pairs:
+        return 0
+    client = get_qdrant_client()
+    coll = get_settings().QDRANT_COLLECTION
+    for start in range(0, len(id_text_pairs), batch_size):
+        batch = id_text_pairs[start : start + batch_size]
+        vectors = await sparse.embed_documents([text for _, text in batch])
+        ids = [pid for pid, _ in batch]
+        await client.update_vectors(
+            collection_name=coll,
+            points=[
+                qmodels.PointVectors(id=pid, vector={SPARSE_VECTOR_NAME: vec})
+                for pid, vec in zip(ids, vectors, strict=True)
+            ],
+            wait=True,
+        )
+        await client.set_payload(collection_name=coll, payload={"has_sparse": True}, points=ids, wait=True)
+    return len(id_text_pairs)
 
 
 async def delete_by_document_id(document_id: str) -> None:

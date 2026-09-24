@@ -49,6 +49,16 @@ COPY alembic.ini .
 
 # Non-root user for security
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
+# Phase 3 local models (BM25 sparse embedder + cross-encoder reranker), baked in so there are no
+# runtime downloads. Keep the model names in sync with SPARSE_MODEL / RERANKER_MODEL in app/config.py.
+ARG SPARSE_MODEL=Qdrant/bm25
+ARG RERANKER_MODEL=Xenova/ms-marco-MiniLM-L-6-v2
+ENV FASTEMBED_CACHE_PATH=/opt/fastembed_cache
+RUN mkdir -p ${FASTEMBED_CACHE_PATH} \
+ && python -c "from fastembed import SparseTextEmbedding; from fastembed.rerank.cross_encoder import TextCrossEncoder; SparseTextEmbedding('${SPARSE_MODEL}'); TextCrossEncoder('${RERANKER_MODEL}')" \
+ && chown -R appuser:appgroup ${FASTEMBED_CACHE_PATH}
+
 USER appuser
 
 EXPOSE 8000
