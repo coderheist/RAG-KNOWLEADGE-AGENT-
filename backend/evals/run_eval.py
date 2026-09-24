@@ -37,8 +37,10 @@ def percentile(values: list[float], pct: float) -> float | None:
 
 
 async def stream_query(
-    client: httpx.AsyncClient, base_url: str, question: str, top_k: int, history: list[dict] | None = None
+    client: httpx.AsyncClient, base_url: str, question: str, top_k: int, history: list[dict] | None = None,
+    sources_only: bool = False,
 ) -> dict:
+    """POST /query and collect the SSE stream. ``sources_only`` hangs up after retrieval (no generation cost)."""
     payload: dict = {"query": question, "top_k": top_k}
     if history:
         payload["history"] = history
@@ -56,6 +58,8 @@ async def stream_query(
             kind = event.get("type")
             if kind == "sources":
                 out["sources"] = event.get("sources", [])
+                if sources_only:
+                    break
             elif kind == "chunk":
                 if out["ttft_ms"] is None:
                     out["ttft_ms"] = (time.perf_counter() - start) * 1000
@@ -77,7 +81,7 @@ async def query_with_retry(
     """stream_query, retrying per-minute 429s. Daily-quota 429s cannot recover, so they are returned as-is."""
     run: dict = {}
     for attempt in range(attempts):
-        run = await stream_query(client, base_url, question, top_k, history)
+        run = await stream_query(client, base_url, question, top_k, history, sources_only=not need_answer)
         err = run["error"] or ""
         retryable = "429" in err and "PerDay" not in err and (need_answer or not run["sources"])
         if not retryable or attempt == attempts - 1:

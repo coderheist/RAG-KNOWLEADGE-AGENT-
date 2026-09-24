@@ -64,8 +64,12 @@ async def ensure_collection() -> None:
         logger.debug("Qdrant collection '%s' already exists", collection_name)
         info = await client.get_collection(collection_name)
         if SPARSE_VECTOR_NAME not in (info.config.params.sparse_vectors or {}):
-            await client.update_collection(collection_name=collection_name, sparse_vectors_config=_SPARSE_CONFIG)
-            logger.info("Added sparse vector '%s' to existing collection '%s'", SPARSE_VECTOR_NAME, collection_name)
+            # Qdrant cannot add a new vector name to an existing collection, so hybrid search needs a migration.
+            logger.warning(
+                "Collection '%s' has no '%s' sparse vector: dense search works, hybrid search is unavailable. "
+                "Run scripts/reindex_hybrid.py and point QDRANT_COLLECTION at the new collection.",
+                collection_name, SPARSE_VECTOR_NAME,
+            )
         return
 
     await client.create_collection(
@@ -156,7 +160,9 @@ async def upsert_vectors(points: list[VectorPoint]) -> int:
     return len(qdrant_points)
 
 
-async def attach_sparse_vectors(id_text_pairs: list[tuple[str, str]], batch_size: int = 64) -> int:
+async def attach_sparse_vectors(
+    id_text_pairs: list[tuple[str, str]], batch_size: int = 64, collection: str | None = None
+) -> int:
     """
     Compute BM25 sparse vectors locally and attach them to existing points, leaving the dense vector
     and payload untouched. Used at ingest time and by scripts/reindex_hybrid.py (no re-embedding).
@@ -164,7 +170,7 @@ async def attach_sparse_vectors(id_text_pairs: list[tuple[str, str]], batch_size
     if not id_text_pairs:
         return 0
     client = get_qdrant_client()
-    coll = get_settings().QDRANT_COLLECTION
+    coll = collection or get_settings().QDRANT_COLLECTION
     for start in range(0, len(id_text_pairs), batch_size):
         batch = id_text_pairs[start : start + batch_size]
         vectors = await sparse.embed_documents([text for _, text in batch])
