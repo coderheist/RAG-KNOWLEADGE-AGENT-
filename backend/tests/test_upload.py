@@ -1,62 +1,22 @@
-"""
-Test script — runs inside the Docker container.
-Uploads the test PDF to POST /upload and verifies the full pipeline.
-"""
-import json
-import urllib.request
+"""Upload the fixture PDF to POST /upload and verify the ingestion pipeline result."""
+from pathlib import Path
 
-PDF_PATH = "test.pdf"
+import httpx
+import pytest
+
+pytestmark = pytest.mark.integration
+
+PDF_PATH = Path(__file__).parent / "fixtures" / "test.pdf"
 URL = "http://localhost:8000/upload"
-BOUNDARY = "----FormBoundary7MA4YWxkTrZu0gW"
 
-with open(PDF_PATH, "rb") as f:
-    pdf_bytes = f.read()
 
-# Build multipart body manually (no external deps)
-boundary_bytes = BOUNDARY.encode()
-body = (
-    b"--" + boundary_bytes + b"\r\n"
-    b'Content-Disposition: form-data; name="files"; filename="test_upload.pdf"\r\n'
-    b"Content-Type: application/pdf\r\n"
-    b"\r\n"
-    + pdf_bytes
-    + b"\r\n"
-    b"--" + boundary_bytes + b"--\r\n"
-)
+def test_upload_pdf_runs_full_pipeline() -> None:
+    with httpx.Client(timeout=120) as client, PDF_PATH.open("rb") as f:
+        resp = client.post(URL, files={"files": ("test_upload.pdf", f, "application/pdf")})
 
-req = urllib.request.Request(
-    URL,
-    data=body,
-    headers={"Content-Type": f"multipart/form-data; boundary={BOUNDARY}"},
-    method="POST",
-)
+    assert resp.status_code == 200, resp.text
+    doc = resp.json()["documents"][0]
 
-print(f"Uploading {len(pdf_bytes):,} byte PDF to {URL} ...")
-try:
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        result = json.loads(resp.read())
-        print("\n=== Upload Response ===")
-        print(json.dumps(result, indent=2, default=str))
-
-        # Verify pipeline
-        doc = result["documents"][0]
-        status = doc["status"]
-        chunk_count = doc.get("chunk_count", 0)
-        page_count = doc.get("page_count", 0)
-
-        print("\n=== Pipeline Verification ===")
-        print(f"  status      : {status}")
-        print(f"  page_count  : {page_count}")
-        print(f"  chunk_count : {chunk_count}")
-
-        assert status == "completed", f"FAIL — status is {status!r}, error: {doc.get('error')}"
-        assert chunk_count > 0, f"FAIL — chunk_count is {chunk_count}"
-        assert page_count > 0, f"FAIL — page_count is {page_count}"
-
-        print("\nALL CHECKS PASSED - upload pipeline is working correctly")
-except urllib.error.HTTPError as e:
-    body = e.read().decode()
-    print(f"HTTP {e.code}: {body}")
-except Exception as exc:
-    print(f"ERROR: {exc}")
-    raise
+    assert doc["status"] in ("completed", "already_exists"), f"unexpected status {doc['status']!r}: {doc.get('error')}"
+    assert doc["chunk_count"] > 0, f"chunk_count is {doc['chunk_count']}"
+    assert doc["page_count"] > 0, f"page_count is {doc['page_count']}"

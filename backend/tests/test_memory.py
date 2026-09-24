@@ -18,7 +18,10 @@ async def _stream_query(client: httpx.AsyncClient, **payload) -> dict:
     async for line in resp.aiter_lines():
         if not line or "data: " not in line:
             continue
-        data = json.loads(line.replace("data: ", "", 1))
+        payload = line.replace("data: ", "", 1)
+        if payload == "[DONE]":
+            break
+        data = json.loads(payload)
         if data.get("type") == "chunk":
             answer += data.get("content", "")
         elif data.get("type") == "done":
