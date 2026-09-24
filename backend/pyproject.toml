@@ -5,6 +5,11 @@ extend-exclude = ["alembic/versions"]
 [tool.ruff.lint]
 select = ["E", "F", "I"]
 
+[tool.ruff.lint.per-file-ignores]
+# Prompt and document-template literals: wrapping would change their content.
+"evals/corpus_data.py" = ["E501"]
+"evals/metrics/generation.py" = ["E501"]
+
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true

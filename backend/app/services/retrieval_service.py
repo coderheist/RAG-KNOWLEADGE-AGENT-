@@ -28,6 +28,7 @@ class RetrievedChunk:
     chunk_index: int
     text: str
     score: float   # cosine similarity (0 – 1)
+    chunk_id: str = ""   # deterministic Qdrant point id (see vector_service.generate_point_id)
 
 
 async def retrieve_chunks(
@@ -121,6 +122,7 @@ async def retrieve_chunks(
                 chunk_index=int(payload.get("chunk_index", 0)),
                 text=payload.get("text", ""),
                 score=float(hit.score),
+                chunk_id=str(hit.id),
             ))
             
         if valid_candidates:

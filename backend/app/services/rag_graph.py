@@ -119,6 +119,7 @@ async def _retrieve_node(state: RAGState) -> dict:
             "chunk_index": c.chunk_index,
             "text_snippet": c.text[:300],
             "score": round(c.score, 4),
+            "chunk_id": c.chunk_id,
         }
         for c in chunks
     ]

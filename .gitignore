@@ -44,3 +44,10 @@ backend/venv/
 backend/.venv/
 backend/*.egg-info/
 backend/alembic/versions/__pycache__/
+
+# ── Eval harness (generated / cached) ─────────────────────────────
+backend/evals/corpus/
+backend/evals/.cache/
+
+# ── Local tooling ─────────────────────────────────────────────────
+.claude/
