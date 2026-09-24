@@ -135,27 +135,34 @@ async def run_case(row: dict, args: argparse.Namespace, client: httpx.AsyncClien
     )
 
     if not args.no_judge and not run["error"]:
-        texts = await fetch_chunk_texts(client, args.qdrant_url, args.collection, retrieved)
-        contexts = [
-            {
-                "filename": s["filename"],
-                "page_number": s["page_number"],
-                "text": texts.get(s.get("chunk_id", ""), s["text_snippet"]),
-            }
-            for s in run["sources"]
-        ]
-        judged = await judge_answer(row["question"], run["answer"], contexts, args.judge_model)
-        cite = await citation_accuracy(run["answer"], contexts, judged["refused"], args.judge_model)
-        refusal = refusal_correctness(row["category"], judged["refused"])
-        for name, scored in (
-            ("faithfulness", judged["faithfulness"]), ("answer_relevance", judged["answer_relevance"]),
-            ("context_precision", judged["context_precision"]), ("citation_accuracy", cite),
-            ("refusal_correctness", refusal),
-        ):
-            m[name] = scored.score
-            result["reasons"][name] = scored.reason
-        result["refused"] = judged["refused"]
+        try:
+            await judge_case(row, run, result, args, client)
+        except Exception as exc:  # one bad judge response must not abort a 60-case run
+            result["judge_error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
     return result
+
+
+async def judge_case(row: dict, run: dict, result: dict, args: argparse.Namespace, client: httpx.AsyncClient) -> None:
+    texts = await fetch_chunk_texts(client, args.qdrant_url, args.collection, result["retrieved_chunk_ids"])
+    contexts = [
+        {
+            "filename": s["filename"],
+            "page_number": s["page_number"],
+            "text": texts.get(s.get("chunk_id", ""), s["text_snippet"]),
+        }
+        for s in run["sources"]
+    ]
+    judged = await judge_answer(row["question"], run["answer"], contexts, args.judge_model)
+    cite = await citation_accuracy(run["answer"], contexts, judged["refused"], args.judge_model)
+    refusal = refusal_correctness(row["category"], judged["refused"])
+    for name, scored in (
+        ("faithfulness", judged["faithfulness"]), ("answer_relevance", judged["answer_relevance"]),
+        ("context_precision", judged["context_precision"]), ("citation_accuracy", cite),
+        ("refusal_correctness", refusal),
+    ):
+        result["metrics"][name] = scored.score
+        result["reasons"][name] = scored.reason
+    result["refused"] = judged["refused"]
 
 
 def mean(values: list[float]) -> float | None:
@@ -197,7 +204,8 @@ def aggregate(cases: list[dict]) -> dict:
             "ttft_p50": percentile(ttfts, 50),
         },
         "n_cases": len(cases), "n_errors": sum(1 for c in cases if c["error"]),
-        "n_generation_errors": sum(1 for c in cases if c.get("generation_error")), "warnings": warnings,
+        "n_generation_errors": sum(1 for c in cases if c.get("generation_error")),
+        "n_judge_errors": sum(1 for c in cases if c.get("judge_error")), "warnings": warnings,
     }
 
 
@@ -301,7 +309,7 @@ async def main_async(args: argparse.Namespace) -> int:
     baseline = load_results(args.compare) if args.compare else None
     print(
         f"\n{agg['n_cases']} cases, {agg['n_errors']} errors, "
-        f"{agg['n_generation_errors']} generation errors -> {path.name}\n"
+        f"{agg['n_generation_errors']} generation errors, {agg['n_judge_errors']} judge errors -> {path.name}\n"
     )
     print_summary(agg, args.tag, baseline, args.compare)
     print_by_category(agg)

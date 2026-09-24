@@ -15,7 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 CACHE_DIR = Path(__file__).resolve().parent.parent / ".cache"
-DEFAULT_JUDGE_MODEL = "gemini-2.5-flash"
+# Quotas are per model, and older flash models are unavailable to newer accounts; override with EVAL_JUDGE_MODEL.
+DEFAULT_JUDGE_MODEL = os.environ.get("EVAL_JUDGE_MODEL", "gemini-flash-lite-latest")
 
 # Matches "(report.pdf, p. 7)" and "(a.md, p. 1)" style citations.
 CITATION_RE = re.compile(r"\(([^(),]+\.[A-Za-z0-9]+),\s*p\.\s*(\d+)\)")
@@ -113,6 +114,8 @@ async def judge_answer(question: str, answer: str, chunks: list[dict], model: st
     """faithfulness / answer_relevance / context_precision as Scored, plus refused: bool."""
     prompt = _MAIN_PROMPT.format(question=question, context=format_context(chunks), answer=answer)
     raw = await _judge_json(prompt, model)
+    if not isinstance(raw, dict):
+        raise ValueError(f"judge returned {type(raw).__name__}, expected a JSON object")
 
     def field(name: str) -> Scored:
         item = raw.get(name) or {}
@@ -151,7 +154,8 @@ async def citation_accuracy(answer: str, chunks: list[dict], refused: bool, mode
     if to_check:
         items = "\n\n".join(f"{i}. CLAIM: {claim}\n   CITED CHUNK TEXT: {text}" for i, claim, text in to_check)
         raw = await _judge_json(_CITATION_PROMPT.format(items=items), model)
-        supported = sum(1 for v in raw.get("verdicts", []) if v.get("supported"))
+        verdicts = raw if isinstance(raw, list) else raw.get("verdicts", [])   # models return either shape
+        supported = sum(1 for v in verdicts if isinstance(v, dict) and v.get("supported"))
     missing = len(citations) - len(to_check)
     reason = f"{supported}/{len(citations)} citations supported; {missing} cite a source that was not retrieved"
     return Scored(supported / len(citations), reason)
