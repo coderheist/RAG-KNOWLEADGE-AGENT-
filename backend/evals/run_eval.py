@@ -266,6 +266,34 @@ def print_by_category(current: dict) -> None:
         print(f"{name:22s}" + "".join(f"{fmt(cats[c].get(name)):>14s}" for c in cats))
 
 
+def check_regression(current: dict, baseline: dict, max_drop: float) -> list[str]:
+    """Overall quality metrics may not fall more than ``max_drop`` (fraction) below the reference run."""
+    failures = []
+    for name, value in current["overall"].items():
+        ref = baseline["aggregates"]["overall"].get(name)
+        if value is None or ref is None or ref <= 0 or name == "no_retrieval":
+            continue
+        if value < ref * (1 - max_drop):
+            failures.append(f"{name} fell {ref:.3f} -> {value:.3f} (more than {max_drop:.0%} below the reference)")
+    return failures
+
+
+def markdown_table(current: dict, tag: str, baseline: dict | None, base_tag: str | None) -> str:
+    if baseline:
+        header = f"| Metric | {base_tag} | {tag} | delta |\n|---|---|---|---|"
+    else:
+        header = f"| Metric | {tag} |\n|---|---|"
+    rows = []
+    for name, value in current["overall"].items():
+        if baseline:
+            ref = baseline["aggregates"]["overall"].get(name)
+            delta = "-" if ref is None or value is None else f"{value - ref:+.3f}"
+            rows.append(f"| {name} | {fmt(ref)} | {fmt(value)} | {delta} |")
+        else:
+            rows.append(f"| {name} | {fmt(value)} |")
+    return "\n".join([header, *rows]) + "\n"
+
+
 def check_fail_under(current: dict, thresholds: list[str]) -> list[str]:
     failures = []
     for spec in thresholds:
@@ -323,6 +351,10 @@ async def main_async(args: argparse.Namespace) -> int:
         print(f"GENERATION FAILED on {len(gen_errors)} cases, e.g. {gen_errors[0]['generation_error'].splitlines()[0]}")
 
     failures = check_fail_under(agg, args.fail_under or [])
+    if args.max_regression is not None and baseline:
+        failures += check_regression(agg, baseline, args.max_regression)
+    if args.markdown_out:
+        Path(args.markdown_out).write_text(markdown_table(agg, args.tag, baseline, args.compare))
     for f in failures:
         print(f"FAIL: {f}")
     generation_broke_judging = agg["n_generation_errors"] and not args.no_judge
@@ -339,6 +371,10 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument(
         "--fail-under", action="append", metavar="METRIC=VALUE", help="exit non-zero if an overall metric is lower"
     )
+    ap.add_argument(
+        "--max-regression", type=float, help="with --compare: fail if any metric drops by more than this fraction"
+    )
+    ap.add_argument("--markdown-out", help="write the comparison table as markdown (for a PR comment)")
     ap.add_argument("--limit", type=int, help="stratified subset size (e.g. 20 for CI smoke)")
     ap.add_argument("--categories", help="comma-separated category filter")
     ap.add_argument("--no-judge", action="store_true", help="skip LLM-judged metrics (retrieval only)")

@@ -23,6 +23,26 @@ Build AI-powered knowledge assistants capable of ingesting, indexing, retrieving
 
 ---
 
+# 📊 Results
+
+Every retrieval or generation change is measured on a 62-case golden set (`backend/evals/datasets/golden_v1.jsonl`)
+through the real `/query` endpoint. Numbers come from result files in `backend/evals/results/`; rows fill in as each
+change is measured, and a change that does not help is reported as such.
+
+| Configuration | recall@5 | MRR | faithfulness | citation acc. | p50 latency |
+|---|---|---|---|---|---|
+| Baseline (dense only) | 0.745 | 0.670 | 0.967 | 0.700 | 3.9 s |
+| + query rewriting | — | — | — | — | — |
+| + hybrid search | — | — | — | — | — |
+| + cross-encoder rerank | — | — | — | — | — |
+| + agentic self-correction | — | — | — | — | — |
+
+Baseline weak spots (recall@5 by category): exact terms 0.583, follow-up questions 0.300, versus 1.000 for factual and
+multi-hop lookups. Those two categories are what the next changes target. Corpus: ~90 chunks of synthetic documents
+with deliberately look-alike identifiers (near-identical error codes and SKUs), so retrieval is not trivially easy.
+
+---
+
 # 📖 Overview
 
 Production RAG Agent is a full-stack enterprise-ready Retrieval-Augmented Generation (RAG) system designed to build intelligent AI assistants over private documents.

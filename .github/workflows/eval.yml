@@ -1,0 +1,81 @@
+name: Eval
+
+# Runs a 20-case stratified smoke eval against a real stack and compares it with the committed
+# reference run (backend/evals/results/ci_reference_*.json). The full 62-case set is too slow and too
+# expensive for every PR. Needs the GOOGLE_API_KEY repository secret; forks (no secrets) skip cleanly.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  smoke-eval:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      GEMINI_MODEL: gemini-flash-lite-latest
+      POSTGRES_PASSWORD: ci-password
+      POSTGRES_HOST: localhost
+      QDRANT_HOST: localhost
+      EVAL_BASE_URL: http://localhost:8000
+      EVAL_QDRANT_URL: http://localhost:6333
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: raguser
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: ragdb
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U raguser -d ragdb" --health-interval 5s --health-timeout 5s --health-retries 10
+      qdrant:
+        image: qdrant/qdrant:v1.12.4
+        ports: ["6333:6333"]
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Skip when the API key secret is unavailable (forked PRs)
+        if: env.GOOGLE_API_KEY == ''
+        working-directory: .
+        run: echo "GOOGLE_API_KEY not available - skipping the smoke eval."
+
+      - uses: actions/checkout@v4
+        if: env.GOOGLE_API_KEY != ''
+      - uses: actions/setup-python@v5
+        if: env.GOOGLE_API_KEY != ''
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Install
+        if: env.GOOGLE_API_KEY != ''
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libpq-dev tesseract-ocr
+          pip install -r requirements-dev.txt
+      - name: Start the API
+        if: env.GOOGLE_API_KEY != ''
+        run: |
+          nohup uvicorn app.main:app --port 8000 > api.log 2>&1 &
+          for i in $(seq 1 40); do curl -sf localhost:8000/health && break; sleep 3; done
+          curl -sf localhost:8000/health
+      - name: Index the fixture corpus
+        if: env.GOOGLE_API_KEY != ''
+        run: python -m evals.setup_corpus --dataset golden_v1
+      - name: Smoke eval (20 cases) vs reference
+        if: env.GOOGLE_API_KEY != ''
+        run: |
+          python -m evals.run_eval --dataset golden_v1 --tag pr --limit 20 --concurrency 2 \
+            --compare ci_reference --max-regression 0.05 --markdown-out eval_comment.md
+      - name: Comment the comparison table on the PR
+        if: always() && env.GOOGLE_API_KEY != '' && hashFiles('backend/eval_comment.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment ${{ github.event.pull_request.number }} --body-file eval_comment.md
+      - name: API log on failure
+        if: failure()
+        run: tail -100 api.log

@@ -196,3 +196,36 @@ retrieved on 5 of 5 scored (the baseline has no router).
 
 **Next:** re-index the hardened corpus, record the retrieval baseline, then continue with the phases
 whose exit gates are retrieval metrics (2, 3) while flagging the quota blocker for the owner.
+
+### Phase 1 · Iteration 2 · 2026-09-24
+
+**Changed:**
+- Quotas are per model. `gemini-3.5-flash` (the app's model) had its 20/day spent, but
+  `gemini-flash-lite-latest` still had quota, so the eval loop now uses it for generation and judging
+  (`GEMINI_MODEL` in the local, gitignored `backend/.env`; judge default via `EVAL_JUDGE_MODEL`).
+  `gemini-2.5-flash`, `gemini-2.5-flash-lite` and `gemini-2.0-flash` all return 404 "no longer available
+  to new users" on this account, so the spec's `QUERY_REWRITE_MODEL=gemini-2.0-flash` and this repo's
+  `.env.example` model are invalid here; the rewrite default is now `gemini-flash-lite-latest`.
+- Hardened corpus indexed (~90 chunks); `relevant_chunk_ids` re-derived for all 47 answerable cases.
+- First full judged run crashed 20 minutes in: the citation judge returned a bare JSON list and an
+  uncaught `AttributeError` aborted the whole run. Fixed both the parser (accepts either shape) and the
+  runner (a judge failure now records `judge_error` for that case and the run continues).
+- Added the runner flags CI needs (`--max-regression`, `--markdown-out`) and the two workflows
+  (`ci.yml`: lint, types, unit tests, frontend build; `eval.yml`: 20-case stratified smoke eval vs a
+  committed reference, PR comment). They have not run: nothing is pushed until the owner confirms.
+
+**Eval:** `backend/evals/results/baseline_20260924_052025.json` — dense-only, no rewrite, ~90-chunk corpus,
+62 cases, 0 errors, 1 judge error.
+recall@5 0.745 | MRR 0.670 | nDCG@5 0.687 | precision@5 0.162 | faithfulness 0.967 |
+answer relevance 0.877 | context precision 0.388 | citation accuracy 0.700 | refusal correctness 0.787 |
+p50 latency 3.9 s. By category, recall@5: factual 1.000, multi_hop 1.000, exact_term 0.583,
+follow_up 0.300. Chitchat: 2 of 7 cases already retrieve nothing (score floor), the rest do.
+
+**Threshold:** MET — harness runs end to end on all golden cases, baseline written, no NaN or
+zero-variance warnings. Recall 0.745 is well under the 0.9 "too easy" ceiling.
+**Not verifiable locally:** "CI runs on every PR and shows a green check" (definition of done 1.5) —
+needs the repo on GitHub, which the spec defers to the end. `ci_reference_*.json` (the 20-case reference
+the eval workflow compares against) still has to be generated with `--limit 20 --tag ci_reference`.
+Tagged `phase-1-complete`.
+
+**Next:** Phase 2 — measure query rewriting on the follow_up subset with the flag off vs on.
