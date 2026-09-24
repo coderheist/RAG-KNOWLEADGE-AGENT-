@@ -45,8 +45,9 @@ from typing import AsyncGenerator
 
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
-from app.schemas.query import QueryRequest, SSEThinking
+from app.schemas.query import HistoryTurn, QueryRequest, SSEThinking
 from app.services.conversation_service import get_or_create_conversation, load_history
 from app.services.rag_graph import stream_rag
 from app.utils.logging import get_logger
@@ -66,11 +67,16 @@ def _sse(payload: dict | str) -> str:
 
 # Streaming generator ──────────────────────────────────────────────────────────
 
+def _client_history(turns: list[HistoryTurn]) -> list[BaseMessage]:
+    return [HumanMessage(content=t.content) if t.role == "user" else AIMessage(content=t.content) for t in turns]
+
+
 async def _generate_sse(
     request: Request,
     query: str,
     conversation_id: uuid.UUID | None,
     top_k: int,
+    client_history: list[HistoryTurn] | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Async generator that drives the entire RAG pipeline and yields raw SSE
@@ -89,7 +95,10 @@ async def _generate_sse(
     # ── 1+2. Conversation setup ───────────────────────────────────────────────
     try:
         conv_id = await get_or_create_conversation(conversation_id)
-        history = await load_history(conv_id)
+        if conversation_id is None and client_history:
+            history = _client_history(client_history)
+        else:
+            history = await load_history(conv_id)
     except Exception as exc:
         logger.exception("Conversation setup failed: %s", exc)
         yield _sse({"type": "error", "message": f"Conversation setup failed: {exc}"})
@@ -167,6 +176,7 @@ async def query_endpoint(
             query=body.query,
             conversation_id=body.conversation_id,
             top_k=body.top_k,
+            client_history=body.history,
         ),
         media_type="text/event-stream",
         headers={

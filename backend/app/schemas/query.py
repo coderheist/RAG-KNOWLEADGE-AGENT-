@@ -9,6 +9,13 @@ from pydantic import BaseModel, Field
 
 # ── Request ───────────────────────────────────────────────────────────────────
 
+class HistoryTurn(BaseModel):
+    """One prior conversation turn supplied by the client."""
+
+    role: Literal["user", "assistant"]
+    content: str = Field(..., max_length=8192)
+
+
 class QueryRequest(BaseModel):
     """Body accepted by POST /query."""
 
@@ -30,6 +37,13 @@ class QueryRequest(BaseModel):
         ge=1,
         le=20,
         description="Number of document chunks to retrieve from the vector store.",
+    )
+    history: list[HistoryTurn] | None = Field(
+        None,
+        description=(
+            "Optional prior turns supplied by the client. Used instead of stored history when "
+            "no conversation_id is given (stateless clients, evaluation)."
+        ),
     )
 
     model_config = {
