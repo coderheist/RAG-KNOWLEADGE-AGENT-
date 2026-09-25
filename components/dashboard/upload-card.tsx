@@ -83,17 +83,17 @@ export function UploadCard({ disabled, onUploadComplete }: UploadCardProps) {
           throw new Error(errMsg);
         }
 
-        if (alreadyExistsCount > 0 && succeededCount === 0) {
-          toast.info("Already Indexed");
-        } else if (alreadyExistsCount > 0) {
-          toast.success(`${succeededCount} files uploaded, ${alreadyExistsCount} files Already Indexed`);
-        } else {
-          toast.success(
-            uploadableFiles.length === 1
-              ? `"${uploadableFiles[0].name}" uploaded successfully`
-              : `${uploadableFiles.length} files uploaded successfully`
-          );
-        }
+        // Say what happened to each file, e.g. "Indexed pricing.xlsx · 142 chunks".
+        const describe = (doc: (typeof results)[number]) =>
+          doc.status === "already_exists"
+            ? `${doc.name} is already indexed`
+            : doc.status === "processing"
+              ? `Processing ${doc.name}…`
+              : `Indexed ${doc.name} · ${doc.chunks} chunk${doc.chunks === 1 ? "" : "s"}`;
+        const lines = results.map(describe);
+        const notify = alreadyExistsCount > 0 && succeededCount === 0 ? toast.info : toast.success;
+        if (lines.length === 1) notify(lines[0]);
+        else notify(`${succeededCount} of ${results.length} files indexed`, { description: lines.join(" · ") });
 
         refresh();
         onUploadComplete?.();

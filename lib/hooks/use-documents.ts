@@ -44,5 +44,5 @@ export function useDocuments(options?: { pollProcessing?: boolean }) {
     return () => clearInterval(interval);
   }, [documents, options?.pollProcessing, refetch]);
 
-  return { documents, stats, loading, error, refetch };
+  return { documents, setDocuments, stats, loading, error, refetch };
 }

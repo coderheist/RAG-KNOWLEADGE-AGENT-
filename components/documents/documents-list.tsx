@@ -48,20 +48,23 @@ const statusConfig: Record<
 
 export function DocumentsList() {
   const { refresh } = useApp();
-  const { documents, loading, error, refetch } = useDocuments({
+  const { documents, setDocuments, loading, error } = useDocuments({
     pollProcessing: true,
   });
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Optimistic: the row disappears at once and comes back if the API refuses.
   const handleDelete = async (id: string, name: string) => {
+    const previous = documents;
     setDeletingId(id);
+    setDocuments(previous.filter((d) => d.id !== id));
     try {
       await deleteDocument(id);
-      toast.success(`"${name}" deleted`);
+      toast.success(`Deleted ${name} and its indexed chunks`);
       refresh();
-      refetch();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Delete failed");
+      setDocuments(previous);
+      toast.error(`Could not delete ${name}: ${err instanceof Error ? err.message : "unknown error"}`);
     } finally {
       setDeletingId(null);
     }
