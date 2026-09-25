@@ -219,6 +219,10 @@ export function normalizeSources(raw: unknown): QuerySource[] {
       ]),
       page: pick<number>(obj, ["page", "page_number"]),
       score: pick<number>(obj, ["score", "relevance"]),
+      chunkId: pick<string>(obj, ["chunk_id", "chunkId"]) || undefined,
+      heading: pick<string>(obj, ["heading"]) || undefined,
+      section: pick<string>(obj, ["section"]) || undefined,
+      rerankScore: pick<number>(obj, ["rerank_score", "rerankScore"]) ?? undefined,
     };
   });
 }

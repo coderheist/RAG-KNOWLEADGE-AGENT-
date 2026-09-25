@@ -32,6 +32,32 @@ export interface QuerySource {
   chunkText?: string;
   page?: number;
   score?: number;
+  chunkId?: string;
+  heading?: string;
+  section?: string;
+  /** Cross-encoder score, present only when reranking is enabled on the backend. */
+  rerankScore?: number;
+}
+
+/** What the agent is doing right now, shown while an answer streams. */
+export type ChatStatus =
+  | "idle"
+  | "thinking"
+  | "searching"
+  | "generating"
+  | "complete"
+  | "error";
+
+export interface CitationClaim {
+  text: string;
+  sourceIds: number[];
+}
+
+export interface CitationInfo {
+  claims: CitationClaim[];
+  confidence?: "high" | "medium" | "low";
+  droppedSourceIds: number;
+  invalidInline: { filename: string; page: number }[];
 }
 
 export interface HealthInfo {
@@ -51,6 +77,17 @@ export interface ChatMessage {
   sources?: QuerySource[];
   isStreaming?: boolean;
   error?: string;
+  status?: ChatStatus;
+  /** Human-readable description of the current step, e.g. "Searching for: ...". */
+  statusDetail?: string;
+  /** The question this answer responds to, kept so it can be regenerated. */
+  question?: string;
+  rewrite?: { original: string; rewritten: string };
+  /** true/false once the backend's groundedness check ran; null if the check itself failed. */
+  grounded?: boolean | null;
+  citations?: CitationInfo;
+  timingsMs?: Record<string, number>;
+  feedback?: "up" | "down";
 }
 
 export const quickActions = [

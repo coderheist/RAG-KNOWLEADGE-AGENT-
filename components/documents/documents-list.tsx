@@ -18,6 +18,7 @@ import { useDocuments } from "@/lib/hooks/use-documents";
 import type { DocumentStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDelete } from "@/components/ui/confirm-delete";
 import {
   Card,
   CardContent,
@@ -127,19 +128,25 @@ export function DocumentsList() {
                     </div>
                   </div>
                   <Badge variant={status.variant}>{status.label}</Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                    disabled={deletingId === doc.id}
-                    onClick={() => handleDelete(doc.id, doc.name)}
+                  <ConfirmDelete
+                    title={`Delete "${doc.name}"?`}
+                    description="The document and its indexed chunks are removed. Answers will no longer cite it."
+                    onConfirm={() => handleDelete(doc.id, doc.name)}
                   >
-                    {deletingId === doc.id ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="size-4" />
-                    )}
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Delete ${doc.name}`}
+                      className="shrink-0 text-muted-foreground hover:text-destructive"
+                      disabled={deletingId === doc.id}
+                    >
+                      {deletingId === doc.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-4" />
+                      )}
+                    </Button>
+                  </ConfirmDelete>
                 </motion.li>
               );
             })}

@@ -21,6 +21,7 @@ import { useCollections } from "@/lib/hooks/use-collections";
 import { useDocuments } from "@/lib/hooks/use-documents";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDelete } from "@/components/ui/confirm-delete";
 import {
   Card,
   CardContent,
@@ -211,21 +212,25 @@ export function CollectionsManager() {
                     >
                       {isActive ? "Clear Active" : "Set Active"}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-muted-foreground hover:text-destructive"
-                      disabled={deletingId === collection.id}
-                      onClick={() =>
-                        handleDeleteCollection(collection.id, collection.name)
-                      }
+                    <ConfirmDelete
+                      title={`Delete collection "${collection.name}"?`}
+                      description="This permanently deletes the collection and every indexed chunk stored in it. It cannot be undone."
+                      onConfirm={() => handleDeleteCollection(collection.id, collection.name)}
                     >
-                      {deletingId === collection.id ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="size-4" />
-                      )}
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        aria-label={`Delete collection ${collection.name}`}
+                        className="text-muted-foreground hover:text-destructive"
+                        disabled={deletingId === collection.id}
+                      >
+                        {deletingId === collection.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="size-4" />
+                        )}
+                      </Button>
+                    </ConfirmDelete>
                   </CardContent>
                 </Card>
               </motion.div>

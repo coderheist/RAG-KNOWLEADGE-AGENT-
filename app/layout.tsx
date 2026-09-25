@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { AppProvider } from "@/lib/context/app-context";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -25,14 +26,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <AppProvider>
-          {children}
-          <Toaster richColors closeButton />
-        </AppProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <AppProvider>
+            {children}
+            <Toaster richColors closeButton />
+          </AppProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
