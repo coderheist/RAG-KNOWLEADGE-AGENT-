@@ -316,3 +316,41 @@ generation, so it needs judged runs; default stays off until then.
 
 **Next:** Phase 4 — the agentic graph (router, chunk grading with a capped retry loop, grounded-answer check,
 verified citations).
+
+### Phase 4 · Iteration 1 · 2026-09-25
+
+**Built (commits 41ccad9, bb93648):** router (`needs_retrieval | chitchat | clarification_needed`) with a
+no-retrieval `direct_response` path; chunk grading with a capped retry loop (`MAX_RETRIEVAL_LOOPS=2`, weak =
+fewer than `MIN_RELEVANT_CHUNKS=1` chunks graded relevant); groundedness check that appends a visible caveat;
+verified structured citations (source ids validated server-side). Every step is behind its own flag and fails
+open. Graph diagram is in the README.
+
+**Eval (`ag_full`, judged, 62 cases, 0 errors; all three flags on, vs `jd_hybrid` = hybrid + rewriting):**
+| metric | jd_hybrid | ag_full | threshold |
+|---|---|---|---|
+| faithfulness | 0.968 | 0.968 | ≥ 0.90 ✅ |
+| refusal_correctness | 0.952 | 0.919 | ≥ 0.95 ❌ |
+| citation_accuracy | 0.841 | 0.881 | ≥ 0.90 ❌ |
+| chitchat with zero retrieval | 2/7 | 7/7 | all ✅ |
+| recall@5 | 0.936 | 0.915 | — |
+| p50 latency | 3.2 s | 12.5 s | report |
+Loop termination at the cap is covered by `test_loop_terminates_at_the_cap_even_when_grading_is_always_weak`.
+The first attempt of this run was stopped and discarded: at concurrency 2 the agent (≈5 LLM calls per question
+plus 2 judge calls) exceeded the Gemini free-tier *per-minute* quota. `run_eval --delay 30 --concurrency 1`
+paces it; the kept run logged 11 backend 429s, all absorbed by retries (0 case errors). The p50 includes those
+retry waits and 3–4 extra sequential LLM calls, so it overstates steady-state latency on a paid tier.
+
+**Diagnosis:** both lost refusal points are exact-term questions whose correct chunk *was* retrieved on the first
+attempt. q_028 (E-4292): the grader rated the attempt weak, the retry rewrite drifted to "E-4292 error code
+troubleshooting", and the final context no longer held the answer chunk. q_034 (HW-FN-7701): the right chunk
+was retrieved but graded irrelevant, so generation got an empty context and refused. Both are the same design
+flaw: the final context was only the last attempt, filtered by grades. A related latent bug: grading filtered
+chunks *after* the `sources` event, so `[Source N]` in the answer could point at a different chunk than the UI
+showed.
+
+**Changed (commit 45a8471):** keep `(chunk, grade)` from every attempt and choose the final context from that
+pool (relevant, then partial, else everything retrieved, capped at top_k); retry rewrites re-append identifiers
+the model dropped; a final `sources` event carries exactly the context the model sees. Recall in later runs is
+therefore measured on the final context rather than the raw first retrieval.
+
+**Next:** iteration 2 — re-run the same judged eval (`ag_full2`).
