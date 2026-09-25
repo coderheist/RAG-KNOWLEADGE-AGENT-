@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   AlertCircle,
   Clock,
@@ -105,11 +104,8 @@ export function DocumentsList() {
               const status = statusConfig[doc.status];
 
               return (
-                <motion.li
+                <li
                   key={doc.id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.03 }}
                   className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-muted/40"
                 >
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -147,7 +143,7 @@ export function DocumentsList() {
                       )}
                     </Button>
                   </ConfirmDelete>
-                </motion.li>
+                </li>
               );
             })}
           </ul>

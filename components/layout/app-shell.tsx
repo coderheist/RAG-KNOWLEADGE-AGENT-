@@ -10,11 +10,6 @@ export function AppShell({
 }) {
   return (
     <div className="min-h-screen bg-background">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 right-0 h-[500px] w-[500px] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-40 left-0 h-[400px] w-[400px] rounded-full bg-violet-500/5 blur-3xl" />
-      </div>
-
       <AppHeader activePath={activePath} />
       <CommandPalette />
 

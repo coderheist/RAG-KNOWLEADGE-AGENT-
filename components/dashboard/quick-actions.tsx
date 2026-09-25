@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   Upload,
   MessageSquare,
@@ -29,10 +28,7 @@ const iconMap = {
 
 export function QuickActions() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.15 }}
+    <div
     >
       <Card>
         <CardHeader>
@@ -62,7 +58,7 @@ export function QuickActions() {
                     className={cn(
                       "mt-0.5 truncate text-xs",
                       isPrimary
-                        ? "text-primary-foreground/70"
+                        ? "text-primary-foreground/90"
                         : "text-muted-foreground"
                     )}
                   >
@@ -81,11 +77,8 @@ export function QuickActions() {
             );
 
             return (
-              <motion.div
+              <div
                 key={action.id}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.2 + index * 0.05 }}
               >
                 {action.id === "upload" ? (
                   <Button
@@ -107,11 +100,11 @@ export function QuickActions() {
                     <Link href={action.href}>{content}</Link>
                   </Button>
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }

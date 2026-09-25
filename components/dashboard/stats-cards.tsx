@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { AlertCircle, FileText, HardDrive, Layers } from "lucide-react";
 import {
   Card,
@@ -58,11 +57,8 @@ export function StatsCards({ stats, loading, error }: StatsCardsProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {statItems.map((stat, index) => (
-        <motion.div
+        <div
           key={stat.key}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.05 * index }}
         >
           <Card className="relative overflow-hidden">
             <div
@@ -86,13 +82,10 @@ export function StatsCards({ stats, loading, error }: StatsCardsProps) {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       ))}
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
+      <div
         className="sm:col-span-2 xl:col-span-1"
       >
         <Card className="relative h-full overflow-hidden">
@@ -122,12 +115,12 @@ export function StatsCards({ stats, loading, error }: StatsCardsProps) {
                     {formatBytes(stats.storageLimit)}
                   </p>
                 </div>
-                <Progress value={storagePercent} className="h-2.5" />
+                <Progress value={storagePercent} aria-label="Storage used" className="h-2.5" />
               </>
             )}
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -11,6 +11,7 @@ function Progress({
 }: React.ComponentProps<typeof ProgressPrimitive.Root>) {
   return (
     <ProgressPrimitive.Root
+      value={value}
       className={cn(
         "bg-primary/10 relative h-2 w-full overflow-hidden rounded-full",
         className

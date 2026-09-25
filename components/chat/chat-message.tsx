@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import {
   AlertCircle,
   Bot,
@@ -16,11 +17,16 @@ import {
   User,
 } from "lucide-react";
 import type { ChatMessage as Message, QuerySource } from "@/lib/types";
-import { Markdown } from "@/components/chat/markdown";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+
+// Markdown + highlight.js are only needed once an answer arrives, so keep them out of the page's first load.
+const Markdown = dynamic(() => import("@/components/chat/markdown").then((m) => m.Markdown), {
+  ssr: false,
+  loading: () => null,
+});
 
 function SourceChip({ source, n, claims }: { source: QuerySource; n: number; claims: string[] }) {
   const name = source.documentName ?? "Unknown document";

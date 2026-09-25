@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   AlertCircle,
   ArrowRight,
@@ -60,10 +59,7 @@ export function RecentDocuments({
     .slice(0, limit);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.2 }}
+    <div
     >
       <Card>
         <CardHeader>
@@ -114,11 +110,8 @@ export function RecentDocuments({
                 const status = statusConfig[doc.status];
 
                 return (
-                  <motion.li
+                  <li
                     key={doc.id}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.25 + index * 0.05 }}
                     className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-muted/40"
                   >
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -145,13 +138,13 @@ export function RecentDocuments({
                     >
                       {status.label}
                     </Badge>
-                  </motion.li>
+                  </li>
                 );
               })}
             </ul>
           )}
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }

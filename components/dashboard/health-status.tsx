@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, RefreshCw, Server } from "lucide-react";
 import { useHealth } from "@/lib/hooks/use-health";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -39,10 +38,7 @@ export function HealthStatus() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.15 }}
+    <div
     >
       <Card className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5" />
@@ -57,6 +53,7 @@ export function HealthStatus() {
             variant="ghost"
             size="icon"
             onClick={refetch}
+            aria-label="Refresh service health"
             disabled={loading}
             className="size-8"
           >
@@ -89,6 +86,6 @@ export function HealthStatus() {
           ))}
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }

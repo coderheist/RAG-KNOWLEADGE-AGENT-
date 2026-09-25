@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   AlertCircle,
   Check,
@@ -164,11 +163,8 @@ export function CollectionsManager() {
           collections.map((collection, index) => {
             const isActive = activeCollectionId === collection.id;
             return (
-              <motion.div
+              <div
                 key={collection.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
               >
                 <Card
                   className={cn(
@@ -233,7 +229,7 @@ export function CollectionsManager() {
                     </ConfirmDelete>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             );
           })
         )}

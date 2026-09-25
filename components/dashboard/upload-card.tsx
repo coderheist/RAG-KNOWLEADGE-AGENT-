@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import { CloudUpload, FileUp, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { uploadDocuments } from "@/lib/api/upload";
@@ -138,11 +137,8 @@ export function UploadCard({ disabled, onUploadComplete }: UploadCardProps) {
   );
 
   return (
-    <motion.div
+    <div
       id="upload"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.1 }}
     >
       <Card className="relative overflow-hidden border-dashed">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5" />
@@ -183,11 +179,7 @@ export function UploadCard({ disabled, onUploadComplete }: UploadCardProps) {
               isDisabled && "pointer-events-none opacity-60"
             )}
           >
-            <motion.div
-              animate={
-                isDragging ? { scale: 1.1, y: -4 } : { scale: 1, y: 0 }
-              }
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            <div
               className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"
             >
               {uploading || processing ? (
@@ -195,7 +187,7 @@ export function UploadCard({ disabled, onUploadComplete }: UploadCardProps) {
               ) : (
                 <FileUp className="size-7" />
               )}
-            </motion.div>
+            </div>
             <p className="text-sm font-medium">
               {uploading
                 ? `Uploading… ${uploadProgress}%`
@@ -210,6 +202,7 @@ export function UploadCard({ disabled, onUploadComplete }: UploadCardProps) {
             </p>
             {(uploading || processing) && (
               <Progress
+                aria-label="Upload progress"
                 value={uploading ? uploadProgress : undefined}
                 className="mt-4 h-2 w-full max-w-xs"
               />
@@ -226,6 +219,6 @@ export function UploadCard({ disabled, onUploadComplete }: UploadCardProps) {
           </div>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }
