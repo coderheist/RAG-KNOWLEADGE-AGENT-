@@ -158,7 +158,9 @@ async def judge_case(row: dict, run: dict, result: dict, args: argparse.Namespac
         for s in run["sources"]
     ]
     judged = await judge_answer(row["question"], run["answer"], contexts, args.judge_model)
-    cite = await citation_accuracy(run["answer"], contexts, judged["refused"], args.judge_model)
+    cite = await citation_accuracy(
+        run["answer"], contexts, judged["refused"], args.judge_model, applicable=row["category"] != "chitchat"
+    )
     refusal = refusal_correctness(row["category"], judged["refused"])
     for name, scored in (
         ("faithfulness", judged["faithfulness"]), ("answer_relevance", judged["answer_relevance"]),

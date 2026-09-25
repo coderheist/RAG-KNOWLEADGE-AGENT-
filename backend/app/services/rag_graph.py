@@ -27,8 +27,19 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 
 from app.config import get_settings
+from app.services.agent_steps import (
+    UNGROUNDED_CAVEAT,
+    build_retry_prompt,
+    check_groundedness,
+    classify_turn,
+    grade_chunks,
+    is_weak,
+    should_retry,
+    usable_indexes,
+)
 from app.services.conversation_service import save_turn
-from app.services.query_rewriter import gemini_rewrite_llm, rewrite_query
+from app.services.llm_json import gemini_structured_llm
+from app.services.query_rewriter import gemini_rewrite_llm, guard_rewrite, rewrite_query
 from app.services.retrieval_service import RetrievedChunk, get_stage_timings, retrieve_chunks
 from app.utils.logging import get_logger
 
@@ -87,10 +98,22 @@ class RAGState(TypedDict):
     chunks: list[RetrievedChunk]
     sources: list[dict]            # serialisable dicts ready for SSE
     timings_ms: dict[str, float]   # per-stage retrieval timings (search / fuse / rerank)
+    route: str                     # needs_retrieval | chitchat | clarification_needed
+    retrieval_attempt: int         # retrievals performed so far; capped by MAX_RETRIEVAL_LOOPS
+    retrieval_weak: bool           # the last grading found too few usable chunks
+    chunk_grades: list[str]        # relevant | partial | irrelevant, per chunk of the last retrieval
+    failed_queries: list[str]      # search queries that retrieved weakly, fed to the retry rewrite
+    groundedness: dict             # {"grounded": bool, "unsupported_claims": [...]} once checked
     answer: str
 
 
 # ── LLM factory ──────────────────────────────────────────────────────────────
+
+def _agent_llm():
+    """Structured-output model for the router, grader and groundedness checker (monkeypatched in tests)."""
+    settings = get_settings()
+    return gemini_structured_llm(settings.AGENT_MODEL, settings.GOOGLE_API_KEY, settings.AGENT_MAX_TOKENS)
+
 
 def _build_llm(settings) -> ChatGoogleGenerativeAI:
     """Return a streaming-capable Gemini chat model."""
@@ -105,14 +128,49 @@ def _build_llm(settings) -> ChatGoogleGenerativeAI:
 
 # ── Graph nodes ───────────────────────────────────────────────────────────────
 
+async def _router_node(state: RAGState) -> dict:
+    """
+    Decide whether this turn needs a document lookup at all.
+
+    With the agentic loop off this is a passthrough (no LLM call): every turn retrieves, as before.
+    """
+    if not get_settings().ENABLE_AGENTIC_LOOP:
+        return {"route": "needs_retrieval"}
+    route = await classify_turn(state["query"], state["history_messages"], _agent_llm())
+    logger.info("router_node: route=%s query=%r", route, state["query"][:80])
+    return {"route": route}
+
+
+async def _rewrite_retry_node(state: RAGState, settings) -> dict:
+    """A retry: the previous search retrieved weakly, so ask for a differently-phrased or broader query."""
+    query = state["query"]
+    llm = gemini_rewrite_llm(
+        settings.QUERY_REWRITE_MODEL, settings.GOOGLE_API_KEY, settings.QUERY_REWRITE_MAX_TOKENS
+    )
+    try:
+        raw = await llm(build_retry_prompt(query, state["history_messages"], state["failed_queries"]))
+        candidate = guard_rewrite(query, raw)
+    except Exception as exc:
+        logger.warning("Retry rewrite failed, reusing the previous query: %s", exc)
+        candidate = None
+    search_query = candidate or state["search_query"]
+    logger.info(
+        "rewrite_retry: attempt=%d %r -> %r", state["retrieval_attempt"], state["search_query"][:60], search_query[:60]
+    )
+    return {"search_query": search_query, "rewrite_applied": search_query != query}
+
+
 async def _rewrite_query_node(state: RAGState) -> dict:
     """
     Turn a follow-up into a standalone search query before retrieval.
 
     With no history (or the flag off) this is a pure passthrough: no LLM call, no added latency.
+    On a retry (agentic loop) it asks for a differently-phrased or broader query instead.
     """
     settings = get_settings()
     query = state["query"]
+    if state["retrieval_attempt"] > 0:
+        return await _rewrite_retry_node(state, settings)
     if not settings.ENABLE_QUERY_REWRITE or not state["history_messages"]:
         return {"search_query": query, "rewrite_applied": False}
 
@@ -157,7 +215,63 @@ async def _retrieve_node(state: RAGState) -> dict:
         len(chunks),
         state["query"][:80],
     )
-    return {"chunks": chunks, "sources": sources, "timings_ms": get_stage_timings()}
+    return {
+        "chunks": chunks,
+        "sources": sources,
+        "timings_ms": get_stage_timings(),
+        "retrieval_attempt": state["retrieval_attempt"] + 1,
+    }
+
+
+async def _grade_chunks_node(state: RAGState) -> dict:
+    """
+    Grade the retrieved chunks. Weak retrieval loops back to a rewritten query (capped by
+    MAX_RETRIEVAL_LOOPS); otherwise only relevant/partial chunks go on to generation.
+    """
+    settings = get_settings()
+    chunks = state["chunks"]
+    grades = await grade_chunks(state["search_query"], [c.text for c in chunks], _agent_llm())
+    weak = is_weak(grades, settings.MIN_RELEVANT_CHUNKS)
+    logger.info("grade_chunks_node: grades=%s weak=%s attempt=%d", grades, weak, state["retrieval_attempt"])
+    if weak and should_retry(True, state["retrieval_attempt"], settings.MAX_RETRIEVAL_LOOPS):
+        return {"chunk_grades": grades, "retrieval_weak": True,
+                "failed_queries": [*state["failed_queries"], state["search_query"]]}
+    keep = usable_indexes(grades)
+    return {"chunk_grades": grades, "retrieval_weak": weak, "chunks": [chunks[i] for i in keep]}
+
+
+_DIRECT_SYSTEM = (
+    "You are a friendly assistant for a private document knowledge base. Reply briefly. Greet back, thank the "
+    "user, or say goodbye when they do. If asked what you can do, say you answer questions about the documents "
+    "they have uploaded. If asked to repeat or rephrase your previous message, do so using the conversation. "
+    "If the message is too vague to search for, ask ONE short clarifying question. Never state facts about the "
+    "documents' contents."
+)
+
+
+async def _direct_response_node(state: RAGState) -> dict:
+    """Answer chitchat / clarification turns without any retrieval. Streams like the generate node."""
+    llm = _build_llm(get_settings())
+    messages: list[BaseMessage] = [
+        SystemMessage(content=_DIRECT_SYSTEM), *state["history_messages"][-6:], HumanMessage(content=state["query"])
+    ]
+    response = await llm.ainvoke(messages)
+    answer = response.content if isinstance(response.content, str) else str(response.content)
+    return {"answer": answer, "chunks": [], "sources": []}
+
+
+async def _check_grounded_node(state: RAGState) -> dict:
+    """Verify the finished answer against the chunks it was generated from; append a caveat if unsupported."""
+    settings = get_settings()
+    if not settings.ENABLE_GROUNDEDNESS_CHECK or not state["chunks"] or not state["answer"].strip():
+        return {}
+    verdict = await check_groundedness(state["answer"], [c.text for c in state["chunks"]], _agent_llm())
+    if verdict is None:
+        return {"groundedness": {"grounded": None, "unsupported_claims": []}}
+    result = {"grounded": verdict.grounded, "unsupported_claims": verdict.unsupported_claims}
+    if verdict.grounded:
+        return {"groundedness": result}
+    return {"groundedness": result, "answer": state["answer"] + UNGROUNDED_CAVEAT}
 
 
 async def _generate_node(state: RAGState) -> dict:
@@ -246,18 +360,40 @@ async def _save_history_node(state: RAGState) -> dict:
 
 # ── Graph compilation ─────────────────────────────────────────────────────────
 
+def _after_router(state: RAGState) -> str:
+    return "rewrite_query" if state["route"] == "needs_retrieval" else "direct_response"
+
+
+def _after_retrieve(state: RAGState) -> str:
+    return "grade_chunks" if get_settings().ENABLE_AGENTIC_LOOP else "generate"
+
+
+def _after_grade(state: RAGState) -> str:
+    """Retry through a rewritten query while retrieval is weak and the loop cap allows it; otherwise generate."""
+    retry = should_retry(state["retrieval_weak"], state["retrieval_attempt"], get_settings().MAX_RETRIEVAL_LOOPS)
+    return "rewrite_query" if retry else "generate"
+
+
 def _compile_graph():
     graph: StateGraph = StateGraph(RAGState)
 
-    graph.add_node("retrieve", _retrieve_node)
+    graph.add_node("router", _router_node)
     graph.add_node("rewrite_query", _rewrite_query_node)
+    graph.add_node("retrieve", _retrieve_node)
+    graph.add_node("grade_chunks", _grade_chunks_node)
     graph.add_node("generate", _generate_node)
+    graph.add_node("direct_response", _direct_response_node)
+    graph.add_node("check_grounded", _check_grounded_node)
     graph.add_node("save_history", _save_history_node)
 
-    graph.add_edge(START, "rewrite_query")
+    graph.add_edge(START, "router")
+    graph.add_conditional_edges("router", _after_router, ["rewrite_query", "direct_response"])
     graph.add_edge("rewrite_query", "retrieve")
-    graph.add_edge("retrieve", "generate")
-    graph.add_edge("generate", "save_history")
+    graph.add_conditional_edges("retrieve", _after_retrieve, ["grade_chunks", "generate"])
+    graph.add_conditional_edges("grade_chunks", _after_grade, ["rewrite_query", "generate"])
+    graph.add_edge("generate", "check_grounded")
+    graph.add_edge("check_grounded", "save_history")
+    graph.add_edge("direct_response", "save_history")
     graph.add_edge("save_history", END)
 
     return graph.compile()
@@ -311,10 +447,15 @@ async def stream_rag(
         "chunks": [],
         "sources": [],
         "timings_ms": {},
+        "route": "needs_retrieval",
+        "retrieval_attempt": 0,
+        "retrieval_weak": False,
+        "chunk_grades": [],
+        "failed_queries": [],
+        "groundedness": {},
         "answer": "",
     }
 
-    sources_emitted = False
     total_chars = 0
 
     try:
@@ -322,14 +463,20 @@ async def stream_rag(
             kind: str = event["event"]
             name: str = event.get("name", "")
 
+            # ── After router: report a non-retrieval route ─────────────────────
+            if kind == "on_chain_end" and name == "router":
+                route = event["data"].get("output", {}).get("route", "needs_retrieval")
+                if route != "needs_retrieval":
+                    yield {"type": "route", "route": route}
+
             # ── After rewrite node: tell the client what was actually searched ──
-            if kind == "on_chain_end" and name == "rewrite_query":
+            elif kind == "on_chain_end" and name == "rewrite_query":
                 output = event["data"].get("output", {})
                 if output.get("rewrite_applied"):
                     yield {"type": "query_rewrite", "original": query, "rewritten": output["search_query"]}
 
-            # ── After retrieve node: emit sources ──────────────────────────────
-            elif kind == "on_chain_end" and name == "retrieve" and not sources_emitted:
+            # ── After retrieve node: emit sources (again on every retry) ────────
+            elif kind == "on_chain_end" and name == "retrieve":
                 output = event["data"].get("output", {})
                 sources: list[dict] = output.get("sources", [])
                 yield {
@@ -338,10 +485,27 @@ async def stream_rag(
                     "retrieved_count": len(sources),
                     "timings_ms": output.get("timings_ms", {}),
                 }
-                sources_emitted = True
+
+            # ── After grading: per-chunk grades and whether a retry follows ─────
+            elif kind == "on_chain_end" and name == "grade_chunks":
+                output = event["data"].get("output", {})
+                yield {"type": "chunk_grades", "grades": output.get("chunk_grades", []),
+                       "weak": output.get("retrieval_weak", False)}
+
+            # ── After the groundedness check: verdict, plus a visible caveat if unsupported ──
+            elif kind == "on_chain_end" and name == "check_grounded":
+                verdict = event["data"].get("output", {}).get("groundedness")
+                if verdict:
+                    yield {"type": "groundedness", **verdict}
+                    if verdict.get("grounded") is False:
+                        total_chars += len(UNGROUNDED_CAVEAT)
+                        yield {"type": "chunk", "content": UNGROUNDED_CAVEAT}
 
             # ── LLM token streaming (answer tokens only, never helper models) ───
-            elif kind == "on_chat_model_stream" and event.get("metadata", {}).get("langgraph_node") == "generate":
+            elif kind == "on_chat_model_stream" and event.get("metadata", {}).get("langgraph_node") in (
+                "generate",
+                "direct_response",
+            ):
                 chunk = event["data"].get("chunk")
                 if chunk is None:
                     continue

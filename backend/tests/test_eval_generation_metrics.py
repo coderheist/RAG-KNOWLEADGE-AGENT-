@@ -30,6 +30,11 @@ def test_refusal_correctness(category: str, refused: bool, expected: float) -> N
     assert refusal_correctness(category, refused).score == expected
 
 
+async def test_citation_accuracy_is_not_applicable_when_nothing_should_be_cited() -> None:
+    result = await citation_accuracy("Hello! How can I help?", [], refused=False, applicable=False)
+    assert result.score is None
+
+
 async def test_citation_accuracy_none_for_refusal_and_zero_without_citations() -> None:
     assert (await citation_accuracy("I don't know.", CHUNKS, refused=True)).score is None
     assert (await citation_accuracy("It is 600 per minute.", CHUNKS, refused=False)).score == 0.0

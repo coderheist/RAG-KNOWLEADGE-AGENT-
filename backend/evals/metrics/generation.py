@@ -130,11 +130,16 @@ async def judge_answer(question: str, answer: str, chunks: list[dict], model: st
     }
 
 
-async def citation_accuracy(answer: str, chunks: list[dict], refused: bool, model: str = DEFAULT_JUDGE_MODEL) -> Scored:
+async def citation_accuracy(
+    answer: str, chunks: list[dict], refused: bool, model: str = DEFAULT_JUDGE_MODEL, applicable: bool = True
+) -> Scored:
     """Share of citations that both exist in the retrieved set and support their claim.
 
-    None for refusals (nothing to cite). An answer with no citations at all scores 0.0.
+    None when not applicable (chitchat: nothing to cite) or for refusals. An otherwise answerable question
+    whose answer has no citations at all scores 0.0.
     """
+    if not applicable:
+        return Scored(None, "not applicable - no factual claims expected")
     if refused:
         return Scored(None, "refusal - no citations expected")
     citations = extract_citations(answer)

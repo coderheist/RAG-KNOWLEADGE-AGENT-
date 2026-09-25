@@ -55,6 +55,17 @@ class Settings(BaseSettings):
     RRF_K: int = 60
     CANDIDATE_MULTIPLIER: int = 4            # each retriever fetches top_k * this many candidates
 
+    # ── Agentic graph (Phase 4) — off by default = the linear pipeline ────────────
+    ENABLE_AGENTIC_LOOP: bool = False        # router + chunk grading with a capped retry loop + direct responses
+    MAX_RETRIEVAL_LOOPS: int = 2             # hard cap on retries after the first retrieval (never unbounded)
+    # Chunks graded *relevant* needed before generating without a retry. The spec's example is 2, but a
+    # single-fact answer lives in one chunk, so 2 would retry nearly every such question.
+    MIN_RELEVANT_CHUNKS: int = 1
+    ENABLE_GROUNDEDNESS_CHECK: bool = False  # verify the finished answer against the retrieved chunks
+    ENABLE_VERIFIED_CITATIONS: bool = False  # structured answer: claims with source ids validated server-side
+    AGENT_MODEL: str = "gemini-flash-lite-latest"   # router / grader / groundedness checker
+    AGENT_MAX_TOKENS: int = 512
+
     # ── Embedding Resiliency ──────────────────────────────────────────────────
     MAX_EMBED_RETRIES: int = 5
     INITIAL_BACKOFF: float = 1.0
