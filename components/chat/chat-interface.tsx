@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bot, Plus, Send, Square, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { getDocuments } from "@/lib/api/documents";
+import { uploadDocuments } from "@/lib/api/upload";
 import { streamQuery } from "@/lib/api/query";
 import { useApp } from "@/lib/context/app-context";
 import { suggestedQuestions, type ChatMessage as Message, type Document } from "@/lib/types";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -81,7 +83,7 @@ function EmptyState({ documents, onAsk }: { documents: Document[] | null; onAsk:
 }
 
 export function ChatInterface() {
-  const { activeCollectionId, refreshKey } = useApp();
+  const { activeCollectionId, refreshKey, refresh } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -91,6 +93,8 @@ export function ChatInterface() {
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     getDocuments(activeCollectionId)
@@ -190,6 +194,28 @@ export function ChatInterface() {
     inputRef.current?.focus();
   };
 
+  const upload = (files: File[]) => {
+    if (!files.length) return;
+    toast.promise(uploadDocuments(files, { collectionId: activeCollectionId }), {
+      loading: `Uploading ${files.length === 1 ? files[0].name : `${files.length} files`}…`,
+      success: (docs) => {
+        refresh();
+        return docs.map((d) => (d.status === "already_exists" ? `${d.name} is already indexed` : `Indexed ${d.name} · ${d.chunks} chunks`)).join(" · ");
+      },
+      error: (err) => `Upload failed: ${err instanceof Error ? err.message : "unknown error"}`,
+    });
+  };
+
+  const commands = [
+    { name: "/new", hint: "Start a new conversation", run: newChat },
+    { name: "/upload", hint: "Upload documents", run: () => fileRef.current?.click() },
+  ];
+  const slashMatches = /^\/\S*$/.test(input) ? commands.filter((c) => c.name.startsWith(input)) : [];
+  const runCommand = (c: (typeof commands)[number]) => {
+    setInput("");
+    c.run();
+  };
+
   // ponytail: feedback is kept client-side until the /feedback endpoint lands (Phase 6).
   const giveFeedback = (id: string, value: "up" | "down") =>
     patch(id, (m) => ({ feedback: m.feedback === value ? undefined : value }));
@@ -230,25 +256,68 @@ export function ChatInterface() {
       </p>
 
       <form
-        className="border-t border-border/60 p-3 sm:p-4"
+        className={cn("relative border-t border-border/60 p-3 transition-colors sm:p-4", dragging && "bg-primary/5")}
         onSubmit={(e) => {
           e.preventDefault();
-          sendQuery(input);
+          if (slashMatches[0]) runCommand(slashMatches[0]);
+          else sendQuery(input);
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          upload(Array.from(e.dataTransfer.files));
         }}
       >
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          hidden
+          onChange={(e) => {
+            upload(Array.from(e.target.files ?? []));
+            e.target.value = "";
+          }}
+        />
+        {slashMatches.length > 0 && (
+          <ul
+            role="listbox"
+            aria-label="Commands"
+            className="absolute bottom-full left-1/2 mb-2 w-[min(28rem,calc(100%-2rem))] -translate-x-1/2 rounded-lg border bg-popover p-1 text-sm shadow-lg"
+          >
+            {slashMatches.map((c, i) => (
+              <li key={c.name} role="option" aria-selected={i === 0}>
+                <button
+                  type="button"
+                  onClick={() => runCommand(c)}
+                  className={cn("flex w-full gap-3 rounded-md px-3 py-2 text-left hover:bg-accent", i === 0 && "bg-accent")}
+                >
+                  <span className="font-mono">{c.name}</span>
+                  <span className="text-muted-foreground">{c.hint}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {dragging && <p className="pointer-events-none mb-2 text-center text-xs text-primary">Drop files to upload them</p>}
         <div className="mx-auto flex max-w-3xl items-end gap-2">
           <Textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question about your documents…"
+            placeholder="Ask about your documents, or type / for commands…"
             aria-label="Your question"
-            className="max-h-40 min-h-[44px] resize-none [field-sizing:content]"
+            className="max-h-52 min-h-[44px] resize-none [field-sizing:content]"
             rows={1}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                sendQuery(input);
+                if (slashMatches[0]) runCommand(slashMatches[0]);
+                else sendQuery(input);
               }
             }}
           />
