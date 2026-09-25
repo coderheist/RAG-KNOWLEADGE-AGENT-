@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ComponentProps } from "react";
+import { useRef, useState, type ComponentProps, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -32,12 +32,26 @@ function CodeBlock({ node: _node, ...props }: ComponentProps<"pre"> & { node?: u
   );
 }
 
-export function Markdown({ children }: { children: string }) {
+export function Markdown({
+  children,
+  renderCitation,
+}: {
+  children: string;
+  /** Renders "[n](#cite-n)" links (see lib/citations.ts) as citation chips. */
+  renderCitation?: (n: number) => ReactNode;
+}) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[[rehypeHighlight, { detect: true }]]}
-      components={{ pre: CodeBlock }}
+      components={{
+        pre: CodeBlock,
+        a: ({ node: _node, href, ...props }) => {
+          const cite = href?.match(/^#cite-(\d+)$/);
+          if (cite && renderCitation) return renderCitation(Number(cite[1]));
+          return <a href={href} target="_blank" rel="noreferrer" {...props} />;
+        },
+      }}
     >
       {children}
     </ReactMarkdown>

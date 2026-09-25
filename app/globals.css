@@ -120,3 +120,38 @@
   background: transparent;
   padding: 0;
 }
+
+.prose table {
+  margin: 0.5rem 0;
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--border);
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+}
+
+.prose th {
+  background: color-mix(in oklch, var(--muted) 80%, transparent);
+  font-weight: 600;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   AlertCircle,
   Bot,
   Check,
   Copy,
-  FileText,
+  FileSearch,
   Loader2,
   RotateCcw,
   ShieldAlert,
@@ -16,6 +16,7 @@ import {
   ThumbsUp,
   User,
 } from "lucide-react";
+import { linkCitations } from "@/lib/citations";
 import type { ChatMessage as Message, QuerySource } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,34 +29,41 @@ const Markdown = dynamic(() => import("@/components/chat/markdown").then((m) => 
   loading: () => null,
 });
 
-function SourceChip({ source, n, claims }: { source: QuerySource; n: number; claims: string[] }) {
-  const name = source.documentName ?? "Unknown document";
+function sourceLabel(s: QuerySource) {
+  return `${s.documentName ?? "Unknown document"}${s.page ? `, page ${s.page}` : ""}`;
+}
+
+/** Superscript chip for an inline citation; the popover shows the passage it points at. */
+function CitationChip({
+  n,
+  source,
+  claims,
+  onShowInPanel,
+}: {
+  n: number;
+  source: QuerySource;
+  claims: string[];
+  onShowInPanel: () => void;
+}) {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex max-w-full items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-xs transition-colors hover:bg-accent"
-          aria-label={`Source ${n}: ${name}${source.page ? `, page ${source.page}` : ""}`}
+          aria-label={`Source ${n}: ${sourceLabel(source)}`}
+          className="mx-0.5 inline-flex h-4 min-w-4 -translate-y-1 items-center justify-center rounded bg-primary/15 px-1 align-baseline font-mono text-[10px] font-semibold leading-none text-primary hover:bg-primary/25"
         >
-          <span className="font-semibold text-primary">{n}</span>
-          <span className="truncate">{name}</span>
-          {source.page ? <span className="text-muted-foreground">p.{source.page}</span> : null}
+          {n}
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <div className="flex items-start gap-2">
-          <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-          <div className="min-w-0">
-            <p className="break-words font-medium">{name}</p>
-            <p className="text-xs text-muted-foreground">
-              {[source.page && `Page ${source.page}`, source.heading || source.section]
-                .filter(Boolean)
-                .join(" · ")}
-              {source.score !== undefined && ` · relevance ${source.score.toFixed(2)}`}
-            </p>
-          </div>
-        </div>
+        <p className="break-words font-medium">{sourceLabel(source)}</p>
+        <p className="text-xs text-muted-foreground">
+          {[source.heading || source.section, source.score !== undefined && `relevance ${source.score.toFixed(2)}`,
+            source.rerankScore !== undefined && `rerank ${source.rerankScore.toFixed(2)}`]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
         {source.chunkText && (
           <p className="mt-2 max-h-48 overflow-y-auto whitespace-pre-line text-xs text-muted-foreground">
             {source.chunkText}
@@ -71,8 +79,59 @@ function SourceChip({ source, n, claims }: { source: QuerySource; n: number; cla
             </ul>
           </div>
         )}
+        <button type="button" onClick={onShowInPanel} className="mt-2 text-xs font-medium text-primary hover:underline">
+          Show in sources
+        </button>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** Ranked retrieved passages; doubles as the "show raw context" view. */
+function SourcesPanel({
+  id,
+  sources,
+  open,
+  onToggle,
+}: {
+  id: string;
+  sources: QuerySource[];
+  open: boolean;
+  onToggle: (open: boolean) => void;
+}) {
+  const top = Math.max(...sources.map((s) => s.score ?? 0), 0.0001);
+  return (
+    <details
+      open={open}
+      onToggle={(e) => onToggle(e.currentTarget.open)}
+      className="group rounded-lg border bg-background/60"
+    >
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-xs font-medium text-muted-foreground sm:min-h-9">
+        <FileSearch className="size-3.5" aria-hidden />
+        Sources · {sources.length} passage{sources.length === 1 ? "" : "s"}
+        <span className="ml-auto group-open:hidden">Show</span>
+        <span className="ml-auto hidden group-open:inline">Hide</span>
+      </summary>
+      <ol aria-label="Retrieved passages" className="space-y-2 border-t px-3 py-2">
+        {sources.map((s, i) => (
+          <li key={s.chunkId ?? i} id={`${id}-src-${i + 1}`} className="scroll-mt-4 rounded-md p-1 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-semibold text-primary">{i + 1}</span>
+              <span className="min-w-0 flex-1 truncate font-medium">{sourceLabel(s)}</span>
+              {s.score !== undefined && (
+                <span className="flex items-center gap-1.5 text-muted-foreground" title="Relevance">
+                  <span className="h-1.5 w-12 overflow-hidden rounded-full bg-muted" aria-hidden>
+                    <span className="block h-full rounded-full bg-primary" style={{ width: `${(s.score / top) * 100}%` }} />
+                  </span>
+                  {s.score.toFixed(2)}
+                </span>
+              )}
+            </div>
+            {s.chunkText && <p className="mt-1 whitespace-pre-line pl-5 text-muted-foreground">{s.chunkText}</p>}
+          </li>
+        ))}
+      </ol>
+    </details>
   );
 }
 
@@ -82,13 +141,18 @@ interface ChatMessageProps {
   onFeedback?: (value: "up" | "down") => void;
 }
 
+// 44px touch targets on phones, compact on desktop.
+const actionClass = "size-11 sm:size-8";
+
 export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   if (message.role === "user") {
     return (
       <div className="flex justify-end gap-3">
-        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-xl bg-primary px-4 py-3 text-sm text-primary-foreground">
+        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-xl bg-primary px-4 py-3 text-base text-primary-foreground sm:text-sm">
           {message.content}
         </div>
         <div className="hidden size-8 shrink-0 items-center justify-center rounded-lg bg-muted sm:flex">
@@ -103,6 +167,16 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
   const claimsFor = (n: number) =>
     message.citations?.claims.filter((c) => c.sourceIds.includes(n)).map((c) => c.text) ?? [];
 
+  const showInPanel = (n?: number) => {
+    setPanelOpen(true);
+    requestAnimationFrame(() => {
+      const target = n
+        ? rootRef.current?.querySelector(`#${CSS.escape(`${message.id}-src-${n}`)}`)
+        : rootRef.current?.querySelector("details");
+      target?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  };
+
   const copy = async () => {
     await navigator.clipboard.writeText(message.content);
     setCopied(true);
@@ -110,7 +184,7 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
   };
 
   return (
-    <div className="flex gap-3">
+    <div ref={rootRef} className="flex gap-3">
       <div className="hidden size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:flex">
         <Bot className="size-4" aria-hidden />
       </div>
@@ -123,8 +197,16 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
         )}
 
         {message.content && (
-          <div className="prose prose-sm max-w-none break-words rounded-xl bg-muted px-4 py-3 text-sm dark:prose-invert">
-            <Markdown>{message.content}</Markdown>
+          <div className="prose prose-sm max-w-none break-words rounded-xl bg-muted px-4 py-3 text-base dark:prose-invert sm:text-sm">
+            <Markdown
+              renderCitation={(n) =>
+                sources[n - 1] ? (
+                  <CitationChip n={n} source={sources[n - 1]} claims={claimsFor(n)} onShowInPanel={() => showInPanel(n)} />
+                ) : null
+              }
+            >
+              {linkCitations(message.content, sources)}
+            </Markdown>
             {message.isStreaming && <span className="ml-0.5 inline-block animate-pulse" aria-hidden>▍</span>}
           </div>
         )}
@@ -158,26 +240,24 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
         )}
 
         {sources.length > 0 && (
-          <div>
-            <p className="mb-1.5 text-xs font-medium text-muted-foreground">Sources</p>
-            <div className="flex flex-wrap gap-1.5">
-              {sources.map((s, i) => (
-                <SourceChip key={s.chunkId ?? i} source={s} n={i + 1} claims={claimsFor(i + 1)} />
-              ))}
-            </div>
-          </div>
+          <SourcesPanel id={message.id} sources={sources} open={panelOpen} onToggle={setPanelOpen} />
         )}
 
         {done && (
           <div className="flex items-center gap-0.5 text-muted-foreground">
             {message.content && (
-              <Button variant="ghost" size="icon" className="size-8" aria-label={copied ? "Copied" : "Copy answer"} onClick={copy}>
+              <Button variant="ghost" size="icon" className={actionClass} aria-label={copied ? "Copied" : "Copy answer"} onClick={copy}>
                 {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               </Button>
             )}
             {onRegenerate && (
-              <Button variant="ghost" size="icon" className="size-8" aria-label="Regenerate answer" onClick={onRegenerate}>
+              <Button variant="ghost" size="icon" className={actionClass} aria-label="Regenerate answer" onClick={onRegenerate}>
                 <RotateCcw className="size-3.5" />
+              </Button>
+            )}
+            {sources.length > 0 && (
+              <Button variant="ghost" size="icon" className={actionClass} aria-label="Show raw context" onClick={() => showInPanel()}>
+                <FileSearch className="size-3.5" />
               </Button>
             )}
             {onFeedback && message.content && !message.error && (
@@ -185,7 +265,7 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={cn("size-8", message.feedback === "up" && "text-primary")}
+                  className={cn(actionClass, message.feedback === "up" && "text-primary")}
                   aria-label="Good answer"
                   aria-pressed={message.feedback === "up"}
                   onClick={() => onFeedback("up")}
@@ -195,7 +275,7 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={cn("size-8", message.feedback === "down" && "text-destructive")}
+                  className={cn(actionClass, message.feedback === "down" && "text-destructive")}
                   aria-label="Bad answer"
                   aria-pressed={message.feedback === "down"}
                   onClick={() => onFeedback("down")}
