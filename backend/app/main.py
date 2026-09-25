@@ -19,11 +19,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.collections import router as collections_router
 from app.api.document_management import router as document_management_router
 from app.api.documents import router as documents_router
+from app.api.feedback import router as feedback_router
 from app.api.health import router as health_router
 from app.api.query import router as query_router
 from app.config import get_settings
 from app.db import (
     conversation_models,  # noqa: F401 — registers Phase 4 tables
+    feedback_models,  # noqa: F401 — registers the feedback table
     models,  # noqa: F401 — registers Phase 2 tables with Base.metadata
 )
 from app.db.postgres import Base, dispose_engine, get_engine
@@ -119,6 +121,7 @@ def create_app() -> FastAPI:
     app.include_router(document_management_router)  # Phase 3 — GET/DELETE /documents
     app.include_router(collections_router)       # Phase 3 — /collections CRUD
     app.include_router(query_router)             # Phase 4 — POST /query SSE
+    app.include_router(feedback_router)          # POST /feedback
 
     return app
 

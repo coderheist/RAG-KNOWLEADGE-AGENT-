@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bot, Plus, Send, Square, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { getDocuments } from "@/lib/api/documents";
+import { sendFeedback } from "@/lib/api/feedback";
 import { uploadDocuments } from "@/lib/api/upload";
 import { streamQuery } from "@/lib/api/query";
 import { useApp } from "@/lib/context/app-context";
@@ -216,9 +217,23 @@ export function ChatInterface() {
     c.run();
   };
 
-  // ponytail: feedback is kept client-side until the /feedback endpoint lands (Phase 6).
-  const giveFeedback = (id: string, value: "up" | "down") =>
-    patch(id, (m) => ({ feedback: m.feedback === value ? undefined : value }));
+  const giveFeedback = async (m: Message, rating: "up" | "down", comment?: string) => {
+    patch(m.id, () => ({ feedback: rating }));
+    try {
+      await sendFeedback({
+        rating,
+        comment,
+        question: m.question ?? "",
+        answer: m.content,
+        chunkIds: (m.sources ?? []).map((s) => s.chunkId).filter((c): c is string => !!c),
+        conversationId,
+      });
+      toast.success(rating === "up" ? "Thanks for the feedback" : "Thanks. This answer will be reviewed.");
+    } catch (err) {
+      patch(m.id, () => ({ feedback: undefined }));
+      toast.error(`Feedback not saved: ${err instanceof Error ? err.message : "unknown error"}`);
+    }
+  };
 
   return (
     <Card className="flex h-[calc(100dvh-20rem)] min-h-[24rem] flex-col gap-0 overflow-hidden p-0 md:h-[calc(100dvh-12rem)]">
@@ -243,7 +258,7 @@ export function ChatInterface() {
                 key={m.id}
                 message={m}
                 onRegenerate={m.role === "assistant" && m.question && !isStreaming ? () => sendQuery(m.question!, m.id) : undefined}
-                onFeedback={(v) => giveFeedback(m.id, v)}
+                onFeedback={m.role === "assistant" && m.question ? (v, c) => giveFeedback(m, v, c) : undefined}
               />
             ))}
             <div ref={bottomRef} />

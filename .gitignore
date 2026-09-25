@@ -50,4 +50,5 @@ backend/evals/corpus/
 backend/evals/.cache/
 
 # ── Local tooling ─────────────────────────────────────────────────
-.claude/
+.claude/# feedback-derived eval candidates contain real user questions; reviewed cases go into golden_v*.jsonl
+backend/evals/datasets/candidates/

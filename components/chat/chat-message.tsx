@@ -138,7 +138,7 @@ function SourcesPanel({
 interface ChatMessageProps {
   message: Message;
   onRegenerate?: () => void;
-  onFeedback?: (value: "up" | "down") => void;
+  onFeedback?: (value: "up" | "down", comment?: string) => void;
 }
 
 // 44px touch targets on phones, compact on desktop.
@@ -147,6 +147,8 @@ const actionClass = "size-11 sm:size-8";
 export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [askingWhy, setAskingWhy] = useState(false);
+  const [why, setWhy] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
 
   if (message.role === "user") {
@@ -268,6 +270,7 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
                   className={cn(actionClass, message.feedback === "up" && "text-primary")}
                   aria-label="Good answer"
                   aria-pressed={message.feedback === "up"}
+                  disabled={!!message.feedback}
                   onClick={() => onFeedback("up")}
                 >
                   <ThumbsUp className="size-3.5" />
@@ -277,14 +280,41 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
                   size="icon"
                   className={cn(actionClass, message.feedback === "down" && "text-destructive")}
                   aria-label="Bad answer"
-                  aria-pressed={message.feedback === "down"}
-                  onClick={() => onFeedback("down")}
+                  aria-pressed={message.feedback === "down" || askingWhy}
+                  disabled={!!message.feedback}
+                  onClick={() => setAskingWhy(true)}
                 >
                   <ThumbsDown className="size-3.5" />
                 </Button>
               </>
             )}
           </div>
+        )}
+
+        {askingWhy && !message.feedback && onFeedback && (
+          <form
+            className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center"
+            onSubmit={(e) => {
+              e.preventDefault();
+              onFeedback("down", why.trim());
+              setAskingWhy(false);
+            }}
+          >
+            <label htmlFor={`${message.id}-why`} className="sr-only">What went wrong? (optional)</label>
+            <input
+              id={`${message.id}-why`}
+              autoFocus
+              value={why}
+              onChange={(e) => setWhy(e.target.value)}
+              maxLength={2000}
+              placeholder="What went wrong? (optional)"
+              className="min-h-11 flex-1 rounded-md border bg-background px-3 text-sm sm:min-h-9"
+            />
+            <div className="flex gap-2">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAskingWhy(false)}>Cancel</Button>
+              <Button type="submit" size="sm">Send feedback</Button>
+            </div>
+          </form>
         )}
       </div>
     </div>
