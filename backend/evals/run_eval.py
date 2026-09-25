@@ -331,7 +331,9 @@ async def main_async(args: argparse.Namespace) -> int:
     async with httpx.AsyncClient(timeout=httpx.Timeout(300)) as client:
         async def guarded(row: dict) -> dict:
             async with sem:
-                return await run_case(row, args, client)
+                result = await run_case(row, args, client)
+                await asyncio.sleep(args.delay)  # keeps free-tier per-minute LLM quotas from skewing results
+                return result
 
         cases = await asyncio.gather(*[guarded(r) for r in rows])
 
@@ -382,6 +384,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--dataset", default="golden_v1")
     ap.add_argument("--tag", required=True)
     ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--delay", type=float, default=0.0, help="seconds to pause after each case (rate-limited APIs)")
     ap.add_argument("--top-k", type=int, default=5)
     ap.add_argument("--compare", help="tag of an earlier results file to diff against")
     ap.add_argument(

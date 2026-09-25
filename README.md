@@ -32,10 +32,14 @@ change is measured, and a change that does not help is reported as such.
 | Configuration | recall@5 | MRR | faithfulness | citation acc. | p50 latency |
 |---|---|---|---|---|---|
 | Baseline (dense only) | 0.745 | 0.670 | 0.967 | 0.700 | 3.9 s |
-| + query rewriting | — | — | — | — | — |
-| + hybrid search | — | — | — | — | — |
-| + cross-encoder rerank | — | — | — | — | — |
+| + query rewriting | 0.894 | 0.846 | 0.952 | 0.833 | 3.1 s |
+| + hybrid search (default) | 0.936 | 0.926 | 0.968 | 0.841 | 3.2 s |
+| + cross-encoder rerank (off by default)¹ | 0.978 | 0.967 | 0.982 | 0.822 | 6.9 s |
 | + agentic self-correction | — | — | — | — | — |
+
+Each row adds to the one above and is a full judged run (`jd_*` result files). ¹ Rerank helps retrieval but adds
+~3.5 s p50 on CPU (p95 32 s under load), so it ships disabled; 6 of 62 cases in that run hit the Gemini free-tier
+quota and are excluded from its averages.
 
 Baseline weak spots (recall@5 by category): exact terms 0.583, follow-up questions 0.300, versus 1.000 for factual and
 multi-hop lookups. Those two categories are what the next changes target. Corpus: ~90 chunks of synthetic documents
@@ -199,6 +203,30 @@ Real-time monitoring for:
       └───────────────┬───────────────┘
                       ▼
                  LangGraph RAG
+```
+
+## Agent graph
+
+Generated from the compiled LangGraph (`_compile_graph().get_graph().draw_mermaid()`). Dashed edges are
+conditional. The router sends chitchat and clarification requests straight to `direct_response` with no retrieval;
+`grade_chunks` sends weak results back to `rewrite_query` for at most `MAX_RETRIEVAL_LOOPS` retries; `check_grounded`
+appends a visible caveat when the answer is not supported by the retrieved sources. Each step is behind a flag
+(`ENABLE_AGENTIC_LOOP`, `ENABLE_GROUNDEDNESS_CHECK`, `ENABLE_VERIFIED_CITATIONS`) and fails open.
+
+```mermaid
+graph TD;
+	__start__([start]) --> router;
+	router -.-> rewrite_query;
+	router -.-> direct_response;
+	rewrite_query --> retrieve;
+	retrieve -.-> grade_chunks;
+	retrieve -.-> generate;
+	grade_chunks -.-> rewrite_query;
+	grade_chunks -.-> generate;
+	generate --> check_grounded;
+	check_grounded --> save_history;
+	direct_response --> save_history;
+	save_history --> __end__([end]);
 ```
 
 ---
