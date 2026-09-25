@@ -195,7 +195,7 @@ export function ChatInterface() {
     patch(id, (m) => ({ feedback: m.feedback === value ? undefined : value }));
 
   return (
-    <Card className="flex h-[calc(100dvh-15rem)] min-h-[28rem] flex-col gap-0 overflow-hidden p-0 md:h-[calc(100dvh-12rem)]">
+    <Card className="flex h-[calc(100dvh-20rem)] min-h-[24rem] flex-col gap-0 overflow-hidden p-0 md:h-[calc(100dvh-12rem)]">
       <div className="flex items-center justify-between border-b border-border/60 px-4 py-2 sm:px-6">
         <p className="text-sm text-muted-foreground">
           {conversationId ? "Follow-up questions remember this conversation" : "New conversation"}

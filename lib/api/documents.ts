@@ -6,13 +6,26 @@ export async function getDocuments(collectionId?: string | null): Promise<{
   documents: Document[];
   stats: DashboardStats;
 }> {
-  const params = new URLSearchParams();
-  if (collectionId) params.set("collection_id", collectionId);
-  const query = params.toString();
-  const raw = await apiFetch<unknown>(
-    `/documents${query ? `?${query}` : ""}`
-  );
-  return normalizeDocumentsPayload(raw);
+  // The API pages at <=100 items; fetch every page so lists and totals are complete.
+  const documents: Document[] = [];
+  let stats: DashboardStats | undefined;
+  for (let page = 1; ; page++) {
+    const params = new URLSearchParams({ page: String(page), limit: "100" });
+    if (collectionId) params.set("collection_id", collectionId);
+    const raw = await apiFetch<{ pages?: number }>(`/documents?${params}`);
+    const batch = normalizeDocumentsPayload(raw);
+    documents.push(...batch.documents);
+    stats ??= batch.stats;
+    if (page >= (raw?.pages ?? 1)) break;
+  }
+  return {
+    documents,
+    stats: {
+      ...stats!,
+      totalChunks: documents.reduce((sum, d) => sum + d.chunks, 0),
+      storageUsed: documents.reduce((sum, d) => sum + d.size, 0),
+    },
+  };
 }
 
 export async function deleteDocument(id: string): Promise<void> {
