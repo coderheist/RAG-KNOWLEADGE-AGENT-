@@ -173,6 +173,32 @@ async def judge_case(row: dict, run: dict, result: dict, args: argparse.Namespac
     result["refused"] = judged["refused"]
 
 
+JUDGED = ("faithfulness", "answer_relevance", "context_precision", "citation_accuracy", "refusal_correctness")
+
+
+async def rejudge_case(row: dict, old: dict, args: argparse.Namespace, client: httpx.AsyncClient) -> dict:
+    """Re-score a stored case with another judge: same answer and retrieved chunks, no call to the app."""
+    case = {**old, "metrics": {k: v for k, v in old["metrics"].items() if k not in JUDGED}, "reasons": {}}
+    case.pop("judge_error", None)
+    if old["error"] or old.get("generation_error"):
+        return case
+    ids = old["retrieved_chunk_ids"]
+    resp = await client.post(
+        f"{args.qdrant_url}/collections/{args.collection}/points", json={"ids": ids, "with_payload": True}
+    ) if ids else None
+    payloads = {str(p["id"]): p["payload"] for p in resp.json()["result"]} if resp else {}
+    sources = [
+        {"chunk_id": i, "filename": payloads[i].get("filename"), "page_number": payloads[i].get("page_number"),
+         "text_snippet": payloads[i].get("text", "")}
+        for i in ids if i in payloads
+    ]
+    try:
+        await judge_case(row, {"answer": old["answer"], "sources": sources}, case, args, client)
+    except Exception as exc:
+        case["judge_error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
+    return case
+
+
 def mean(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
@@ -336,7 +362,19 @@ async def main_async(args: argparse.Namespace) -> int:
                 await asyncio.sleep(args.delay)  # keeps free-tier per-minute LLM quotas from skewing results
                 return result
 
-        cases = await asyncio.gather(*[guarded(r) for r in rows])
+        if args.rejudge:
+            by_id = {r["id"]: r for r in rows}
+            old_cases = [c for c in load_results(args.rejudge)["cases"] if c["id"] in by_id]
+
+            async def guarded_rejudge(old: dict) -> dict:
+                async with sem:
+                    result = await rejudge_case(by_id[old["id"]], old, args, client)
+                    await asyncio.sleep(args.delay)
+                    return result
+
+            cases = await asyncio.gather(*[guarded_rejudge(c) for c in old_cases])
+        else:
+            cases = await asyncio.gather(*[guarded(r) for r in rows])
 
     agg = aggregate(list(cases))
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -344,7 +382,7 @@ async def main_async(args: argparse.Namespace) -> int:
     path = RESULTS_DIR / f"{args.tag}_{stamp}.json"
     config = {
         "dataset": args.dataset, "top_k": args.top_k, "judge_model": None if args.no_judge else args.judge_model,
-        "base_url": args.base_url, "limit": args.limit, "note": args.note,
+        "base_url": args.base_url, "limit": args.limit, "note": args.note, "rejudged_from": args.rejudge,
     }
     payload = {"tag": args.tag, "timestamp": stamp, "config": config, "aggregates": agg, "cases": cases}
     path.write_text(json.dumps(payload, indent=2))
@@ -399,6 +437,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--categories", help="comma-separated category filter")
     ap.add_argument("--no-judge", action="store_true", help="skip LLM-judged metrics (retrieval only)")
     ap.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
+    ap.add_argument("--rejudge", help="tag of an earlier results file: re-score its answers with --judge-model")
     ap.add_argument("--note", default="", help="free-text note stored in the results file")
     ap.add_argument("--base-url", default=os.environ.get("EVAL_BASE_URL", "http://localhost:8000"))
     ap.add_argument("--qdrant-url", default=os.environ.get("EVAL_QDRANT_URL", "http://localhost:6333"))
