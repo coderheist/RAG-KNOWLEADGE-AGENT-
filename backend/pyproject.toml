@@ -10,6 +10,7 @@ select = ["E", "F", "I"]
 "evals/corpus_data.py" = ["E501"]
 "evals/metrics/generation.py" = ["E501"]
 "app/services/agent_steps.py" = ["E501"]
+"app/services/citations.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"

@@ -2,7 +2,12 @@
 LangGraph RAG agent (Phase 4).
 
 Graph topology:
-    START → rewrite_query → retrieve → generate → save_history → END
+    START → router ─┬─ needs_retrieval → rewrite_query → retrieve → [grade_chunks ─ weak, ≤ MAX loops ─┐]
+                    │                        ▲                                                       │
+                    │                        └───────────────────────────────────────────────────────┘
+                    │                   → generate → check_grounded → save_history → END
+                    └─ chitchat / clarification_needed → direct_response → save_history → END
+    (grade_chunks, the router's LLM call and check_grounded are passthroughs unless the agentic flags are on)
 
 Streaming:
     The graph is executed via ``graph.astream_events(input, version="v2")``.
@@ -36,6 +41,13 @@ from app.services.agent_steps import (
     is_weak,
     should_retry,
     usable_indexes,
+)
+from app.services.citations import (
+    STRUCTURED_OUTPUT_INSTRUCTIONS,
+    AnswerStreamExtractor,
+    find_invalid_inline_citations,
+    parse_structured_answer,
+    validate_claims,
 )
 from app.services.conversation_service import save_turn
 from app.services.llm_json import gemini_structured_llm
@@ -104,6 +116,8 @@ class RAGState(TypedDict):
     chunk_grades: list[str]        # relevant | partial | irrelevant, per chunk of the last retrieval
     failed_queries: list[str]      # search queries that retrieved weakly, fed to the retry rewrite
     groundedness: dict             # {"grounded": bool, "unsupported_claims": [...]} once checked
+    structured: bool               # the answer came from validated structured output
+    citations: dict                # claims, confidence, dropped_source_ids, invalid_inline
     answer: str
 
 
@@ -325,8 +339,10 @@ async def _generate_node(state: RAGState) -> dict:
         f"Do NOT repeat or preface with content from previous turns.]\n\n"
         f"{state['query']}"
     )
+    structured = bool(settings.ENABLE_VERIFIED_CITATIONS and state["chunks"])
+    system_prompt = _SYSTEM_TEMPLATE.format(context=context) + (STRUCTURED_OUTPUT_INSTRUCTIONS if structured else "")
     messages: list[BaseMessage] = [
-        SystemMessage(content=_SYSTEM_TEMPLATE.format(context=context)),
+        SystemMessage(content=system_prompt),
         *trimmed_history,
         HumanMessage(content=focused_query),
     ]
@@ -340,7 +356,31 @@ async def _generate_node(state: RAGState) -> dict:
     response = await llm.ainvoke(messages)
     answer: str = response.content if isinstance(response.content, str) else str(response.content)
 
-    return {"answer": answer}
+    if not structured:
+        return {"answer": answer, "structured": False}
+
+    parsed = parse_structured_answer(answer)
+    if parsed is None:
+        logger.warning("Structured output was not valid JSON; using the raw text with no verified claims")
+        return {"answer": answer, "structured": False}
+
+    claims, dropped = validate_claims(parsed.claims, len(state["chunks"]))
+    invalid_inline = find_invalid_inline_citations(
+        parsed.answer, [(c.filename, c.page_number) for c in state["chunks"]]
+    )
+    if dropped or invalid_inline:
+        logger.warning("Citation check: dropped %d invented source ids, %d invalid inline citations",
+                       dropped, len(invalid_inline))
+    return {
+        "answer": parsed.answer,
+        "structured": True,
+        "citations": {
+            "claims": [c.model_dump() for c in claims],
+            "confidence": parsed.confidence,
+            "dropped_source_ids": dropped,
+            "invalid_inline": [{"filename": f, "page": p} for f, p in invalid_inline],
+        },
+    }
 
 
 async def _save_history_node(state: RAGState) -> dict:
@@ -453,9 +493,13 @@ async def stream_rag(
         "chunk_grades": [],
         "failed_queries": [],
         "groundedness": {},
+        "structured": False,
+        "citations": {},
         "answer": "",
     }
 
+    verified = get_settings().ENABLE_VERIFIED_CITATIONS
+    extractor = AnswerStreamExtractor()
     total_chars = 0
 
     try:
@@ -520,9 +564,21 @@ async def stream_rag(
                 else:
                     token = str(raw)
 
+                # Structured mode: the model emits JSON, so stream only the decoded "answer" text.
+                if verified and event["metadata"]["langgraph_node"] == "generate":
+                    token = extractor.feed(token)
                 if token:
                     total_chars += len(token)
                     yield {"type": "chunk", "content": token}
+
+            # ── Generation finished: validated citations, and a fallback if nothing streamed ──
+            elif kind == "on_chain_end" and name == "generate" and verified:
+                output = event["data"].get("output", {})
+                if not extractor.started and output.get("answer"):
+                    total_chars += len(output["answer"])          # plain-text answer: emit it in one piece
+                    yield {"type": "chunk", "content": output["answer"]}
+                if output.get("structured"):
+                    yield {"type": "citations", **output["citations"]}
 
         # ── Graph complete ─────────────────────────────────────────────────────────
         yield {
