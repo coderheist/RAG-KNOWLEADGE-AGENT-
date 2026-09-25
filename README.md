@@ -267,27 +267,19 @@ graph TD;
 
 # 📸 Application Preview
 
-## Dashboard
+Captured from the production build (`npm run build && npm start`) in light and dark mode; mobile shots at 390 px.
 
-> ![Dashboard](./screenshots/dashboard.png)
+| | Light | Dark |
+|---|---|---|
+| Dashboard | ![Dashboard, light](docs/screenshots/dashboard-desktop-light.png) | ![Dashboard, dark](docs/screenshots/dashboard-desktop-dark.png) |
+| Documents | ![Documents, light](docs/screenshots/documents-desktop-light.png) | ![Documents, dark](docs/screenshots/documents-desktop-dark.png) |
+| Chat | ![Chat, light](docs/screenshots/chat-desktop-light.png) | ![Chat, dark](docs/screenshots/chat-desktop-dark.png) |
 
----
-
-## Upload Documents
-
-> ![Upload Documents](./screenshots/upload.png)
-
----
-
-## Documents
-
-> ![Documents](./screenshots/documents.png)
-
----
-
-## AI Chat
-
-> ![AI Chat](./screenshots/chat.png)
+<p>
+<img src="docs/screenshots/dashboard-mobile-light.png" width="200" alt="Dashboard on mobile">
+<img src="docs/screenshots/documents-mobile-dark.png" width="200" alt="Documents on mobile, dark">
+<img src="docs/screenshots/chat-mobile-light.png" width="200" alt="Chat on mobile">
+</p>
 
 ---
 
