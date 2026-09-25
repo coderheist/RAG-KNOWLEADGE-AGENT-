@@ -58,6 +58,7 @@ async def stream_query(
             kind = event.get("type")
             if kind == "sources":
                 out["sources"] = event.get("sources", [])
+                out["timings_ms"] = event.get("timings_ms", {})
                 if sources_only:
                     break
             elif kind == "chunk":
@@ -135,7 +136,7 @@ async def run_case(row: dict, args: argparse.Namespace, client: httpx.AsyncClien
 
     result.update(
         answer=run["answer"], retrieved_chunk_ids=retrieved, latency_ms=run["latency_ms"], ttft_ms=run["ttft_ms"],
-        rewrite=run["rewrite"],
+        rewrite=run["rewrite"], timings_ms=run.get("timings_ms", {}),
     )
 
     if not args.no_judge and not run["error"]:
@@ -178,6 +179,7 @@ def aggregate(cases: list[dict]) -> dict:
     per_cat: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     latencies: list[float] = []
     ttfts: list[float] = []
+    stage_ms: dict[str, list[float]] = defaultdict(list)
     names: set[str] = set()
     for c in cases:
         if c["error"]:
@@ -185,6 +187,8 @@ def aggregate(cases: list[dict]) -> dict:
         latencies.append(c["latency_ms"])
         if c["ttft_ms"] is not None:
             ttfts.append(c["ttft_ms"])
+        for stage, ms in (c.get("timings_ms") or {}).items():
+            stage_ms[stage].append(ms)
         for name, value in c["metrics"].items():
             names.add(name)
             if value is not None:
@@ -206,6 +210,8 @@ def aggregate(cases: list[dict]) -> dict:
             "p50": percentile(latencies, 50),
             "p95": percentile(latencies, 95),
             "ttft_p50": percentile(ttfts, 50),
+            "stage_p50": {stage: percentile(vals, 50) for stage, vals in sorted(stage_ms.items())},
+            "stage_p95": {stage: percentile(vals, 95) for stage, vals in sorted(stage_ms.items())},
         },
         "n_cases": len(cases), "n_errors": sum(1 for c in cases if c["error"]),
         "n_generation_errors": sum(1 for c in cases if c.get("generation_error")),
@@ -344,6 +350,10 @@ async def main_async(args: argparse.Namespace) -> int:
         f"{agg['n_generation_errors']} generation errors, {agg['n_judge_errors']} judge errors -> {path.name}\n"
     )
     print_summary(agg, args.tag, baseline, args.compare)
+    stages = agg["latency_ms"]["stage_p50"]
+    if stages:
+        p95 = agg["latency_ms"]["stage_p95"]
+        print("retrieval stages p50/p95 ms: " + ", ".join(f"{s} {stages[s]:.0f}/{p95[s]:.0f}" for s in stages))
     print_by_category(agg)
     for w in agg["warnings"]:
         print(f"WARNING: {w}")

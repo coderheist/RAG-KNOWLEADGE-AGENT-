@@ -229,3 +229,90 @@ the eval workflow compares against) still has to be generated with `--limit 20 -
 Tagged `phase-1-complete`.
 
 **Next:** Phase 2 — measure query rewriting on the follow_up subset with the flag off vs on.
+
+### Phase 2 · Iteration 1 · 2026-09-24
+
+**Changed:** `rewrite_query` graph node before `retrieve` (`app/services/query_rewriter.py`): no history →
+passthrough with no LLM call; otherwise one Gemini call (temperature 0, small output cap, last 3 turns) to
+produce a standalone query, guarded against empty / multi-line / preamble / overlong output and falling back
+to the original query on any failure. The SDK is called directly, not through LangChain: inside the graph a
+LangChain chat model emits `on_chat_model_stream` events that would have leaked into the user-facing answer
+stream, and the stream loop is now also restricted to the `generate` node. A `query_rewrite` SSE event
+reports what was searched. Flags: `ENABLE_QUERY_REWRITE`, `QUERY_REWRITE_MODEL`,
+`QUERY_REWRITE_HISTORY_TURNS`, `QUERY_REWRITE_MAX_TOKENS`.
+Guard detail: the spec's "longer than ~3x the original" rule would reject the very rewrites this feature exists
+for ("his skills?" → "What are Marcus Bell's technical skills?" is 3.5x), so the limit is
+`max(3x, 200 chars)`.
+
+**Eval** (retrieval-only, 62 cases, `rc_dense_*.json` vs `rc_dense_rewrite_*.json`, same build):
+follow_up recall@5 **0.300 → 1.000** (MRR 0.125 → 1.000); overall recall@5 0.745 → 0.894; factual,
+multi_hop and exact_term unchanged; p50 retrieval latency 0.82 s → 0.90 s (only follow-ups pay for the
+extra LLM call). The dense control run reproduces the earlier judged baseline exactly (0.745 / 0.670), so
+the flag-off path is unchanged.
+
+**Tests:** unit tests for empty history (no LLM call), pronoun resolution, six malformed-output cases, LLM
+failure, identical rewrite, guard length rule, history formatting.
+**Threshold:** MET on the first iteration (follow_up recall@5 +0.700 ≥ +0.15; no other category regressed
+by more than 0.02). `ENABLE_QUERY_REWRITE` now defaults to true. Model note: the spec's default
+`gemini-2.0-flash` is unavailable to this account; the default is `gemini-flash-lite-latest`.
+
+### Phase 3 · Iteration 1 · 2026-09-24
+
+**Changed:** BM25 sparse vectors (fastembed, local) beside the dense vector; dense and sparse searched
+concurrently (`asyncio.gather`, top_k x 4 each) and merged with client-side Reciprocal Rank Fusion (k=60);
+optional local cross-encoder rerank (`Xenova/ms-marco-MiniLM-L-6-v2`) behind a `Reranker` protocol mirroring
+`embeddings/`; score-floor / gap logic applied after reranking on the dense cosine score, which is kept on the
+chunk beside `rerank_score`. All behind `ENABLE_HYBRID_SEARCH` / `ENABLE_RERANKING`, default off.
+
+**Two real bugs found while rolling out** (both fixed): (1) Qdrant cannot add a new vector name to an existing
+collection, so `update_collection(sparse_vectors_config=...)` returned 400 and the API failed to start on any
+existing deployment even with every flag off — startup now warns, and `scripts/reindex_hybrid.py` is a real
+resumable migration into a new collection (dense vectors copied, BM25 computed locally, no embedding calls;
+96 points migrated, 0 API calls). (2) Eval containers must run as root to write results — launch mistake, not code.
+
+**Eval** (retrieval-only, 62 cases; recall@5 / MRR / p50 retrieval latency; exact_term recall):
+dense 0.745 / 0.670 / 0.82 s / 0.583 · hybrid 0.787 / 0.748 / 0.78 s / 0.750 ·
+dense+rerank 0.787 / 0.749 / 3.22 s / 0.750 · hybrid+rerank 0.830 / 0.802 / 4.43 s / 0.917.
+**Latency diagnosis** (stage timings from the API log): search 14–100 ms, fusion ~20 ms, **rerank 1.3–1.7 s
+for 20 candidates**, with 3–15 s spikes. Compute-bound cross-encoder inference over ~300-token chunks in a
+3.8 GB Docker VM; not a bug. The reranker's cost is the whole story: hybrid retrieval itself is faster than
+dense-only.
+**Threshold (so far):** NOT MET for hybrid+rerank on latency (+3.6 s vs ≤ 300 ms). Rewriting must be on when
+judging Phase 3 (it is the shipped Phase 2 default), so the combined configurations are being measured next.
+
+### Phase 3 · Iteration 2 · 2026-09-25
+
+**Diagnosis:** end-to-end p50 swings run to run because the query-embedding call to Gemini dominates and
+varies, so it cannot resolve a 300 ms budget. Added per-stage server timings to the `sources` SSE event
+(`timings_ms`: search / fuse / rerank), recorded by the runner (`latency_ms.stage_p50/p95`). This is also the
+"latency per stage" the spec asks for and feeds Phase 6.
+**Changed:** (1) rollout guard: `hybrid_enabled()` is true only if the flag is on AND the collection has the
+sparse vector, so an older collection falls back to dense with a warning and ingestion never tries to attach
+sparse vectors to a collection that cannot hold them; (2) stage timings; (3) `ENABLE_HYBRID_SEARCH` now
+defaults to true. Reranking stays off by default (flag).
+**Verified end to end:** ingested a new document with hybrid on — it received a sparse vector automatically
+(97/97 points flagged) and a query for a made-up fault code retrieved it as the only source. The probe
+document was then deleted (collection back to 96 points).
+
+**Eval, rewriting ON** (retrieval-only, 62 cases; server-side stage p50):
+| config | recall@5 | MRR | exact_term recall | stage p50 |
+|---|---|---|---|---|
+| dense (`rs_dense`) | 0.894 | 0.856 | 0.583 | search 8 ms |
+| hybrid (`rs_hybrid`) | 0.936 | 0.926 | 0.750 | search 12 ms, fuse ~0 ms |
+| hybrid + rerank, 10 candidates (`rc_full_rr10`) | 0.936 | 0.936 | 0.750 | end-to-end +1.1 s |
+| hybrid + rerank, 20 candidates (`rs_hybrid_rr20`) | 0.979 | 0.979 | 0.917 | rerank 3,761 ms (p95 13.8 s) |
+With rewriting OFF (`rc_*`): dense 0.745 / 0.670, hybrid 0.787 / 0.748, dense+rerank 0.787 / 0.749,
+hybrid+rerank 0.830 / 0.802; exact_term recall 0.583 / 0.750 / 0.750 / 0.917. Exact-term and numeric cases
+improve most, as predicted; follow-up cases are unaffected by retrieval changes (0.300 without rewriting).
+
+**Threshold:** MET by **hybrid search alone**: recall@5 0.936 ≥ 0.85; MRR 0.926 ≥ 0.75; exact_term +0.167 ≥
++0.10; added retrieval latency ≈ +4 ms ≤ 300 ms. **Reranking is not adopted by default:** it adds
++0.043 recall and +0.053 MRR (mostly exact_term 0.75 → 0.917) for +3.7 s p50 (spec: "if reranking costs
+more than ~150 ms, say so"), an order of magnitude over budget on this hardware (cross-encoder inference
+over ~300-token chunks, 3.8 GB Docker VM). It remains one flag away: `ENABLE_RERANKING=true`. With 10
+candidates the cost halves but the accuracy gain disappears. The 300 ms threshold was not changed.
+**Not measured:** `INCLUDE_CHUNK_METADATA_IN_PROMPT` (heading/section in the context header) affects only
+generation, so it needs judged runs; default stays off until then.
+
+**Next:** Phase 4 — the agentic graph (router, chunk grading with a capped retry loop, grounded-answer check,
+verified citations).

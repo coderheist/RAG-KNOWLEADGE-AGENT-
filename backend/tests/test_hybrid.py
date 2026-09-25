@@ -24,6 +24,18 @@ def test_rrf_single_ranking_preserves_order() -> None:
     assert [i for i, _ in reciprocal_rank_fusion([["p", "q", "r"]])] == ["p", "q", "r"]
 
 
+def test_hybrid_enabled_requires_flag_and_a_collection_with_sparse_vectors(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.services import vector_service
+
+    monkeypatch.setattr(vector_service, "_hybrid_supported", {"with_sparse": True, "dense_only": False})
+    on = SimpleNamespace(ENABLE_HYBRID_SEARCH=True, QDRANT_COLLECTION="with_sparse")
+    off = SimpleNamespace(ENABLE_HYBRID_SEARCH=False, QDRANT_COLLECTION="with_sparse")
+    assert vector_service.hybrid_enabled(on) is True
+    assert vector_service.hybrid_enabled(off) is False
+    assert vector_service.hybrid_enabled(on, "dense_only") is False       # old collection: fall back to dense
+    assert vector_service.hybrid_enabled(on, "never_seen") is False
+
+
 @dataclass
 class FakeHit:
     id: str

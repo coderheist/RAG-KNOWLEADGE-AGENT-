@@ -23,6 +23,14 @@ logger = get_logger(__name__)
 # IDF is applied by Qdrant at query time; fastembed's BM25 emits term-frequency weights only.
 _SPARSE_CONFIG = {SPARSE_VECTOR_NAME: qmodels.SparseVectorParams(modifier=qmodels.Modifier.IDF)}
 
+# collection name -> has the BM25 sparse vector. Filled by ensure_collection() at startup.
+_hybrid_supported: dict[str, bool] = {}
+
+
+def hybrid_enabled(settings, collection: str | None = None) -> bool:
+    """Hybrid search is on only if configured AND the collection can hold sparse vectors."""
+    return bool(settings.ENABLE_HYBRID_SEARCH and _hybrid_supported.get(collection or settings.QDRANT_COLLECTION))
+
 NAMESPACE_RAG = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 def generate_point_id(
@@ -63,7 +71,8 @@ async def ensure_collection() -> None:
     if collection_name in names:
         logger.debug("Qdrant collection '%s' already exists", collection_name)
         info = await client.get_collection(collection_name)
-        if SPARSE_VECTOR_NAME not in (info.config.params.sparse_vectors or {}):
+        _hybrid_supported[collection_name] = SPARSE_VECTOR_NAME in (info.config.params.sparse_vectors or {})
+        if not _hybrid_supported[collection_name]:
             # Qdrant cannot add a new vector name to an existing collection, so hybrid search needs a migration.
             logger.warning(
                 "Collection '%s' has no '%s' sparse vector: dense search works, hybrid search is unavailable. "
@@ -95,6 +104,7 @@ async def ensure_collection() -> None:
         field_schema=qmodels.PayloadSchemaType.KEYWORD,
     )
 
+    _hybrid_supported[collection_name] = True
     logger.info(
         "Created Qdrant collection '%s' (dim=%d, distance=COSINE)",
         collection_name,
@@ -149,7 +159,7 @@ async def upsert_vectors(points: list[VectorPoint]) -> int:
         wait=True,          # wait for WAL flush — guarantees durability
     )
 
-    if settings.ENABLE_HYBRID_SEARCH:
+    if hybrid_enabled(settings):
         await attach_sparse_vectors([(str(qp.id), p.text) for qp, p in zip(qdrant_points, points, strict=True)])
 
     logger.info(

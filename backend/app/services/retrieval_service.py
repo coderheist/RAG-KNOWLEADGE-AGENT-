@@ -11,6 +11,7 @@ difference between document ingestion and query embedding.
 import asyncio
 import math
 import time
+from contextvars import ContextVar
 from dataclasses import dataclass
 
 from qdrant_client.http import models as qmodels
@@ -21,9 +22,18 @@ from app.services import sparse
 from app.services.embedding_service import embed_batch_with_retry
 from app.services.fusion import reciprocal_rank_fusion
 from app.services.reranking import get_reranker
+from app.services.vector_service import hybrid_enabled
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+# Per-request stage timings, read by the graph so they can be reported in the SSE stream.
+_STAGE_TIMINGS: ContextVar[dict[str, float] | None] = ContextVar("stage_timings", default=None)
+
+
+def get_stage_timings() -> dict[str, float]:
+    """Timings (ms) of the most recent retrieval in this request context, e.g. search / fuse / rerank."""
+    return dict(_STAGE_TIMINGS.get() or {})
 
 
 @dataclass
@@ -118,6 +128,11 @@ async def _hybrid_candidates(
         except Exception as exc:  # a reranker failure must degrade to the fused order, never break retrieval
             logger.warning("Reranking failed, keeping fused order: %s", exc)
     t_rerank = time.perf_counter()
+    _STAGE_TIMINGS.set({
+        "search_ms": round((t_search - t0) * 1000, 1),
+        "fuse_ms": round((t_fuse - t_search) * 1000, 1),
+        "rerank_ms": round((t_rerank - t_fuse) * 1000, 1),
+    })
 
     logger.info(
         "hybrid_retrieval: search=%.0fms fuse=%.0fms rerank=%.0fms candidates=%d hybrid=%s rerank=%s",
@@ -154,16 +169,20 @@ async def retrieve_chunks(
     vectors = await embed_batch_with_retry([query], task_type="RETRIEVAL_QUERY")
     query_vector = vectors[0]
 
-    reordered = settings.ENABLE_HYBRID_SEARCH or settings.ENABLE_RERANKING
+    use_hybrid = hybrid_enabled(settings, coll)
+    reordered = use_hybrid or settings.ENABLE_RERANKING
     if reordered:
-        search_results = await _hybrid_candidates(client, coll, query, query_vector, top_k, settings)
+        effective = settings.model_copy(update={"ENABLE_HYBRID_SEARCH": use_hybrid})
+        search_results = await _hybrid_candidates(client, coll, query, query_vector, top_k, effective)
     else:
+        t_start = time.perf_counter()
         search_results = await client.search(
             collection_name=coll,
             query_vector=query_vector,
             limit=top_k,
             with_payload=True,
         )
+        _STAGE_TIMINGS.set({"search_ms": round((time.perf_counter() - t_start) * 1000, 1)})
 
     # Log all raw candidate scores before filtering
     if search_results:

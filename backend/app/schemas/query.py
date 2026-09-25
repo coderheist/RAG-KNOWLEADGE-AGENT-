@@ -86,6 +86,7 @@ class SSESources(BaseModel):
     type: Literal["sources"] = "sources"
     sources: list[SourceCitation]
     retrieved_count: int
+    timings_ms: dict[str, float] = Field(default_factory=dict, description="Per-stage retrieval timings.")
 
 
 class SSEChunk(BaseModel):

@@ -43,7 +43,9 @@ class Settings(BaseSettings):
     QUERY_REWRITE_MAX_TOKENS: int = 96
 
     # ── Hybrid search + reranking (Phase 3) — all off by default = old dense-only behaviour ──
-    ENABLE_HYBRID_SEARCH: bool = False       # dense + BM25 sparse, merged with Reciprocal Rank Fusion
+    # dense + BM25 sparse merged with RRF. Measured: exact_term recall@5 0.583 -> 0.750, +4 ms. Only active on
+    # collections that carry the sparse vector; older collections fall back to dense with a startup warning.
+    ENABLE_HYBRID_SEARCH: bool = True
     ENABLE_RERANKING: bool = False           # cross-encoder rerank of the fused candidates
     INCLUDE_CHUNK_METADATA_IN_PROMPT: bool = False   # heading/section in each context block header
     SPARSE_MODEL: str = "Qdrant/bm25"

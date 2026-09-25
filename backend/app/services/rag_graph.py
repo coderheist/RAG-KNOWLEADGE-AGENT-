@@ -29,7 +29,7 @@ from langgraph.graph import END, START, StateGraph
 from app.config import get_settings
 from app.services.conversation_service import save_turn
 from app.services.query_rewriter import gemini_rewrite_llm, rewrite_query
-from app.services.retrieval_service import RetrievedChunk, retrieve_chunks
+from app.services.retrieval_service import RetrievedChunk, get_stage_timings, retrieve_chunks
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -86,6 +86,7 @@ class RAGState(TypedDict):
     top_k: int
     chunks: list[RetrievedChunk]
     sources: list[dict]            # serialisable dicts ready for SSE
+    timings_ms: dict[str, float]   # per-stage retrieval timings (search / fuse / rerank)
     answer: str
 
 
@@ -156,7 +157,7 @@ async def _retrieve_node(state: RAGState) -> dict:
         len(chunks),
         state["query"][:80],
     )
-    return {"chunks": chunks, "sources": sources}
+    return {"chunks": chunks, "sources": sources, "timings_ms": get_stage_timings()}
 
 
 async def _generate_node(state: RAGState) -> dict:
@@ -309,6 +310,7 @@ async def stream_rag(
         "top_k": top_k,
         "chunks": [],
         "sources": [],
+        "timings_ms": {},
         "answer": "",
     }
 
@@ -334,6 +336,7 @@ async def stream_rag(
                     "type": "sources",
                     "sources": sources,
                     "retrieved_count": len(sources),
+                    "timings_ms": output.get("timings_ms", {}),
                 }
                 sources_emitted = True
 
