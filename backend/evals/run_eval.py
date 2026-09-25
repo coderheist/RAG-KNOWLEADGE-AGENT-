@@ -58,7 +58,8 @@ async def stream_query(
             kind = event.get("type")
             if kind == "sources":
                 out["sources"] = event.get("sources", [])
-                out["timings_ms"] = event.get("timings_ms", {})
+                # the agent re-sends the final (graded) context without timings; keep the retrieval timings
+                out["timings_ms"] = event.get("timings_ms") or out.get("timings_ms", {})
                 if sources_only:
                     break
             elif kind == "chunk":

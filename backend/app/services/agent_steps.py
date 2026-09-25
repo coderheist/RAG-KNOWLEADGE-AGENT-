@@ -8,6 +8,7 @@ no caveat). A flaky helper model must never make answers worse than the pipeline
 
 from __future__ import annotations
 
+import re
 from typing import Literal
 
 from langchain_core.messages import BaseMessage
@@ -111,8 +112,28 @@ def should_retry(weak: bool, retrieval_attempts: int, max_loops: int) -> bool:
     return weak and retrieval_attempts <= max_loops
 
 
-def usable_indexes(grades: list[Grade]) -> list[int]:
-    return [i for i, g in enumerate(grades) if g in ("relevant", "partial")]
+def select_from_pool(pool: list[tuple[str, str]], top_k: int) -> list[str]:
+    """
+    Pick the chunk ids to generate from, across every retrieval attempt (``pool`` is ``(chunk_id, grade)`` in
+    retrieval order). Relevant chunks come first, then partial ones. If the grader found nothing usable, fall
+    back to everything retrieved: the generator can still refuse, but it cannot answer from chunks it never
+    sees, and graders do misjudge look-alike identifiers.
+    """
+    seen: dict[str, str] = {}
+    for cid, grade in pool:
+        if cid not in seen or grade == "relevant":
+            seen[cid] = grade
+    ranked = [c for c, g in seen.items() if g == "relevant"] + [c for c, g in seen.items() if g == "partial"]
+    return (ranked or list(seen))[:top_k]
+
+
+_IDENTIFIER = re.compile(r"\b(?=[A-Za-z0-9.-]*\d)[A-Za-z0-9]+(?:[-.][A-Za-z0-9]+)+\b")
+
+
+def keep_identifiers(original: str, candidate: str) -> str:
+    """Re-append identifiers (error codes, SKUs, versions) the retry rewrite dropped: they are what search needs."""
+    missing = [t for t in _IDENTIFIER.findall(original) if t.lower() not in candidate.lower()]
+    return " ".join([candidate, *missing]) if missing else candidate
 
 
 _RETRY_INSTRUCTION = (

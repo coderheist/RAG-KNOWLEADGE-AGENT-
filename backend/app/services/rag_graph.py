@@ -39,8 +39,9 @@ from app.services.agent_steps import (
     classify_turn,
     grade_chunks,
     is_weak,
+    keep_identifiers,
+    select_from_pool,
     should_retry,
-    usable_indexes,
 )
 from app.services.citations import (
     STRUCTURED_OUTPUT_INSTRUCTIONS,
@@ -114,6 +115,7 @@ class RAGState(TypedDict):
     retrieval_attempt: int         # retrievals performed so far; capped by MAX_RETRIEVAL_LOOPS
     retrieval_weak: bool           # the last grading found too few usable chunks
     chunk_grades: list[str]        # relevant | partial | irrelevant, per chunk of the last retrieval
+    pool: list                     # (RetrievedChunk, grade) from every attempt; the final context is chosen here
     failed_queries: list[str]      # search queries that retrieved weakly, fed to the retry rewrite
     groundedness: dict             # {"grounded": bool, "unsupported_claims": [...]} once checked
     structured: bool               # the answer came from validated structured output
@@ -164,6 +166,7 @@ async def _rewrite_retry_node(state: RAGState, settings) -> dict:
     try:
         raw = await llm(build_retry_prompt(query, state["history_messages"], state["failed_queries"]))
         candidate = guard_rewrite(query, raw)
+        candidate = candidate and keep_identifiers(query, candidate)
     except Exception as exc:
         logger.warning("Retry rewrite failed, reusing the previous query: %s", exc)
         candidate = None
@@ -198,6 +201,21 @@ async def _rewrite_query_node(state: RAGState) -> dict:
     return {"search_query": search_query, "rewrite_applied": applied}
 
 
+def _source_dict(c: RetrievedChunk) -> dict:
+    return {
+        "document_id": c.document_id,
+        "filename": c.filename,
+        "page_number": c.page_number,
+        "chunk_index": c.chunk_index,
+        "text_snippet": c.text[:300],
+        "score": round(c.score, 4),
+        "chunk_id": c.chunk_id,
+        "rerank_score": None if c.rerank_score is None else round(c.rerank_score, 4),
+        "heading": c.heading,
+        "section": c.section,
+    }
+
+
 async def _retrieve_node(state: RAGState) -> dict:
     """
     Embed the standalone search query and fetch the top-k chunks from Qdrant.
@@ -208,21 +226,7 @@ async def _retrieve_node(state: RAGState) -> dict:
     """
     chunks = await retrieve_chunks(query=state["search_query"], top_k=state["top_k"])
 
-    sources = [
-        {
-            "document_id": c.document_id,
-            "filename": c.filename,
-            "page_number": c.page_number,
-            "chunk_index": c.chunk_index,
-            "text_snippet": c.text[:300],
-            "score": round(c.score, 4),
-            "chunk_id": c.chunk_id,
-            "rerank_score": None if c.rerank_score is None else round(c.rerank_score, 4),
-            "heading": c.heading,
-            "section": c.section,
-        }
-        for c in chunks
-    ]
+    sources = [_source_dict(c) for c in chunks]
 
     logger.info(
         "retrieve_node: %d chunks for query=%r",
@@ -247,11 +251,15 @@ async def _grade_chunks_node(state: RAGState) -> dict:
     grades = await grade_chunks(state["search_query"], [c.text for c in chunks], _agent_llm())
     weak = is_weak(grades, settings.MIN_RELEVANT_CHUNKS)
     logger.info("grade_chunks_node: grades=%s weak=%s attempt=%d", grades, weak, state["retrieval_attempt"])
+    pool = [*state["pool"], *zip(chunks, grades)]
     if weak and should_retry(True, state["retrieval_attempt"], settings.MAX_RETRIEVAL_LOOPS):
-        return {"chunk_grades": grades, "retrieval_weak": True,
+        return {"chunk_grades": grades, "retrieval_weak": True, "pool": pool,
                 "failed_queries": [*state["failed_queries"], state["search_query"]]}
-    keep = usable_indexes(grades)
-    return {"chunk_grades": grades, "retrieval_weak": weak, "chunks": [chunks[i] for i in keep]}
+    # The final context is chosen across all attempts, so a good first hit survives a drifting retry.
+    by_id = {c.chunk_id: c for c, _ in pool}
+    chosen = [by_id[cid] for cid in select_from_pool([(c.chunk_id, g) for c, g in pool], state["top_k"])]
+    return {"chunk_grades": grades, "retrieval_weak": weak, "pool": pool,
+            "chunks": chosen, "sources": [_source_dict(c) for c in chosen]}
 
 
 _DIRECT_SYSTEM = (
@@ -492,6 +500,7 @@ async def stream_rag(
         "retrieval_weak": False,
         "chunk_grades": [],
         "failed_queries": [],
+        "pool": [],
         "groundedness": {},
         "structured": False,
         "citations": {},
@@ -535,6 +544,9 @@ async def stream_rag(
                 output = event["data"].get("output", {})
                 yield {"type": "chunk_grades", "grades": output.get("chunk_grades", []),
                        "weak": output.get("retrieval_weak", False)}
+                if "sources" in output:  # the final context: [Source N] in the answer refers to this list
+                    yield {"type": "sources", "sources": output["sources"], "retrieved_count": len(output["sources"]),
+                           "timings_ms": {}}
 
             # ── After the groundedness check: verdict, plus a visible caveat if unsupported ──
             elif kind == "on_chain_end" and name == "check_grounded":

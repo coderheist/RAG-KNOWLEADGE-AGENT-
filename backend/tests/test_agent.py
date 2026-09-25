@@ -14,8 +14,9 @@ from app.services.agent_steps import (
     classify_turn,
     grade_chunks,
     is_weak,
+    keep_identifiers,
+    select_from_pool,
     should_retry,
-    usable_indexes,
 )
 from app.services.retrieval_service import RetrievedChunk
 
@@ -80,8 +81,24 @@ def test_is_weak(grades, min_relevant, weak) -> None:
     assert is_weak(grades, min_relevant) is weak
 
 
-def test_usable_indexes_keeps_relevant_and_partial() -> None:
-    assert usable_indexes(["relevant", "irrelevant", "partial"]) == [0, 2]
+def test_select_from_pool_prefers_relevant_across_attempts() -> None:
+    pool = [("a", "irrelevant"), ("b", "partial"), ("c", "irrelevant"), ("d", "relevant"), ("b", "irrelevant")]
+    assert select_from_pool(pool, top_k=5) == ["d", "b"]      # a good first-attempt chunk survives the retry
+    assert select_from_pool(pool, top_k=1) == ["d"]
+
+
+def test_select_from_pool_falls_back_to_everything_when_nothing_is_usable() -> None:
+    pool = [("a", "irrelevant"), ("b", "irrelevant"), ("a", "irrelevant")]
+    assert select_from_pool(pool, top_k=5) == ["a", "b"]      # never generate from an empty context
+
+
+def test_keep_identifiers_restores_dropped_codes() -> None:
+    q = "What is the Q3 unit cost for SKU HW-FN-7701?"
+    assert keep_identifiers(q, "HW-FN-7701 Q3 expenses") == "HW-FN-7701 Q3 expenses"
+    assert keep_identifiers(q, "quarterly fan pricing") == "quarterly fan pricing HW-FN-7701"
+    both = keep_identifiers("What does E-4292 mean in v4.4.2?", "queue quota error")
+    assert both == "queue quota error E-4292 v4.4.2"
+    assert keep_identifiers("How long is data retained?", "retention period") == "retention period"
 
 
 @pytest.mark.parametrize(
@@ -108,8 +125,9 @@ async def test_groundedness_returns_the_verdict_or_none_on_failure() -> None:
 
 # ── graph: loop termination and the no-retrieval route ─────────────────────────────────────────
 
-def chunk(text: str = "some passage") -> RetrievedChunk:
-    return RetrievedChunk(document_id="d", filename="f.md", page_number=1, chunk_index=0, text=text, score=0.9)
+def chunk(text: str = "some passage", chunk_id: str = "c0") -> RetrievedChunk:
+    return RetrievedChunk(document_id="d", filename="f.md", page_number=1, chunk_index=0, text=text, score=0.9,
+                          chunk_id=chunk_id)
 
 
 @pytest.fixture
@@ -127,7 +145,8 @@ def graph_env(monkeypatch: pytest.MonkeyPatch):
 
     async def fake_retrieve(state):
         calls["retrieve"] += 1
-        return {"chunks": [chunk(), chunk()], "sources": [], "timings_ms": {},
+        n = state["retrieval_attempt"]
+        return {"chunks": [chunk(chunk_id=f"a{n}-0"), chunk(chunk_id=f"a{n}-1")], "sources": [], "timings_ms": {},
                 "retrieval_attempt": state["retrieval_attempt"] + 1}
 
     async def fake_generate(state):
@@ -153,7 +172,7 @@ def initial_state() -> dict:
         "query": "what is the rate limit?", "search_query": "what is the rate limit?", "rewrite_applied": False,
         "conversation_id": "c", "history_messages": [AIMessage(content="hi")], "top_k": 5, "chunks": [],
         "sources": [], "timings_ms": {}, "route": "needs_retrieval", "retrieval_attempt": 0,
-        "retrieval_weak": False, "chunk_grades": [], "failed_queries": [], "groundedness": {}, "answer": "",
+        "retrieval_weak": False, "chunk_grades": [], "failed_queries": [], "pool": [], "groundedness": {}, "answer": "",
     }
 
 
@@ -165,8 +184,11 @@ async def test_loop_terminates_at_the_cap_even_when_grading_is_always_weak(graph
     final = await rag_graph._compile_graph().ainvoke(initial_state())
 
     assert graph_env["retrieve"] == 3                    # first retrieval + MAX_RETRIEVAL_LOOPS (2) retries, then stop
-    assert final["answer"] == "final answer"             # it still answers (here: with no usable chunks)
-    assert final["chunks"] == []                         # irrelevant chunks never reach generation
+    assert final["answer"] == "final answer"
+    # Nothing graded usable in any attempt: generate from what was retrieved (capped at top_k) rather than
+    # from an empty context -- graders misjudge look-alike identifiers, and the generator can still refuse.
+    assert [c.chunk_id for c in final["chunks"]] == ["a0-0", "a0-1", "a1-0", "a1-1", "a2-0"]
+    assert [s["chunk_id"] for s in final["sources"]] == [c.chunk_id for c in final["chunks"]]
     assert len(final["failed_queries"]) == 2
 
 
@@ -178,7 +200,8 @@ async def test_good_retrieval_generates_without_retrying(graph_env, monkeypatch)
     final = await rag_graph._compile_graph().ainvoke(initial_state())
 
     assert graph_env["retrieve"] == 1
-    assert len(final["chunks"]) == 1
+    assert [c.chunk_id for c in final["chunks"]] == ["a0-0"]   # only the relevant chunk, and sources match it
+    assert [s["chunk_id"] for s in final["sources"]] == ["a0-0"]
 
 
 async def test_chitchat_makes_zero_retrieval_calls(graph_env, monkeypatch) -> None:
@@ -202,3 +225,21 @@ async def test_agentic_loop_off_is_the_linear_pipeline_with_no_helper_llm_calls(
     assert graph_env["retrieve"] == 1
     assert llm.calls == []
     assert final["answer"] == "final answer"
+
+
+async def test_a_good_first_hit_survives_a_retry(graph_env, monkeypatch) -> None:
+    grades = iter([["partial", "irrelevant"], ["irrelevant", "irrelevant"], ["irrelevant", "irrelevant"]])
+
+    class SeqLLM(StubLLM):
+        async def __call__(self, prompt, schema):
+            if schema is GradeResult:
+                return GradeResult(grades=next(grades))
+            return await super().__call__(prompt, schema)
+
+    llm = SeqLLM(RouteDecision=RouteDecision(route="needs_retrieval"))
+    monkeypatch.setattr(rag_graph, "_agent_llm", lambda: llm)
+
+    final = await rag_graph._compile_graph().ainvoke(initial_state())
+
+    assert graph_env["retrieve"] == 3
+    assert [c.chunk_id for c in final["chunks"]] == ["a0-0"]   # the first attempt's partial hit is kept

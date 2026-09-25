@@ -13,6 +13,7 @@ import math
 import time
 from contextvars import ContextVar
 from dataclasses import dataclass
+from typing import Any, cast
 
 from qdrant_client.http import models as qmodels
 
@@ -176,12 +177,13 @@ async def retrieve_chunks(
         search_results = await _hybrid_candidates(client, coll, query, query_vector, top_k, effective)
     else:
         t_start = time.perf_counter()
-        search_results = await client.search(
+        # ScoredPoint and _Hit share .id/.payload/.score; Any lets both branches feed the code below.
+        search_results = cast(list[Any], await client.search(
             collection_name=coll,
             query_vector=query_vector,
             limit=top_k,
             with_payload=True,
-        )
+        ))
         _STAGE_TIMINGS.set({"search_ms": round((time.perf_counter() - t_start) * 1000, 1)})
 
     # Log all raw candidate scores before filtering
