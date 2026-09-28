@@ -262,7 +262,9 @@ def stratified_subset(rows: list[dict], limit: int) -> list[dict]:
 
 
 def load_results(tag: str) -> dict:
-    files = sorted(RESULTS_DIR.glob(f"{tag}_*.json"))
+    # exact tag: "rs_hybrid" must not match "rs_hybrid_rr20_<stamp>.json"
+    pattern = re.compile(rf"{re.escape(tag)}_\d{{8}}_\d{{6}}\.json")
+    files = sorted(f for f in RESULTS_DIR.glob(f"{tag}_*.json") if pattern.fullmatch(f.name))
     if not files:
         raise SystemExit(f"no results file found for tag {tag!r} in {RESULTS_DIR}")
     return json.loads(files[-1].read_text())

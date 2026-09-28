@@ -14,6 +14,7 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
+from app.config import get_settings
 from app.services.metrics import record_sdk_usage
 
 T = TypeVar("T", bound=BaseModel)
@@ -44,6 +45,7 @@ def gemini_structured_llm(model: str, api_key: str, max_output_tokens: int) -> S
                 "max_output_tokens": max_output_tokens,
                 "response_mime_type": "application/json",
             },
+            request_options={"timeout": get_settings().LLM_TIMEOUT_S},
         )
         record_sdk_usage(model, "agent", response)
         return response.text

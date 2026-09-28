@@ -8,7 +8,6 @@ no caveat). A flaky helper model must never make answers worse than the pipeline
 
 from __future__ import annotations
 
-import re
 from typing import Literal
 
 from langchain_core.messages import BaseMessage
@@ -16,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from app.services.llm_json import StructuredLLM
 from app.services.query_rewriter import format_history
+from app.services.sparse import IDENTIFIER
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -127,12 +127,11 @@ def select_from_pool(pool: list[tuple[str, str]], top_k: int) -> list[str]:
     return (ranked or list(seen))[:top_k]
 
 
-_IDENTIFIER = re.compile(r"\b(?=[A-Za-z0-9.-]*\d)[A-Za-z0-9]+(?:[-.][A-Za-z0-9]+)+\b")
 
 
 def keep_identifiers(original: str, candidate: str) -> str:
     """Re-append identifiers (error codes, SKUs, versions) the retry rewrite dropped: they are what search needs."""
-    missing = [t for t in _IDENTIFIER.findall(original) if t.lower() not in candidate.lower()]
+    missing = [t for t in IDENTIFIER.findall(original) if t.lower() not in candidate.lower()]
     return " ".join([candidate, *missing]) if missing else candidate
 
 

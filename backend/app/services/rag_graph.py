@@ -141,6 +141,8 @@ def _build_llm(settings) -> ChatGoogleGenerativeAI:
         temperature=0.1,          # low temperature for factual RAG
         streaming=True,           # enables on_chat_model_stream events
         convert_system_message_to_human=False,
+        timeout=settings.LLM_TIMEOUT_S,
+        max_retries=settings.LLM_MAX_RETRIES,
     )
 
 

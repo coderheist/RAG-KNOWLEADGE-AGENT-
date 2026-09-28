@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     ENABLE_VERIFIED_CITATIONS: bool = False  # structured answer: claims with source ids validated server-side
     AGENT_MODEL: str = "gemini-flash-lite-latest"   # router / grader / groundedness checker
     AGENT_MAX_TOKENS: int = 512
+    # Bound every LLM call: a provider stall must not hold a request for minutes (seen: 200+ s with defaults).
+    LLM_TIMEOUT_S: float = 45.0
+    LLM_MAX_RETRIES: int = 2
 
     # ── Observability (Phase 6) ──────────────────────────────────────────────
     # USD per 1M tokens for the rag_llm_cost_usd_total metric. 0 = free tier; set from your plan's price sheet.

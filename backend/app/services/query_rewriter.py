@@ -19,6 +19,7 @@ from collections.abc import Awaitable, Callable
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
+from app.config import get_settings
 from app.services.metrics import record_sdk_usage
 from app.utils.logging import get_logger
 
@@ -100,7 +101,9 @@ def gemini_rewrite_llm(model: str, api_key: str, max_output_tokens: int) -> Rewr
 
         genai.configure(api_key=api_key)
         response = genai.GenerativeModel(model).generate_content(
-            prompt, generation_config={"temperature": 0, "max_output_tokens": max_output_tokens}
+            prompt,
+            generation_config={"temperature": 0, "max_output_tokens": max_output_tokens},
+            request_options={"timeout": get_settings().LLM_TIMEOUT_S},
         )
         record_sdk_usage(model, "rewrite", response)
         return response.text

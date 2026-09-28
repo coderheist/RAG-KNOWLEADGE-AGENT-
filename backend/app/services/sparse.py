@@ -8,6 +8,7 @@ matches (product codes, error codes, surnames, dates) that dense embeddings blur
 from __future__ import annotations
 
 import asyncio
+import re
 from functools import lru_cache
 from typing import Any
 
@@ -16,6 +17,14 @@ from qdrant_client.http import models as qmodels
 from app.config import get_settings
 
 SPARSE_VECTOR_NAME = "bm25"
+
+# Identifiers such as error codes, SKUs and versions (E-4292, HW-FN-7701, v4.4.2): tokens with a digit and a
+# separator. Dense embeddings blur look-alikes (E-5107 vs E-5108); BM25 matches them exactly.
+IDENTIFIER = re.compile(r"\b(?=[A-Za-z0-9.-]*\d)[A-Za-z0-9]+(?:[-.][A-Za-z0-9]+)+\b")
+
+
+def has_identifier(text: str) -> bool:
+    return IDENTIFIER.search(text) is not None
 
 
 @lru_cache(maxsize=1)

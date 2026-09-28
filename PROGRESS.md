@@ -354,3 +354,39 @@ the model dropped; a final `sources` event carries exactly the context the model
 therefore measured on the final context rather than the raw first retrieval.
 
 **Next:** iteration 2 — re-run the same judged eval (`ag_full2`).
+
+### Phase 4 · Iteration 2 · 2026-09-28
+
+**Invalid attempt first (`ag_full2`, 2026-09-25, kept in results/ for the record):** the Gemini free tier allows
+500 requests/day per model and that day's budget was already partly spent on iteration 1, so 36/62 cases failed
+with 429 mid-run. Numbers from that file are not used anywhere. Lesson: one full judged agent run (≈4.5 app calls
++ 2 judge calls per case) is the most a single day's quota holds, so each iteration gets its own day. A plan to
+move the judge to `gemini-3.6-flash` was dropped: its free daily cap ran out after ~15 calls. `--rejudge` (re-score
+a stored run with another judge, no app calls) was added while investigating and stays useful.
+
+**Eval (`ag_full3`, judged with the same flash-lite judge as `jd_hybrid`; 62 cases, 6 client timeouts):**
+Paired over the 56 cases both runs completed: faithfulness 0.964 → **0.973**, refusal_correctness 0.946 → 0.946
+(no per-case change: both iteration-1 regressions, q_028 and q_034, are fixed), citation_accuracy (39 applicable)
+0.821 → **0.846**. Unpaired aggregates: faithfulness 0.968 → 0.973, context_precision 0.536 → 0.664 (the grader
+drops irrelevant chunks), chitchat without retrieval 2/7 → **7/7**, recall@5 0.936 → 0.929.
+**Latency:** p50 3.2 s → 14.1 s. The `/metrics` dump for the run shows why beyond the extra calls: 55 retrieval
+queries took 3,053 s in total and the 7 chitchat replies 484 s, yet 5 of those 7 took 3–4 s; two took 207 s and 261 s.
+Slow cases cluster in time (q_011–013, q_020–025, q_058–059) and 6 cases exceeded the eval client's 300 s timeout:
+provider stalls, amplified by LLM clients with no timeout (Gemini SDK) or 6 retries with backoff (LangChain).
+**Cost per query (measured, this run):** 55 retrieval queries + 7 chitchat used 122,720 input and 7,195 output tokens
+in the app (router, grader, groundedness, rewrite, generation), i.e. ≈1,980 input + 116 output tokens per query;
+$0 on the free tier. Retrievals per query averaged 87/55 = 1.58 (the loop retries about half the time).
+
+**Threshold:** faithfulness 0.973 ≥ 0.90 — met. Definition of done: faithfulness improved (paired +0.009),
+chitchat skips retrieval, latency reported; refusal_correctness did **not** improve (equal).
+
+**Diagnosis of the remaining refusals:** all three are exact-code questions that no configuration answers
+(q_026 E-5107, q_029 E-4025, q_031 E-5112). Traced below the API: BM25 ranks the answer chunk **#1** for all three,
+dense does not have it in its top 20, and RRF then scores it 1/61 against chunks that are mediocre in *both* lists,
+so it lands at fused rank 11–13, outside the top 5. Even when kept, the dense-cosine floor and gap filter would cut
+it. A Phase 3 weakness that only this per-case analysis exposed.
+
+**Changed (iteration 3):** (1) for queries containing an identifier (error code, SKU, version), the BM25 leader is
+pinned into the top-k and exempt from the dense-score floor/gap; (2) every LLM call is bounded:
+`LLM_TIMEOUT_S=45` per attempt, `LLM_MAX_RETRIES=2` for the answering model, SDK helpers time out and fail open.
+

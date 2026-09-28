@@ -21,7 +21,7 @@ from app.config import get_settings
 from app.db.qdrant import get_qdrant_client
 from app.services import sparse
 from app.services.embedding_service import embed_batch_with_retry
-from app.services.fusion import reciprocal_rank_fusion
+from app.services.fusion import pin, reciprocal_rank_fusion
 from app.services.reranking import get_reranker
 from app.services.vector_service import hybrid_enabled
 from app.utils.logging import get_logger
@@ -51,6 +51,7 @@ class RetrievedChunk:
     rerank_score: float | None = None   # cross-encoder score, set only when reranking is enabled
     heading: str | None = None
     section: str | None = None
+    pinned: bool = False   # BM25 leader for an identifier query: exempt from the dense-score floor and gap
 
 
 @dataclass
@@ -61,6 +62,7 @@ class _Hit:
     payload: dict
     score: float                       # dense cosine similarity
     rerank_score: float | None = None
+    pinned: bool = False
 
 
 async def _cosine_scores(client, coll: str, ids: list[str], query_vector: list[float]) -> dict[str, float]:
@@ -110,12 +112,15 @@ async def _hybrid_candidates(
         fused_ids = [i for i, _ in reciprocal_rank_fusion(rankings, settings.RRF_K)]
     else:
         fused_ids = dense_ids
+    leader = str(sparse_hits[0].id) if sparse_hits and sparse.has_identifier(query) else None
+    if leader:
+        fused_ids = pin(fused_ids, leader, top_k)
     candidate_ids = fused_ids[: max(settings.RERANK_CANDIDATE_COUNT if settings.ENABLE_RERANKING else top_k, top_k)]
 
     missing = [i for i in candidate_ids if i not in dense_scores]
     if missing:
         dense_scores.update(await _cosine_scores(client, coll, missing, query_vector))
-    hits = [_Hit(id=i, payload=payloads[i], score=dense_scores.get(i, 0.0)) for i in candidate_ids]
+    hits = [_Hit(id=i, payload=payloads[i], score=dense_scores.get(i, 0.0), pinned=i == leader) for i in candidate_ids]
     t_fuse = time.perf_counter()
 
     if settings.ENABLE_RERANKING and hits:
@@ -247,6 +252,7 @@ async def retrieve_chunks(
                 rerank_score=getattr(hit, "rerank_score", None),
                 heading=payload.get("heading"),
                 section=payload.get("section"),
+                pinned=getattr(hit, "pinned", False),
             ))
 
         if valid_candidates:
@@ -263,6 +269,9 @@ async def retrieve_chunks(
             )
             
             for c in valid_candidates:
+                if c.pinned:  # exact lexical match: its dense score says little about a look-alike identifier
+                    chunks.append(c)
+                    continue
                 # Apply absolute score floor
                 if c.score < settings.RETRIEVAL_MIN_SCORE:
                     logger.info(

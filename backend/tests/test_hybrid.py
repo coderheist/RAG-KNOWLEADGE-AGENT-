@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.services import retrieval_service
-from app.services.fusion import reciprocal_rank_fusion
+from app.services.fusion import pin, reciprocal_rank_fusion
 
 
 def test_rrf_matches_hand_computed_scores() -> None:
@@ -121,3 +121,37 @@ async def test_reranker_failure_falls_back_to_fused_order(monkeypatch: pytest.Mo
     )
     assert [h.id for h in hits] == ["a", "b"]
     assert all(h.rerank_score is None for h in hits)
+
+
+def test_pin_moves_an_id_into_the_window_and_keeps_order() -> None:
+    ids = ["a", "b", "c", "d", "e"]
+    assert pin(ids, "e", 3) == ["a", "b", "e", "c", "d"]
+    assert pin(ids, "b", 3) == ids                              # already inside: unchanged
+    assert pin(ids, "e", 0) == ids
+
+
+def _identifier_case() -> FakeClient:
+    # The answer chunk "x" is BM25's #1 but absent from the dense top list; "m1".."m4" are mediocre in both
+    # lists, so plain RRF ranks x fifth and a top-3 cut would lose it (the E-5107 / E-4025 failure).
+    both = [hit(f"m{i}", 0.70 - i / 100, f"m{i}") for i in range(1, 5)]
+    return FakeClient(
+        dense=both,
+        sparse=[hit("x", 9.0, "E-5107: shard unavailable"), *reversed(both)],
+        vectors={"x": [0.0, 1.0]},
+    )
+
+
+async def test_bm25_leader_is_pinned_for_identifier_queries() -> None:
+    hits = await retrieval_service._hybrid_candidates(
+        _identifier_case(), "docs", "What does error code E-5107 mean?", [1.0, 1.0], 3, settings()
+    )
+    assert "x" in [h.id for h in hits]
+    assert [h.pinned for h in hits if h.id == "x"] == [True]
+
+
+async def test_no_pinning_without_an_identifier() -> None:
+    hits = await retrieval_service._hybrid_candidates(
+        _identifier_case(), "docs", "what does the shard error mean?", [1.0, 1.0], 3, settings()
+    )
+    assert "x" not in [h.id for h in hits] and not any(h.pinned for h in hits)
+
