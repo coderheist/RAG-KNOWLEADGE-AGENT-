@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   AlertCircle,
@@ -16,7 +16,7 @@ import {
   ThumbsUp,
   User,
 } from "lucide-react";
-import { linkCitations } from "@/lib/citations";
+import { bestSupportingLine, linkCitations } from "@/lib/citations";
 import type { ChatMessage as Message, QuerySource } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,34 @@ const Markdown = dynamic(() => import("@/components/chat/markdown").then((m) => 
 
 function sourceLabel(s: QuerySource) {
   return `${s.documentName ?? "Unknown document"}${s.page ? `, page ${s.page}` : ""}`;
+}
+
+/** The cited chunk with the line that best supports the claims highlighted and scrolled into view. */
+function Passage({ text, claims }: { text: string; claims: string[] }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const markRef = useRef<HTMLElement>(null);
+  const lines = text.split(/\n+/).filter((l) => l.trim());
+  const best = bestSupportingLine(lines, claims);
+
+  useEffect(() => {
+    const box = boxRef.current;
+    const mark = markRef.current;
+    if (box && mark) box.scrollTop = mark.offsetTop - box.offsetTop - box.clientHeight / 3;
+  }, []);
+
+  return (
+    <div ref={boxRef} className="relative mt-2 max-h-48 space-y-1 overflow-y-auto text-xs text-muted-foreground">
+      {lines.map((line, i) =>
+        i === best ? (
+          <mark key={i} ref={markRef} className="block rounded bg-primary/15 px-1 text-foreground">
+            {line}
+          </mark>
+        ) : (
+          <p key={i}>{line}</p>
+        )
+      )}
+    </div>
+  );
 }
 
 /** Superscript chip for an inline citation; the popover shows the passage it points at. */
@@ -64,11 +92,7 @@ function CitationChip({
             .filter(Boolean)
             .join(" · ")}
         </p>
-        {source.chunkText && (
-          <p className="mt-2 max-h-48 overflow-y-auto whitespace-pre-line text-xs text-muted-foreground">
-            {source.chunkText}
-          </p>
-        )}
+        {source.chunkText && <Passage text={source.chunkText} claims={claims} />}
         {claims.length > 0 && (
           <div className="mt-2 border-t pt-2">
             <p className="text-xs font-medium">Supports</p>

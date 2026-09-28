@@ -66,7 +66,7 @@ class SourceCitation(BaseModel):
     filename: str
     page_number: int
     chunk_index: int
-    text_snippet: str = Field(..., description="First 300 chars of the chunk text.")
+    text_snippet: str = Field(..., description="The chunk text (up to 2,000 chars), shown as the cited passage.")
     score: float = Field(..., description="Cosine similarity score (0–1).")
     chunk_id: str = Field("", description="Deterministic chunk (Qdrant point) id; used by the eval harness.")
     rerank_score: float | None = Field(None, description="Cross-encoder score when reranking is enabled.")

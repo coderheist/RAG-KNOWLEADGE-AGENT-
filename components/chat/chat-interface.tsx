@@ -97,6 +97,11 @@ export function ChatInterface() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
+  // Warm the lazily loaded markdown renderer so the first answer never renders into an empty bubble.
+  useEffect(() => {
+    void import("@/components/chat/markdown");
+  }, []);
+
   useEffect(() => {
     getDocuments(activeCollectionId)
       .then((r) => setDocuments(r.documents))

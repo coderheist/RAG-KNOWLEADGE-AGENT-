@@ -211,7 +211,7 @@ def _source_dict(c: RetrievedChunk) -> dict:
         "filename": c.filename,
         "page_number": c.page_number,
         "chunk_index": c.chunk_index,
-        "text_snippet": c.text[:300],
+        "text_snippet": c.text[:2000],   # the whole chunk in practice: the UI shows it as the cited passage
         "score": round(c.score, 4),
         "chunk_id": c.chunk_id,
         "rerank_score": None if c.rerank_score is None else round(c.rerank_score, 4),
