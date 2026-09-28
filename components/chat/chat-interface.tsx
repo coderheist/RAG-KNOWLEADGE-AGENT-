@@ -97,11 +97,6 @@ export function ChatInterface() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
-  // Warm the lazily loaded markdown renderer so the first answer never renders into an empty bubble.
-  useEffect(() => {
-    void import("@/components/chat/markdown");
-  }, []);
-
   useEffect(() => {
     getDocuments(activeCollectionId)
       .then((r) => setDocuments(r.documents))
@@ -119,6 +114,9 @@ export function ChatInterface() {
     async (raw: string, replaceId?: string) => {
       const query = raw.trim();
       if (!query || isStreaming) return;
+      // Load the markdown renderer now, while the answer is being prepared: loading it on mount slowed the
+      // page's first paint on mobile, and loading it lazily on the first token left a blank bubble.
+      void import("@/components/chat/markdown");
 
       const assistantId = createId();
       const assistant: Message = {
