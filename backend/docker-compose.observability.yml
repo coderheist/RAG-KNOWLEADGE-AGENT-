@@ -4,6 +4,8 @@
 #
 # Grafana: http://localhost:3001 (anonymous read-only viewer; the "RAG Agent" dashboard is provisioned)
 # Prometheus: http://localhost:9090 — scrapes backend:8000/metrics every 15 s
+# Langfuse:   http://localhost:3002 — traces, one per /query (set LANGFUSE_ENABLED=true in .env).
+#             The project, its API keys and the first admin login are seeded from .env on first start.
 services:
   prometheus:
     image: prom/prometheus:v3.5.0
@@ -27,6 +29,9 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"     # no usage stats sent out, fewer background jobs
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
     volumes:
       - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -39,6 +44,52 @@ services:
       - rag_net
     restart: unless-stopped
 
+  langfuse-db:
+    image: postgres:16-alpine
+    container_name: rag_langfuse_db
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse        # reachable only on the internal rag_net network
+      POSTGRES_DB: langfuse
+    volumes:
+      - langfuse_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 5s
+      retries: 10
+    networks:
+      - rag_net
+    restart: unless-stopped
+
+  langfuse:
+    # v2 needs only Postgres; v3 adds ClickHouse, Redis and MinIO, too heavy next to this stack on a laptop.
+    image: langfuse/langfuse:2.95.11
+    container_name: rag_langfuse
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://langfuse:langfuse@langfuse-db:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3002
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET:?set LANGFUSE_NEXTAUTH_SECRET in .env}
+      SALT: ${LANGFUSE_SALT:?set LANGFUSE_SALT in .env}
+      TELEMETRY_ENABLED: "false"
+      AUTH_DISABLE_SIGNUP: "true"
+      LANGFUSE_INIT_ORG_ID: rag-agent
+      LANGFUSE_INIT_ORG_NAME: RAG Agent
+      LANGFUSE_INIT_PROJECT_ID: rag-agent
+      LANGFUSE_INIT_PROJECT_NAME: rag-agent
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:?set LANGFUSE_PUBLIC_KEY in .env}
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: ${LANGFUSE_SECRET_KEY:?set LANGFUSE_SECRET_KEY in .env}
+      LANGFUSE_INIT_USER_EMAIL: ${LANGFUSE_ADMIN_EMAIL:?set LANGFUSE_ADMIN_EMAIL in .env}
+      LANGFUSE_INIT_USER_PASSWORD: ${LANGFUSE_ADMIN_PASSWORD:?set LANGFUSE_ADMIN_PASSWORD in .env}
+    ports:
+      - "3002:3000"
+    networks:
+      - rag_net
+    restart: unless-stopped
+
 volumes:
   prometheus_data:
   grafana_data:
+  langfuse_db_data:

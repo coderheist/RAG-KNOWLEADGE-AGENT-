@@ -33,7 +33,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 
 from app.config import get_settings
-from app.services import metrics
+from app.services import metrics, tracing
 from app.services.agent_steps import (
     UNGROUNDED_CAVEAT,
     build_retry_prompt,
@@ -514,9 +514,13 @@ async def stream_rag(
     extractor = AnswerStreamExtractor()
     total_chars = 0
     started, route, outcome, attempts = time.perf_counter(), "needs_retrieval", "ok", 0
+    answer, grounded = "", None
+    trace = tracing.start_trace(query, conversation_id)
 
     try:
-        async for event in graph.astream_events(initial_state, version="v2"):
+        async for event in graph.astream_events(
+            initial_state, version="v2", config={"callbacks": tracing.langchain_callbacks(trace)}
+        ):
             kind: str = event["event"]
             name: str = event.get("name", "")
 
@@ -558,12 +562,17 @@ async def stream_rag(
             # ── After the groundedness check: verdict, plus a visible caveat if unsupported ──
             elif kind == "on_chain_end" and name == "check_grounded":
                 verdict = event["data"].get("output", {}).get("groundedness")
+                grounded = verdict.get("grounded") if verdict else None
                 if verdict:
                     yield {"type": "groundedness", **verdict}
                     if verdict.get("grounded") is False:
                         outcome = "ungrounded"
                         total_chars += len(UNGROUNDED_CAVEAT)
                         yield {"type": "chunk", "content": UNGROUNDED_CAVEAT}
+
+            # ── Final answer text (for the trace) ───────────────────────────────
+            elif kind == "on_chain_end" and (name == "direct_response" or (name == "generate" and not verified)):
+                answer = event["data"].get("output", {}).get("answer", "") or answer
 
             # ── Token usage of the LangChain calls (generate / direct_response) ──
             elif kind == "on_chat_model_end":
@@ -602,6 +611,7 @@ async def stream_rag(
             # ── Generation finished: validated citations, and a fallback if nothing streamed ──
             elif kind == "on_chain_end" and name == "generate" and verified:
                 output = event["data"].get("output", {})
+                answer = output.get("answer", "") or answer
                 if not extractor.started and output.get("answer"):
                     total_chars += len(output["answer"])          # plain-text answer: emit it in one piece
                     yield {"type": "chunk", "content": output["answer"]}
@@ -622,6 +632,10 @@ async def stream_rag(
             "message": f"Generation failed: {str(e)}"
         }
     finally:
+        tracing.end_trace(trace, answer, {
+            "route": route, "outcome": outcome, "retrieval_attempts": attempts, "grounded": grounded,
+            "latency_s": round(time.perf_counter() - started, 3),
+        })
         metrics.QUERIES.labels(route, outcome).inc()
         metrics.QUERY_SECONDS.labels(route).observe(time.perf_counter() - started)
         if attempts:

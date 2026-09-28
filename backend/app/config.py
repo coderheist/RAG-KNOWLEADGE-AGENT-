@@ -70,6 +70,11 @@ class Settings(BaseSettings):
     # USD per 1M tokens for the rag_llm_cost_usd_total metric. 0 = free tier; set from your plan's price sheet.
     LLM_PRICE_INPUT_PER_MTOK: float = 0.0
     LLM_PRICE_OUTPUT_PER_MTOK: float = 0.0
+    # Langfuse tracing: off unless enabled AND both keys are set (self-hosted via docker-compose.observability.yml)
+    LANGFUSE_ENABLED: bool = False
+    LANGFUSE_HOST: str = "http://langfuse:3000"
+    LANGFUSE_PUBLIC_KEY: str = ""
+    LANGFUSE_SECRET_KEY: str = ""
 
     # ── Embedding Resiliency ──────────────────────────────────────────────────
     MAX_EMBED_RETRIES: int = 5

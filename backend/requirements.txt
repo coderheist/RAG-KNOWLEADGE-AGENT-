@@ -39,3 +39,4 @@ python-multipart==0.0.20
 # ── Hybrid search + reranking (Phase 3) — local CPU models, no API key ─────────
 fastembed==0.7.4
 prometheus-client==0.26.0
+langfuse==2.60.10
