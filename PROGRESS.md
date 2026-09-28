@@ -422,3 +422,38 @@ README). New config keys this phase: `ENABLE_AGENTIC_LOOP`, `MAX_RETRIEVAL_LOOPS
 `ENABLE_GROUNDEDNESS_CHECK`, `ENABLE_VERIFIED_CITATIONS`, `AGENT_MODEL`, `AGENT_MAX_TOKENS`, `LLM_TIMEOUT_S`,
 `LLM_MAX_RETRIES`.
 
+### Phase 5 · UI overhaul · 2026-09-25 → 2026-09-28 (direction: "tighten the current look")
+
+**Built:** SSE client for every backend event (typed handlers, single `onDone`, conversation memory via
+`conversation_id`); streaming status line with `aria-live`; markdown with syntax highlighting, code-copy and tables;
+inline citation chips (only for citations that match a retrieved source; invented ones stay plain text) with a popover
+that highlights the supporting sentence; ranked sources panel with relevance bars ("show raw context"); groundedness
+and confidence badges; copy / regenerate / thumbs up-down; composer with slash commands, drag-and-drop upload and an
+8-row cap; empty state from the indexed documents; dark mode (next-themes), mobile nav, Ctrl/Cmd+K palette, delete
+confirmation, optimistic delete, specific toasts; framer-motion removed (~40 kB per page); reduced motion respected.
+**Bugs found while testing:** document list and stats were capped at the first 20 of 81 documents (the client never
+paged); Progress bars never received their value; an aborted request could reset a newer one; the cited passage was
+cut at 300 characters, often before the supporting sentence; the lazily loaded renderer could leave the first answer
+blank, and preloading it on mount cost mobile /chat ~28 Lighthouse points, so it now loads when a question is sent.
+**Lighthouse (median of 3, production build):** accessibility 100 and best practices 100 on /chat, /dashboard and
+/documents, desktop and mobile. Performance: desktop 100 / 94 / 99, mobile 91 / 75 / 64 (LCP 2.8–3.0 s on mobile).
+**Threshold:** accessibility ≥ 95 — met. Not met: mobile performance on dashboard and documents (< 85, LCP > 2.5 s on
+the throttled profile of this laptop). Screenshots: `docs/screenshots/` (light/dark, desktop/mobile).
+**Not built (and why):** per-stage upload progress (ingestion is one synchronous request, no stage events); a
+right-rail sources panel on desktop (the panel stays inline under each answer).
+
+### Phase 6 · Observability and the feedback loop · 2026-09-25 → 2026-09-28
+
+**Built:** `POST /feedback` (rating, question, answer, retrieved chunk ids, comment, active flags) wired to the thumbs
+in the UI; `scripts/feedback_to_eval.py` turns thumbs-down rows into golden-format candidates with the ground truth
+left for a human (verified end to end with a probe row, then deleted). Prometheus `/metrics` replaces the in-process
+singleton: queries by route/outcome, latency per request and per retrieval stage, retrievals per query, LLM tokens by
+model and step, cost at configured prices, embedding requests/retries/429s, ingestion. `docker-compose.observability.yml`
+brings up Prometheus, Grafana (provisioned 11-panel dashboard) and self-hosted Langfuse v2 (Postgres only; v3 needs
+ClickHouse/Redis/MinIO, too heavy next to this stack). Langfuse: one trace per query, a span per graph node, flags as
+tags, seeded headlessly from `.env`; tracing and metrics fail open.
+**Verified:** `/metrics` scrapes (Prometheus target up); the Grafana dashboard renders live data; a real query produced a
+38-observation trace with route, outcome, groundedness and flags (screenshots in the README).
+**Cost per query:** ≈2,040 input + 124 output tokens with the agent on (`ag_full4`), $0 on the free tier.
+**Threshold:** traces + metrics + feedback live — met.
+

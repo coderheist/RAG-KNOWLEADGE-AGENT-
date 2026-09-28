@@ -315,6 +315,15 @@ docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
 
 ![Grafana dashboard](docs/screenshots/grafana-dashboard.png)
 
+A Langfuse trace of one agent query: the router, rewrite, retrieval (three attempts here), chunk grading,
+generation and groundedness spans with timings and token counts, tagged with the active feature flags.
+
+![Langfuse trace](docs/screenshots/langfuse-trace.png)
+
+**Cost per query** (measured on the 62-question eval with the agent on): ≈2,040 input + 124 output LLM tokens;
+$0 on the Gemini free tier. Multiply the token counts by your plan's per-token prices, or
+set `LLM_PRICE_*_PER_MTOK` and read `rag_llm_cost_usd_total` from `/metrics`.
+
 # ⚠️ Known limitations
 
 * **Free-tier Gemini quotas shape everything.** The free tier allows about 500 requests per day per model. A full
@@ -349,6 +358,26 @@ Captured from the production build (`npm run build && npm start`) in light and d
 <img src="docs/screenshots/documents-mobile-dark.png" width="200" alt="Documents on mobile, dark">
 <img src="docs/screenshots/chat-mobile-light.png" width="200" alt="Chat on mobile">
 </p>
+
+---
+
+## Lighthouse
+
+Production build (`npm run build && npm start`), median of three runs per page, Lighthouse 12 in headless Chrome
+on the development laptop (a slow machine by Lighthouse's CPU benchmark, so the throttled mobile profile is
+pessimistic).
+
+| Profile | Page | Performance | Accessibility | Best practices | LCP | CLS |
+|---|---|---|---|---|---|---|
+| Desktop | /chat | 100 | 100 | 100 | 0.7 s | 0.011 |
+| Desktop | /dashboard | 94 | 100 | 100 | 0.8 s | 0.005 |
+| Desktop | /documents | 99 | 100 | 100 | 0.6 s | 0.005 |
+| Mobile | /chat | 91 | 100 | 100 | 2.8 s | 0.025 |
+| Mobile | /dashboard | 75 | 100 | 100 | 2.8 s | 0.000 |
+| Mobile | /documents | 64 | 100 | 100 | 3.0 s | 0.000 |
+
+Accessibility is 100 on every page in both profiles. Mobile performance on the dashboard and documents pages is
+below the 85 target and LCP is above 2.5 s on the throttled profile; single runs vary by up to 20 points here.
 
 ---
 
