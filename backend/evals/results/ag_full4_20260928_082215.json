@@ -1,0 +1,2715 @@
+{
+  "tag": "ag_full4",
+  "timestamp": "20260928_082215",
+  "config": {
+    "dataset": "golden_v1",
+    "top_k": 5,
+    "judge_model": "gemini-flash-lite-latest",
+    "base_url": "http://rag_j:8000",
+    "limit": null,
+    "note": "Phase 4 it.3: ag_full3 config + BM25-leader pinning for identifier queries + bounded LLM calls (45 s, 2 retries); judge flash-lite; paced 25s/case",
+    "rejudged_from": null
+  },
+  "aggregates": {
+    "overall": {
+      "answer_relevance": 0.9836065573770492,
+      "citation_accuracy": 0.8478260869565217,
+      "context_precision": 0.7381967213114754,
+      "faithfulness": 0.9836065573770492,
+      "hit_rate@5": 1.0,
+      "mrr": 0.9891304347826086,
+      "ndcg@5": 0.9919767337732925,
+      "no_retrieval": 1.0,
+      "precision@5": 0.21304347826086958,
+      "recall@5": 1.0,
+      "refusal_correctness": 1.0
+    },
+    "by_category": {
+      "chitchat": {
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "faithfulness": 0.8571428571428571,
+        "no_retrieval": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "exact_term": {
+        "answer_relevance": 1.0,
+        "citation_accuracy": 0.6363636363636364,
+        "context_precision": 0.8663636363636363,
+        "faithfulness": 1.0,
+        "hit_rate@5": 1.0,
+        "mrr": 0.9545454545454546,
+        "ndcg@5": 0.966448159415587,
+        "precision@5": 0.2,
+        "recall@5": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "factual_lookup": {
+        "answer_relevance": 1.0,
+        "citation_accuracy": 0.9411764705882353,
+        "context_precision": 0.9705882352941176,
+        "faithfulness": 1.0,
+        "hit_rate@5": 1.0,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "precision@5": 0.2,
+        "recall@5": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "follow_up": {
+        "answer_relevance": 1.0,
+        "citation_accuracy": 1.0,
+        "context_precision": 1.0,
+        "faithfulness": 1.0,
+        "hit_rate@5": 1.0,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "precision@5": 0.2,
+        "recall@5": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "multi_hop": {
+        "answer_relevance": 1.0,
+        "citation_accuracy": 0.75,
+        "context_precision": 1.0,
+        "faithfulness": 1.0,
+        "hit_rate@5": 1.0,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "precision@5": 0.275,
+        "recall@5": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "unanswerable": {
+        "answer_relevance": 0.875,
+        "context_precision": 0.125,
+        "faithfulness": 1.0,
+        "refusal_correctness": 1.0
+      }
+    },
+    "latency_ms": {
+      "p50": 8659.054736001053,
+      "p95": 35127.3571239999,
+      "ttft_p50": 6635.872766999455,
+      "stage_p50": {
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0,
+        "search_ms": 43.8
+      },
+      "stage_p95": {
+        "fuse_ms": 93.2,
+        "rerank_ms": 0.0,
+        "search_ms": 447.2
+      }
+    },
+    "n_cases": 62,
+    "n_errors": 1,
+    "n_generation_errors": 0,
+    "n_judge_errors": 0,
+    "warnings": [
+      "hit_rate@5: zero variance (1.000 on all 46 cases) - check the metric",
+      "no_retrieval: zero variance (1.000 on all 7 cases) - check the metric",
+      "recall@5: zero variance (1.000 on all 46 cases) - check the metric",
+      "refusal_correctness: zero variance (1.000 on all 61 cases) - check the metric"
+    ]
+  },
+  "cases": [
+    {
+      "id": "q_001",
+      "category": "factual_lookup",
+      "question": "What is the default rate limit for Atlas Sync?",
+      "ground_truth": "600 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding the default rate limit for Atlas Sync.",
+        "context_precision": "The retrieved chunk contains the exact information needed to answer the question and no irrelevant chunks were provided.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The default rate limit for Atlas Sync is 600 requests per minute per API key (spec_atlas_sync.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912"
+      ],
+      "latency_ms": 8797.417240999494,
+      "ttft_ms": 5729.336526999759,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 240.8,
+        "fuse_ms": 0.4,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_002",
+      "category": "factual_lookup",
+      "question": "How long is data retained in Boreal Queue?",
+      "ground_truth": "14 days",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that data is retained for 14 days before deletion is directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding data retention duration in Boreal Queue.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Data is retained for 14 days before it is deleted (spec_boreal_queue.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "273b7636-4c54-5bcb-bfde-05ca2032c58a"
+      ],
+      "latency_ms": 8044.496172000436,
+      "ttft_ms": 6467.071816001408,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 62.9,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_003",
+      "category": "factual_lookup",
+      "question": "Which team owns Drift Gateway?",
+      "ground_truth": "The API Platform Team",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that the API Platform Team owns Drift Gateway is directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and concisely states which team owns Drift Gateway.",
+        "context_precision": "The only provided context chunk directly contains the answer to the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Drift Gateway is owned by the API Platform Team (spec_drift_gateway.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da"
+      ],
+      "latency_ms": 8424.770904999605,
+      "ttft_ms": 6833.307585000512,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 233.9,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_004",
+      "category": "factual_lookup",
+      "question": "Which authentication method does Cinder Cache use?",
+      "ground_truth": "Static API keys",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer accurately states that Cinder Cache uses static API keys, which is directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and concisely responds to the question about the authentication method used by Cinder Cache.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Cinder Cache uses static API keys to authenticate clients (spec_cinder_cache.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "4564ced9-60f3-52c6-86c5-c0ef2da6714a"
+      ],
+      "latency_ms": 9199.556475999998,
+      "ttft_ms": 7073.994409000079,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 237.4,
+        "fuse_ms": 0.2,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_005",
+      "category": "factual_lookup",
+      "question": "What is the contractual SLA for Ember Stream?",
+      "ground_truth": "99.70% monthly uptime",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding the contractual SLA for Ember Stream.",
+        "context_precision": "The retrieved chunk contains the exact information needed to answer the question and no irrelevant chunks were provided.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The contractual SLA for Ember Stream is 99.70% monthly uptime (spec_ember_stream.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "30618d90-a284-564d-99aa-ec2a2507539e"
+      ],
+      "latency_ms": 8073.0231429988635,
+      "ttft_ms": 6194.295238999985,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 255.0,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_006",
+      "category": "factual_lookup",
+      "question": "When was Atlas Relay version 2.9.0 released?",
+      "ground_truth": "2025-01-27",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims in the answer are fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding the release date of Atlas Relay version 2.9.0.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Atlas Relay version 2.9.0 was released on 2025-01-27 (spec_atlas_relay.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "59a6278e-3604-5cf5-910a-3d8ec665a564"
+      ],
+      "latency_ms": 7123.069031998966,
+      "ttft_ms": 4687.1186699991085,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 110.8,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_007",
+      "category": "factual_lookup",
+      "question": "Which city is Marcus Bell based in?",
+      "ground_truth": "Austin, TX",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 0.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that Marcus Bell is based in Austin, TX is directly supported by chunk [1].",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding Marcus Bell's city.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "0/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Marcus Bell is based in Austin, TX (resume_marcus_bell.docx, p. 1).",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 7408.442386000388,
+      "ttft_ms": 5092.583236999417,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 84.6,
+        "fuse_ms": 0.2,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_008",
+      "category": "factual_lookup",
+      "question": "What certification does Priya Raman hold?",
+      "ground_truth": "Google Professional Data Engineer (2021)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that Priya Raman holds the Google Professional Data Engineer certification is fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately responds to the question about Priya Raman's certification.",
+        "context_precision": "The single provided chunk directly contains the requested certification information and was necessary for the answer.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Priya Raman holds the Google Professional Data Engineer certification (resume_priya_raman.pdf, p. 1).",
+      "retrieved_chunk_ids": [
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 7420.700812001087,
+      "ttft_ms": 5231.283561000964,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 133.9,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_009",
+      "category": "factual_lookup",
+      "question": "Where did Tomas Weber study?",
+      "ground_truth": "TU Berlin (Dipl.-Ing. Informatik, 2012)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that Tomas Weber studied at TU Berlin is directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses where Tomas Weber studied.",
+        "context_precision": "The only retrieved chunk provided the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Tomas Weber studied at TU Berlin (resume_tomas_weber.pdf, p. 1).",
+      "retrieved_chunk_ids": [
+        "9140ce6f-b390-5132-abcc-5016e7c30ecf"
+      ],
+      "latency_ms": 7009.9171540005045,
+      "ttft_ms": 5246.32763199952,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 254.6,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_010",
+      "category": "factual_lookup",
+      "question": "What is the Q3 unit cost of SKU HW-ND-2201?",
+      "ground_truth": "$184.50",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The unit cost stated in the answer matches the Q3 pricing for SKU HW-ND-2201 in the retrieved context exactly.",
+        "answer_relevance": "The answer directly provides the Q3 unit cost for the requested SKU.",
+        "context_precision": "The single retrieved chunk contains the exact pricing sheet needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The Q3 unit cost of SKU HW-ND-2201 is $184.50 (pricing.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 8386.696444000336,
+      "ttft_ms": 6398.607529999936,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 178.6,
+        "fuse_ms": 711.4,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_011",
+      "category": "factual_lookup",
+      "question": "What was Europe's revenue in Q3?",
+      "ground_truth": "3,620 thousand USD",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that Europe's Q3 revenue was $3,620 thousand is fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the user's question about Europe's Q3 revenue.",
+        "context_precision": "The single retrieved chunk contains the exact data needed to answer the question, with no irrelevant information used.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Europe's revenue in Q3 was $3,620 thousand (financials_q3.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 13119.870747001187,
+      "ttft_ms": 10622.189605999665,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 145.4,
+        "fuse_ms": 0.2,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_012",
+      "category": "factual_lookup",
+      "question": "How many people work in Customer Support?",
+      "ground_truth": "63",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All claims in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding the headcount in Customer Support.",
+        "context_precision": "The retrieved chunk contains the exact information needed to answer the question, with no extraneous unhelpful chunks.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "There are 63 people working in Customer Support (financials_q3.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 7329.964493001171,
+      "ttft_ms": 5292.634929999622,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 29.8,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_013",
+      "category": "factual_lookup",
+      "question": "What is the maximum request payload for Ember Stream?",
+      "ground_truth": "8 MB",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims in the answer regarding the maximum request payload are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly addresses the question about the maximum request payload for Ember Stream.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The maximum request payload for Ember Stream is 8 MB (spec_ember_stream.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "348c17ce-7c1c-50e1-a889-8f479f8e4a9f"
+      ],
+      "latency_ms": 8461.917987000561,
+      "ttft_ms": 5312.199648000387,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 23.7,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_014",
+      "category": "factual_lookup",
+      "question": "Which region is the disaster recovery region for Atlas Sync?",
+      "ground_truth": "us-east-1",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.5,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding the disaster recovery region.",
+        "context_precision": "Chunk [1] was extremely useful for answering the question, while chunk [2] contained irrelevant product specification details.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The disaster recovery region for Atlas Sync is us-east-1 (spec_atlas_sync.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912"
+      ],
+      "latency_ms": 7281.097113000214,
+      "ttft_ms": 5578.3725140008755,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 120.5,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_015",
+      "category": "factual_lookup",
+      "question": "How old is Alice?",
+      "ground_truth": "25",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims in the answer are fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding Alice's age.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Alice is 25 years old (test.csv, p. 1).",
+      "retrieved_chunk_ids": [
+        "aa4d8eb2-2563-5c60-b596-64c40324fbbb"
+      ],
+      "latency_ms": 8598.595647001275,
+      "ttft_ms": 6684.772274000352,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 121.2,
+        "fuse_ms": 0.2,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_016",
+      "category": "factual_lookup",
+      "question": "Which word is bold in the markdown test file?",
+      "ground_truth": "bold",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question asked.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The word \"bold\" is bold in the markdown test file (test.md, p. 1).\n\n_Note: parts of this answer may not be fully supported by the retrieved documents._",
+      "retrieved_chunk_ids": [
+        "c138d255-160d-5eb6-8b09-33608a7b847a"
+      ],
+      "latency_ms": 49541.31245299868,
+      "ttft_ms": 28767.34318599847,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 66.2,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_017",
+      "category": "factual_lookup",
+      "question": "What is the simple text file used for?",
+      "ground_truth": "Testing TXT parsing",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that the simple text file is used for testing TXT parsing is fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses what the simple text file is used for based on the provided text.",
+        "context_precision": "The single retrieved chunk contains the exact information required to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The simple text file is used for testing TXT parsing (test.txt, p. 1).",
+      "retrieved_chunk_ids": [
+        "3611bfcf-6694-51be-acba-859f4f2a08c9"
+      ],
+      "latency_ms": 14460.147376999885,
+      "ttft_ms": 12593.42154099977,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What is the simple text file used for?",
+        "rewritten": "what is a txt file used for"
+      },
+      "timings_ms": {
+        "search_ms": 10.9,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_018",
+      "category": "multi_hop",
+      "question": "Who owns Atlas Sync and what is its default rate limit?",
+      "ground_truth": "The Platform Data Team owns it; the default rate limit is 600 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and fully addresses both parts of the user's question regarding ownership and the default rate limit.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Atlas Sync is owned by the Platform Data Team and has a default rate limit of 600 requests per minute per API key (spec_atlas_sync.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912"
+      ],
+      "latency_ms": 86200.47868999973,
+      "ttft_ms": 45150.01348300029,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 22.4,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_019",
+      "category": "multi_hop",
+      "question": "Compare the default rate limits of Atlas Sync and Atlas Relay.",
+      "ground_truth": "Atlas Sync allows 600 requests per minute; Atlas Relay allows 1200 requests per minute, twice as many",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 0.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly compares the default rate limits of Atlas Sync and Atlas Relay as requested.",
+        "context_precision": "Both retrieved chunks were necessary and used to provide the rate limits for the two products.",
+        "citation_accuracy": "0/2 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The default rate limit for Atlas Sync is 600 requests per minute per API key (spec_atlas_sync.md, p. 1), while the default rate limit for Atlas Relay is 1200 requests per minute per API key (spec_atlas_relay.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "59a6278e-3604-5cf5-910a-3d8ec665a564",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912"
+      ],
+      "latency_ms": 58567.86124399878,
+      "ttft_ms": 31909.661197998503,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 23.9,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_020",
+      "category": "multi_hop",
+      "question": "Which has the longer data retention, Cinder Cache or Drift Gateway?",
+      "ground_truth": "Drift Gateway (60 days versus 7 days for Cinder Cache)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 0.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and clearly addresses which service has the longer data retention.",
+        "context_precision": "Both retrieved chunks were necessary and useful for comparing the data retention of Cinder Cache and Drift Gateway.",
+        "citation_accuracy": "answer contains no (file, p. N) citations",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Drift Gateway has the longer data retention (60 days) compared to Cinder Cache (7 days) (spec_cinder_cache.md, p. 1; spec_drift_gateway.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5",
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da"
+      ],
+      "latency_ms": 8010.2388660016,
+      "ttft_ms": 5817.288851001649,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 37.8,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_021",
+      "category": "multi_hop",
+      "question": "By how much did the Q3 unit cost of HW-ND-2210 exceed its Q2 unit cost?",
+      "ground_truth": "$14.65 (412.75 in Q3 versus 398.10 in Q2)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer regarding Q3 and Q2 unit costs for HW-ND-2210 and their difference are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding the difference between the Q3 and Q2 unit costs for HW-ND-2210.",
+        "context_precision": "The retrieved chunk contains all the necessary pricing data for both Q2 and Q3 to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The Q3 unit cost of HW-ND-2210 was $412.75 and its Q2 unit cost was $398.10, meaning the Q3 unit cost exceeded the Q2 unit cost by $14.65 (pricing.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 15596.19816599843,
+      "ttft_ms": 13345.39598399897,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "By how much did the Q3 unit cost of HW-ND-2210 exceed its Q2 unit cost?",
+        "rewritten": "HW-ND-2210 Q3 unit cost Q2 unit cost comparison increase"
+      },
+      "timings_ms": {
+        "search_ms": 13.1,
+        "fuse_ms": 6.3,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_022",
+      "category": "multi_hop",
+      "question": "What was the combined Q3 revenue of North America and Europe?",
+      "ground_truth": "9,210 thousand USD (5,590 + 3,620)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer accurately calculates the combined Q3 revenue using the data from the provided context.",
+        "answer_relevance": "The answer directly and fully addresses the question asked.",
+        "context_precision": "The retrieved chunk was directly useful and necessary for answering the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The combined Q3 revenue of North America and Europe was $9,210,000 ($5,590,000 for North America and $3,620,000 for Europe) (financials_q3.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 6790.50892899977,
+      "ttft_ms": 4325.962110999171,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 19.0,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_023",
+      "category": "multi_hop",
+      "question": "Which certification does Marcus Bell hold and where did he study?",
+      "ground_truth": "AWS Certified Solutions Architect - Professional (2022); University of Texas at Austin",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and completely addresses the question regarding Marcus Bell's certification and education.",
+        "context_precision": "The single retrieved chunk contains all the necessary information to answer the question without any irrelevant noise.",
+        "citation_accuracy": "2/2 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Marcus Bell holds the AWS Certified Solutions Architect - Professional certification (resume_marcus_bell.docx, p. 1) and studied at the University of Texas at Austin (resume_marcus_bell.docx, p. 1).",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 6379.267899999832,
+      "ttft_ms": 4253.983911999967,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 33.0,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_024",
+      "category": "multi_hop",
+      "question": "Which error code does Atlas Sync return when a shard is unavailable, and what is its primary region?",
+      "ground_truth": "E-5107; the primary region is eu-west-2",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses both parts of the question.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "2/2 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Atlas Sync returns error code E-5107 when the target shard is temporarily unavailable (spec_atlas_sync.md, p. 1). Its primary region is eu-west-2 (spec_atlas_sync.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 13745.05564699939,
+      "ttft_ms": 11758.889841999917,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "Which error code does Atlas Sync return when a shard is unavailable, and what is its primary region?",
+        "rewritten": "Atlas Sync shard unavailable error code primary region documentation"
+      },
+      "timings_ms": {
+        "search_ms": 15.5,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_025",
+      "category": "multi_hop",
+      "question": "How long are Drift Gateway access tokens valid and what is its default rate limit?",
+      "ground_truth": "30 minutes; 450 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and fully addresses both parts of the question regarding access token validity and the default rate limit.",
+        "context_precision": "Both retrieved chunks contain the necessary information to answer the two distinct parts of the question.",
+        "citation_accuracy": "2/2 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Drift Gateway access tokens are valid for 30 minutes (spec_drift_gateway.md, p. 1), and its default rate limit is 450 requests per minute per API key (spec_drift_gateway.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da",
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2"
+      ],
+      "latency_ms": 11802.33616699843,
+      "ttft_ms": 9525.294495999333,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "How long are Drift Gateway access tokens valid and what is its default rate limit?",
+        "rewritten": "Drift Gateway token expiration time and rate limit"
+      },
+      "timings_ms": {
+        "search_ms": 49.5,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_026",
+      "category": "exact_term",
+      "question": "What does error code E-5107 mean?",
+      "ground_truth": "The target shard is temporarily unavailable",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the user's question about error code E-5107.",
+        "context_precision": "The single retrieved chunk contains the exact definition needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Error code E-5107 means that the target shard is temporarily unavailable (spec_atlas_sync.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 10098.51543699915,
+      "ttft_ms": 8452.25735999884,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What does error code E-5107 mean?",
+        "rewritten": "E-5107 error code meaning"
+      },
+      "timings_ms": {
+        "search_ms": 17.4,
+        "fuse_ms": 6.3,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_027",
+      "category": "exact_term",
+      "question": "What does error code E-5108 mean?",
+      "ground_truth": "The delivery queue is full",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that error code E-5108 means the delivery queue is full is fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question asked about error code E-5108.",
+        "context_precision": "The only retrieved chunk contained the definition for error code E-5108 and was directly useful.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Error code E-5108 means that the delivery queue is full (spec_atlas_relay.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "1fffa676-8a82-5a03-9b32-c2f930edcdb8"
+      ],
+      "latency_ms": 14057.274202999906,
+      "ttft_ms": 12324.177462998705,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What does error code E-5108 mean?",
+        "rewritten": "E-5108 error troubleshooting"
+      },
+      "timings_ms": {
+        "search_ms": 15.9,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_028",
+      "category": "exact_term",
+      "question": "What does error code E-4292 mean?",
+      "ground_truth": "The producer exceeded its quota",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.5,
+        "ndcg@5": 0.6309297535714575,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.2,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All claims made in the answer are directly supported by chunk [2].",
+        "answer_relevance": "The answer directly and accurately addresses what error code E-4292 means.",
+        "context_precision": "Only chunk [2] was useful for answering the question, while chunks [1], [3], [4], and [5] were irrelevant.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Error code E-4292 means that the producer exceeded its quota (spec_boreal_queue.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "00f98397-5c63-5fda-9e6b-e1f978694504",
+        "ef52fe44-a78e-54e8-a3af-8015ca23c098",
+        "1ef11373-5f65-5901-afbe-f0e058c2d050",
+        "b5b14bcd-306a-56ce-b36c-58182c726324",
+        "e0aa3a4e-de98-5c5f-a9af-c4401eaae102"
+      ],
+      "latency_ms": 14272.631572999671,
+      "ttft_ms": 12649.99223400082,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What does error code E-4292 mean?",
+        "rewritten": "E-4292 error code definition"
+      },
+      "timings_ms": {
+        "search_ms": 47.8,
+        "fuse_ms": 0.4,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_029",
+      "category": "exact_term",
+      "question": "Which product returns error E-4025?",
+      "ground_truth": "Drift Gateway (the JWT audience claim is invalid)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer accurately states that Drift Gateway returns error E-4025, which is fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and correctly identifies the product that returns error E-4025.",
+        "context_precision": "The single retrieved chunk directly contains the answer to the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Drift Gateway returns error E-4025 (spec_drift_gateway.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2"
+      ],
+      "latency_ms": 7024.4581419992755,
+      "ttft_ms": 4927.52831100006,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 194.8,
+        "fuse_ms": 54.9,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_030",
+      "category": "exact_term",
+      "question": "What is error E-4021?",
+      "ground_truth": "The access token has expired",
+      "metrics": {},
+      "reasons": {},
+      "error": "ReadTimeout: "
+    },
+    {
+      "id": "q_031",
+      "category": "exact_term",
+      "question": "What does error code E-5112 indicate?",
+      "ground_truth": "The ingestion shard is backpressured",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "Every claim in the answer is directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question asked.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Error code E-5112 indicates that the ingestion shard is backpressured (spec_ember_stream.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "30618d90-a284-564d-99aa-ec2a2507539e"
+      ],
+      "latency_ms": 28132.75812199936,
+      "ttft_ms": 26513.971346999824,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What does error code E-5112 indicate?",
+        "rewritten": "E-5112 troubleshooting"
+      },
+      "timings_ms": {
+        "search_ms": 19.2,
+        "fuse_ms": 0.3,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_032",
+      "category": "exact_term",
+      "question": "What is the product name for SKU HW-SW-3310?",
+      "ground_truth": "Rack Switch 48P",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 0.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding the product name for the specified SKU.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "0/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The product name for SKU HW-SW-3310 is Rack Switch 48P (pricing.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 35127.3571239999,
+      "ttft_ms": 32745.39625000034,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 2337.0,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_033",
+      "category": "exact_term",
+      "question": "What is the minimum order quantity for SKU HW-PW-4401?",
+      "ground_truth": "20",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 0.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All claims made in the answer regarding the MOQ for SKU HW-PW-4401 are fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding the minimum order quantity for the specified SKU.",
+        "context_precision": "The retrieved chunk contains the exact pricing and MOQ information needed to answer the question.",
+        "citation_accuracy": "0/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The minimum order quantity (MOQ) for SKU HW-PW-4401 is 20 (pricing.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 7068.542536999303,
+      "ttft_ms": 5440.7914860003075,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 154.8,
+        "fuse_ms": 30.5,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_034",
+      "category": "exact_term",
+      "question": "What is the Q3 unit cost for SKU HW-FN-7701?",
+      "ground_truth": "$27.90",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.33,
+        "citation_accuracy": 0.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer accurately reports the Q3 unit cost for SKU HW-FN-7701 as $27.90 based on the provided pricing sheet.",
+        "answer_relevance": "The answer directly and completely addresses the user's question regarding the Q3 unit cost for the specified SKU.",
+        "context_precision": "Only chunk [1] contained the necessary pricing information to answer the question, while chunks [2] and [3] were not relevant to this specific query.",
+        "citation_accuracy": "0/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The Q3 unit cost for SKU HW-FN-7701 is $27.90 (pricing.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f",
+        "9afbe85e-f6cd-5e6c-96f2-9ceb52899f49",
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 16638.751686999967,
+      "ttft_ms": 14616.823391001162,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What is the Q3 unit cost for SKU HW-FN-7701?",
+        "rewritten": "HW-FN-7701 Q3 expenses"
+      },
+      "timings_ms": {
+        "search_ms": 447.2,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_035",
+      "category": "exact_term",
+      "question": "What was the Q2 unit cost of SKU HW-ST-5501?",
+      "ground_truth": "$355.60",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 0.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All claims made in the answer regarding the Q2 unit cost of SKU HW-ST-5501 are fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question asked about the Q2 unit cost of the specified SKU.",
+        "context_precision": "The retrieved chunk contains the exact pricing sheet and row needed to answer the question.",
+        "citation_accuracy": "0/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The Q2 unit cost of SKU HW-ST-5501 (Storage Tray 8TB) was $355.60 (pricing.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 11997.9512910013,
+      "ttft_ms": 9702.664616999755,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What was the Q2 unit cost of SKU HW-ST-5501?",
+        "rewritten": "HW-ST-5501 Q2 unit cost pricing expenses"
+      },
+      "timings_ms": {
+        "search_ms": 18.1,
+        "fuse_ms": 9.4,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_036",
+      "category": "exact_term",
+      "question": "Which product is at version 4.4.2?",
+      "ground_truth": "Drift Gateway",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately identifies the product at version 4.4.2.",
+        "context_precision": "The single retrieved chunk directly contains the information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Drift Gateway is at version 4.4.2 (spec_drift_gateway.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "c4c6b791-dea2-50fd-bf80-1c44ad30c0da"
+      ],
+      "latency_ms": 8089.795933001369,
+      "ttft_ms": 5919.993240000622,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 31.4,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_037",
+      "category": "exact_term",
+      "question": "Which version of Cinder Cache was released on 2025-02-14?",
+      "ground_truth": "1.7.3",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the specific question asked.",
+        "context_precision": "The only retrieved chunk provided the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Cinder Cache version 1.7.3 was released on 2025-02-14 (spec_cinder_cache.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5"
+      ],
+      "latency_ms": 8659.054736001053,
+      "ttft_ms": 5094.292346000657,
+      "rewrite": null,
+      "timings_ms": {
+        "search_ms": 33.7,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_038",
+      "category": "follow_up",
+      "question": "How long are its access tokens valid?",
+      "ground_truth": "45 minutes",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that access tokens are valid for 45 minutes is directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the user's question about how long access tokens are valid.",
+        "context_precision": "The only retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Atlas Sync access tokens are valid for 45 minutes (spec_atlas_sync.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 8279.62467299949,
+      "ttft_ms": 6345.452129999103,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "How long are its access tokens valid?",
+        "rewritten": "How long are Atlas Sync access tokens valid?"
+      },
+      "timings_ms": {
+        "search_ms": 125.9,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_039",
+      "category": "follow_up",
+      "question": "What are his technical skills?",
+      "ground_truth": "Python, Go, PostgreSQL, Apache Kafka, Kubernetes, Terraform",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All listed technical skills are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately responds to the question about his technical skills.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Marcus Bell's technical skills include Python, Go, PostgreSQL, Apache Kafka, Kubernetes, and Terraform (resume_marcus_bell.docx, p. 1).",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 8557.73413300085,
+      "ttft_ms": 6571.38222300091,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What are his technical skills?",
+        "rewritten": "Marcus Bell technical skills"
+      },
+      "timings_ms": {
+        "search_ms": 43.8,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_040",
+      "category": "follow_up",
+      "question": "What is its default rate limit?",
+      "ground_truth": "3000 requests per minute per API key",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly addresses the question regarding the default rate limit.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The default rate limit for Boreal Queue is 3000 requests per minute per API key (spec_boreal_queue.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "273b7636-4c54-5bcb-bfde-05ca2032c58a"
+      ],
+      "latency_ms": 8549.741123000786,
+      "ttft_ms": 6635.872766999455,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What is its default rate limit?",
+        "rewritten": "What is the default rate limit of Boreal Queue?"
+      },
+      "timings_ms": {
+        "search_ms": 46.6,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_041",
+      "category": "follow_up",
+      "question": "Which company does she work for now?",
+      "ground_truth": "Lakeview Analytics",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question of which company she currently works for.",
+        "context_precision": "The only retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Priya Raman currently works at Lakeview Analytics (resume_priya_raman.pdf, p. 1).",
+      "retrieved_chunk_ids": [
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 8860.268798998732,
+      "ttft_ms": 6939.3660979985725,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "Which company does she work for now?",
+        "rewritten": "Which company does Priya Raman work for now?"
+      },
+      "timings_ms": {
+        "search_ms": 35.1,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_042",
+      "category": "follow_up",
+      "question": "Which region is it primarily hosted in?",
+      "ground_truth": "us-east-2",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer accurately states that Drift Gateway is primarily hosted in us-east-2, which is fully supported by the retrieved context.",
+        "answer_relevance": "The answer directly and concisely responds to the question asking for the primary region.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Drift Gateway is primarily hosted in the us-east-2 region (spec_drift_gateway.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "7c490487-0410-5050-ae48-da7cbb2f6eb2"
+      ],
+      "latency_ms": 10623.872231999485,
+      "ttft_ms": 8249.42034599917,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "Which region is it primarily hosted in?",
+        "rewritten": "What region is Drift Gateway primarily hosted in?"
+      },
+      "timings_ms": {
+        "search_ms": 818.1,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_043",
+      "category": "follow_up",
+      "question": "How long does it retain data?",
+      "ground_truth": "7 days",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that Cinder Cache retains data for 7 days before it is deleted is directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding how long data is retained.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Cinder Cache retains data for 7 days before it is deleted (spec_cinder_cache.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "55842460-49dc-5a54-88b7-1f023c2b4bc5"
+      ],
+      "latency_ms": 9076.046343998314,
+      "ttft_ms": 7266.545426999073,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "How long does it retain data?",
+        "rewritten": "How long does Cinder Cache retain data?"
+      },
+      "timings_ms": {
+        "search_ms": 44.3,
+        "fuse_ms": 0.2,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_044",
+      "category": "follow_up",
+      "question": "What did he improve at his current employer?",
+      "ground_truth": "Service availability from 99.5% to 99.95%",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All claims in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses what he improved at his current employer.",
+        "context_precision": "The retrieved chunk was entirely relevant and sufficient to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "He improved service availability from 99.5% to 99.95% at Nordlicht Cloud (resume_tomas_weber.pdf, p. 1).",
+      "retrieved_chunk_ids": [
+        "9140ce6f-b390-5132-abcc-5016e7c30ecf"
+      ],
+      "latency_ms": 9422.942029999831,
+      "ttft_ms": 6204.74914999977,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What did he improve at his current employer?",
+        "rewritten": "What did Tomas Weber improve at his current employer?"
+      },
+      "timings_ms": {
+        "search_ms": 26.6,
+        "fuse_ms": 0.0,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_045",
+      "category": "follow_up",
+      "question": "And what is the minimum order quantity for it?",
+      "ground_truth": "2",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims made in the answer regarding the MOQ of the Edge Node Max are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly addresses the user's question about the minimum order quantity for a specific product.",
+        "context_precision": "The retrieved chunk contains the necessary pricing and MOQ table which was directly used to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The minimum order quantity (MOQ) for Edge Node Max (HW-ND-2215) is 2 (pricing.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f"
+      ],
+      "latency_ms": 10238.197464999757,
+      "ttft_ms": 7976.975641000536,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "And what is the minimum order quantity for it?",
+        "rewritten": "minimum order quantity for SKU HW-ND-2215"
+      },
+      "timings_ms": {
+        "search_ms": 90.6,
+        "fuse_ms": 99.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_046",
+      "category": "follow_up",
+      "question": "Which authentication does that use?",
+      "ground_truth": "OAuth 2.0 device flow",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "All factual claims in the answer are directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding the authentication method used.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Ember Stream authenticates clients using OAuth 2.0 device flow (spec_ember_stream.md, p. 1).",
+      "retrieved_chunk_ids": [
+        "30618d90-a284-564d-99aa-ec2a2507539e"
+      ],
+      "latency_ms": 8795.896642001026,
+      "ttft_ms": 6088.382400001137,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "Which authentication does that use?",
+        "rewritten": "Which authentication does Ember Stream use?"
+      },
+      "timings_ms": {
+        "search_ms": 134.9,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_047",
+      "category": "follow_up",
+      "question": "What certification does she have?",
+      "ground_truth": "TensorFlow Developer Certificate (2020)",
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "ndcg@5": 1.0,
+        "hit_rate@5": 1.0,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": 1.0,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The claim that Aiko Tanaka has the TensorFlow Developer Certificate is directly supported by the retrieved context.",
+        "answer_relevance": "The answer directly and accurately addresses the question regarding what certification she has.",
+        "context_precision": "The single retrieved chunk contains the exact information needed to answer the question.",
+        "citation_accuracy": "1/1 citations supported; 0 cite a source that was not retrieved",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Aiko Tanaka has the TensorFlow Developer Certificate (resume_aiko_tanaka.pdf, p. 1).",
+      "retrieved_chunk_ids": [
+        "7513e872-a95e-5b49-ac5a-5bf4f4dff729"
+      ],
+      "latency_ms": 7813.544659999025,
+      "ttft_ms": 5968.653968999206,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What certification does she have?",
+        "rewritten": "What certification does Aiko Tanaka have?"
+      },
+      "timings_ms": {
+        "search_ms": 43.8,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": false
+    },
+    {
+      "id": "q_048",
+      "category": "unanswerable",
+      "question": "What is the pricing tier for Atlas Sync?",
+      "ground_truth": "REFUSAL - the documents do not contain any pricing tier for Atlas Sync",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer correctly states that the information is absent without making any unsupported factual claims.",
+        "answer_relevance": "The response directly addresses the inability to answer the question based on the provided context.",
+        "context_precision": "None of the retrieved chunks contain information about the pricing tier for Atlas Sync.",
+        "citation_accuracy": "refusal - no citations expected",
+        "refusal_correctness": "refused=True, expected=True"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The retrieved documents do not contain information about the pricing tier for Atlas Sync.",
+      "retrieved_chunk_ids": [
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080"
+      ],
+      "latency_ms": 14023.41064599932,
+      "ttft_ms": 12573.325839999598,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What is the pricing tier for Atlas Sync?",
+        "rewritten": "Atlas Sync pricing plans and cost"
+      },
+      "timings_ms": {
+        "search_ms": 15.1,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": true
+    },
+    {
+      "id": "q_049",
+      "category": "unanswerable",
+      "question": "What is Marcus Bell's salary?",
+      "ground_truth": "REFUSAL - salary is not stated in the resume",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer correctly identifies that the salary information is absent without making any unsupported claims.",
+        "answer_relevance": "The answer directly addresses the question by stating the information is unavailable.",
+        "context_precision": "None of the retrieved chunks contain information about Marcus Bell's salary.",
+        "citation_accuracy": "refusal - no citations expected",
+        "refusal_correctness": "refused=True, expected=True"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The provided documents do not contain information about Marcus Bell's salary.",
+      "retrieved_chunk_ids": [
+        "154f66d0-1d07-557e-83ca-2002ee3f5094"
+      ],
+      "latency_ms": 13701.825477999591,
+      "ttft_ms": 12447.439634999682,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What is Marcus Bell's salary?",
+        "rewritten": "Marcus Bell earnings pay package"
+      },
+      "timings_ms": {
+        "search_ms": 11.0,
+        "fuse_ms": 0.0,
+        "rerank_ms": 0.0
+      },
+      "refused": true
+    },
+    {
+      "id": "q_050",
+      "category": "unanswerable",
+      "question": "Who is the CEO of the company?",
+      "ground_truth": "REFUSAL - no CEO is mentioned in any document",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 0.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer makes a truthful statement about the lack of information in the retrieved context without adding unsupported claims.",
+        "answer_relevance": "The answer does not provide the CEO's name because the information was missing, though it appropriately addresses the constraint.",
+        "context_precision": "No context chunks were retrieved to evaluate.",
+        "citation_accuracy": "refusal - no citations expected",
+        "refusal_correctness": "refused=True, expected=True"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The retrieved context does not contain information about who the CEO of the company is.",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 8177.077828999245,
+      "ttft_ms": 8147.0910890002415,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "Who is the CEO of the company?",
+        "rewritten": "chief executive officer current leadership executive management team"
+      },
+      "timings_ms": {
+        "search_ms": 14.9,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": true
+    },
+    {
+      "id": "q_051",
+      "category": "unanswerable",
+      "question": "What is the default rate limit for Fjord Search?",
+      "ground_truth": "REFUSAL - Fjord Search is not a documented product",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer correctly states that the retrieved context does not contain information about Fjord Search, which is a truthful refusal based on the provided text.",
+        "answer_relevance": "The answer directly addresses the inability to answer the question using the provided context.",
+        "context_precision": "None of the retrieved chunks contain information about Fjord Search.",
+        "citation_accuracy": "refusal - no citations expected",
+        "refusal_correctness": "refused=True, expected=True"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The retrieved context does not contain information about Fjord Search.",
+      "retrieved_chunk_ids": [
+        "d15d9b8f-9096-50a6-be13-6914c14721c0",
+        "ac07d795-a854-5691-8a47-8481f76b5fd1",
+        "a9631d95-f7e5-535e-814a-afadbd6bf81a",
+        "280b7187-aeca-51f4-8105-185a51f2a447",
+        "1162d86b-2e1e-58a5-b83f-c61c49420223"
+      ],
+      "latency_ms": 14717.681410998921,
+      "ttft_ms": 13258.990196000013,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What is the default rate limit for Fjord Search?",
+        "rewritten": "Fjord Search rate limit pricing tiers"
+      },
+      "timings_ms": {
+        "search_ms": 25.1,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": true
+    },
+    {
+      "id": "q_052",
+      "category": "unanswerable",
+      "question": "What was Africa's revenue in Q3?",
+      "ground_truth": "REFUSAL - the financials list no Africa region",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer correctly states that the retrieved documents do not contain the requested information.",
+        "answer_relevance": "The answer directly addresses the inability to answer the question using the provided context.",
+        "context_precision": "None of the retrieved chunks contain information about Africa's revenue.",
+        "citation_accuracy": "refusal - no citations expected",
+        "refusal_correctness": "refused=True, expected=True"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The retrieved documents do not contain information about Africa's revenue.",
+      "retrieved_chunk_ids": [
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 13125.023066999347,
+      "ttft_ms": 11756.747383000402,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What was Africa's revenue in Q3?",
+        "rewritten": "Africa segment financial performance Q3 revenue earnings"
+      },
+      "timings_ms": {
+        "search_ms": 13.9,
+        "fuse_ms": 93.2,
+        "rerank_ms": 0.0
+      },
+      "refused": true
+    },
+    {
+      "id": "q_053",
+      "category": "unanswerable",
+      "question": "What is the Q3 unit cost of SKU HW-ND-9999?",
+      "ground_truth": "REFUSAL - HW-ND-9999 is not in the price list",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 1.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer correctly identifies that the requested information is absent from the provided context.",
+        "answer_relevance": "The answer directly addresses the question by stating that the requested SKU is not found in the context.",
+        "context_precision": "The chunk was useful to determine that the SKU does not exist in the pricing sheet.",
+        "citation_accuracy": "refusal - no citations expected",
+        "refusal_correctness": "refused=True, expected=True"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The retrieved context does not contain information for SKU HW-ND-9999 (pricing.xlsx, p. 1).",
+      "retrieved_chunk_ids": [
+        "01ffc517-c236-5303-84ff-b7b89f5f202f",
+        "9afbe85e-f6cd-5e6c-96f2-9ceb52899f49",
+        "43a851cc-48b4-5a93-af77-0c980dd5d310"
+      ],
+      "latency_ms": 15150.944676001018,
+      "ttft_ms": 13389.327283999592,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What is the Q3 unit cost of SKU HW-ND-9999?",
+        "rewritten": "HW-ND-9999 Q3 expense financial report"
+      },
+      "timings_ms": {
+        "search_ms": 22.8,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": true
+    },
+    {
+      "id": "q_054",
+      "category": "unanswerable",
+      "question": "What is Priya Raman's phone number?",
+      "ground_truth": "REFUSAL - no phone number in the resume",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer correctly states that the documents do not contain the requested information without making any unsupported claims.",
+        "answer_relevance": "The answer directly addresses the inability to provide the phone number based on the provided text.",
+        "context_precision": "None of the retrieved chunks contain the phone number, so the chunk was not useful for answering the specific question.",
+        "citation_accuracy": "refusal - no citations expected",
+        "refusal_correctness": "refused=True, expected=True"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The provided documents do not contain Priya Raman's phone number.",
+      "retrieved_chunk_ids": [
+        "45df78c9-05a7-5c8b-9ca7-18f68684e25f"
+      ],
+      "latency_ms": 14536.772452998775,
+      "ttft_ms": 12251.84947499838,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "What is Priya Raman's phone number?",
+        "rewritten": "Priya Raman phone contact"
+      },
+      "timings_ms": {
+        "search_ms": 9.0,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": true
+    },
+    {
+      "id": "q_055",
+      "category": "unanswerable",
+      "question": "Which programming language is Atlas Sync written in?",
+      "ground_truth": "REFUSAL - the specification does not say",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": null,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer correctly states that the provided documents do not contain the requested information without making any unsupported claims.",
+        "answer_relevance": "The answer directly addresses the inability to answer the question based on the provided context.",
+        "context_precision": "None of the retrieved chunks contain information about the programming language used for Atlas Sync.",
+        "citation_accuracy": "refusal - no citations expected",
+        "refusal_correctness": "refused=True, expected=True"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "The retrieved documents do not contain information about the programming language Atlas Sync is written in.",
+      "retrieved_chunk_ids": [
+        "54b1f4b7-629d-5b9f-953e-7afbc5db2080",
+        "74badb3d-7c0e-50ad-b5ce-d5f2cbb7e912",
+        "00f98397-5c63-5fda-9e6b-e1f978694504"
+      ],
+      "latency_ms": 16226.801589000388,
+      "ttft_ms": 14705.57080099934,
+      "rewrite": {
+        "type": "query_rewrite",
+        "original": "Which programming language is Atlas Sync written in?",
+        "rewritten": "Atlas Sync implementation language"
+      },
+      "timings_ms": {
+        "search_ms": 18.6,
+        "fuse_ms": 0.1,
+        "rerank_ms": 0.0
+      },
+      "refused": true
+    },
+    {
+      "id": "q_056",
+      "category": "chitchat",
+      "question": "Hello!",
+      "ground_truth": "A short friendly greeting; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer makes no factual claims that require support from the retrieved context.",
+        "answer_relevance": "The answer appropriately responds to the user's greeting.",
+        "context_precision": "No context chunks were retrieved to evaluate.",
+        "citation_accuracy": "not applicable - no factual claims expected",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Hello! How can I help you today?",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 3509.3412090009224,
+      "ttft_ms": 3412.5034010012314,
+      "rewrite": null,
+      "timings_ms": {},
+      "refused": false
+    },
+    {
+      "id": "q_057",
+      "category": "chitchat",
+      "question": "Thanks, that was helpful.",
+      "ground_truth": "A short polite acknowledgement; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer makes no factual claims that require support from a context.",
+        "answer_relevance": "The answer appropriately responds to the user's expression of gratitude.",
+        "context_precision": "No context was retrieved to evaluate.",
+        "citation_accuracy": "not applicable - no factual claims expected",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "You're very welcome! Let me know if you need anything else.",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 2636.8058059997566,
+      "ttft_ms": 2564.597676999256,
+      "rewrite": null,
+      "timings_ms": {},
+      "refused": false
+    },
+    {
+      "id": "q_058",
+      "category": "chitchat",
+      "question": "Who are you?",
+      "ground_truth": "A short description of the assistant; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0,
+        "faithfulness": 0.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer makes claims about its function that are not supported by the empty retrieved context.",
+        "answer_relevance": "The answer directly responds to the identity question asked by the user.",
+        "context_precision": "No context chunks were retrieved.",
+        "citation_accuracy": "not applicable - no factual claims expected",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "I answer questions about the documents you have uploaded.",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 3164.4335580003826,
+      "ttft_ms": 3084.176637999917,
+      "rewrite": null,
+      "timings_ms": {},
+      "refused": false
+    },
+    {
+      "id": "q_059",
+      "category": "chitchat",
+      "question": "Good morning",
+      "ground_truth": "A short friendly greeting; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer makes no factual claims that require support from the context.",
+        "answer_relevance": "The answer appropriately responds to the morning greeting.",
+        "context_precision": "No context chunks were provided to be evaluated.",
+        "citation_accuracy": "not applicable - no factual claims expected",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Good morning! How can I help you today?",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 2948.435136999251,
+      "ttft_ms": 2811.918601999423,
+      "rewrite": null,
+      "timings_ms": {},
+      "refused": false
+    },
+    {
+      "id": "q_060",
+      "category": "chitchat",
+      "question": "Can you help me with something?",
+      "ground_truth": "Offers help and asks what is needed; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer makes no factual claims that require support from the empty retrieved context.",
+        "answer_relevance": "The answer directly responds to the user's opening question by offering assistance.",
+        "context_precision": "No context chunks were retrieved to evaluate.",
+        "citation_accuracy": "not applicable - no factual claims expected",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Of course! What would you like to know about your documents?",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 3037.2100139993563,
+      "ttft_ms": 2917.5031630002195,
+      "rewrite": null,
+      "timings_ms": {},
+      "refused": false
+    },
+    {
+      "id": "q_061",
+      "category": "chitchat",
+      "question": "Goodbye!",
+      "ground_truth": "A short farewell; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer makes no factual claims that require support from the retrieved context.",
+        "answer_relevance": "The answer directly responds to the greeting with a polite farewell.",
+        "context_precision": "No context chunks were retrieved or needed for this simple greeting.",
+        "citation_accuracy": "not applicable - no factual claims expected",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "Goodbye! Have a great day!",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 2381.682302000627,
+      "ttft_ms": 2250.9200100012094,
+      "rewrite": null,
+      "timings_ms": {},
+      "refused": false
+    },
+    {
+      "id": "q_062",
+      "category": "chitchat",
+      "question": "How are you today?",
+      "ground_truth": "A short friendly reply; no document lookup",
+      "metrics": {
+        "recall@5": null,
+        "precision@5": null,
+        "mrr": null,
+        "ndcg@5": null,
+        "hit_rate@5": null,
+        "no_retrieval": 1.0,
+        "faithfulness": 1.0,
+        "answer_relevance": 1.0,
+        "context_precision": 0.0,
+        "citation_accuracy": null,
+        "refusal_correctness": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The answer makes no factual claims that require support from retrieved documents.",
+        "answer_relevance": "The answer politely responds to the greeting asked in the question.",
+        "context_precision": "No context chunks were retrieved to evaluate.",
+        "citation_accuracy": "not applicable - no factual claims expected",
+        "refusal_correctness": "refused=False, expected=False"
+      },
+      "error": null,
+      "generation_error": null,
+      "answer": "I'm doing well, thank you! How can I help you with your documents today?",
+      "retrieved_chunk_ids": [],
+      "latency_ms": 2933.897437998894,
+      "ttft_ms": 2799.743353998565,
+      "rewrite": null,
+      "timings_ms": {},
+      "refused": false
+    }
+  ]
+}

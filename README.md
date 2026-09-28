@@ -35,11 +35,16 @@ change is measured, and a change that does not help is reported as such.
 | + query rewriting | 0.894 | 0.846 | 0.952 | 0.833 | 3.1 s |
 | + hybrid search (default) | 0.936 | 0.926 | 0.968 | 0.841 | 3.2 s |
 | + cross-encoder rerank (off by default)¹ | 0.978 | 0.967 | 0.982 | 0.822 | 6.9 s |
-| + agentic self-correction | — | — | — | — | — |
+| + identifier pinning (retrieval-only run)² | 1.000 | 0.938 | — | — | — |
+| + agentic self-correction (default) | 1.000 | 0.989 | 0.984 | 0.848 | 8.7 s |
 
 Each row adds to the one above and is a full judged run (`jd_*` result files). ¹ Rerank helps retrieval but adds
 ~3.5 s p50 on CPU (p95 32 s under load), so it ships disabled; 6 of 62 cases in that run hit the Gemini free-tier
-quota and are excluded from its averages.
+quota and are excluded from its averages. ² BM25's top hit is kept for queries containing an error code, SKU or
+version (RRF was fusing exact matches out of the top 5); measured without the LLM, so judged columns are empty.
+The agent row includes it. Agent vs. hybrid: refusal correctness 0.952 → 1.000, chitchat answered without
+retrieval 2/7 → 7/7, at p95 5.9 s → 35 s and ≈2,160 LLM tokens per query (≈880 without the agent, from a 4-query sample; $0 on the
+free tier).
 
 Baseline weak spots (recall@5 by category): exact terms 0.583, follow-up questions 0.300, versus 1.000 for factual and
 multi-hop lookups. Those two categories are what the next changes target. Corpus: ~90 chunks of synthetic documents
@@ -315,6 +320,9 @@ docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
 * **Free-tier Gemini quotas shape everything.** The free tier allows about 500 requests per day per model. A full
   judged run of the agent (about 6 LLM calls per question, including the judge) fits into one day at most, and
   runs must be paced to stay under the per-minute limit. Latency numbers include those retry waits.
+* **LLM calls are bounded one by one, not per request.** Each call has a 45 s timeout and the answering model
+  retries at most twice, but there is no overall deadline: during a provider stall one agent query can still take
+  minutes (1 of 62 eval cases exceeded 300 s). The fix is a request-level deadline that skips optional steps.
 * **Ingestion is synchronous.** Upload parses, chunks, embeds and indexes inside the request; there is no
   background queue, so the UI cannot show a per-stage progress bar and very large files hold the request open.
 * **No authentication or multi-tenancy.** Every user sees every document and collection. Do not expose the API

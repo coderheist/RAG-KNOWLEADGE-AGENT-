@@ -390,3 +390,35 @@ it. A Phase 3 weakness that only this per-case analysis exposed.
 pinned into the top-k and exempt from the dense-score floor/gap; (2) every LLM call is bounded:
 `LLM_TIMEOUT_S=45` per attempt, `LLM_MAX_RETRIES=2` for the answering model, SDK helpers time out and fail open.
 
+### Phase 4 · Iteration 3 · 2026-09-28
+
+**Retrieval check first (`rs_pin`, retrieval-only, no LLM beyond rewriting):** vs `rs_hybrid` recall@5 0.936 → 1.000,
+MRR 0.926 → 0.938, exact_term recall 0.750 → 1.000, all other categories unchanged, no added latency. (While
+comparing, `--compare rs_hybrid` turned out to load `rs_hybrid_rr20`: result lookup now requires an exact tag. Only
+that one printout was affected; the numbers above and all earlier PROGRESS numbers come from the exact files.)
+
+**Eval (`ag_full4`, judged with flash-lite like `jd_hybrid`; 62 cases, 1 client timeout, 0 quota errors):**
+| metric | jd_hybrid (no agent) | ag_full3 (it. 2) | ag_full4 (it. 3) |
+|---|---|---|---|
+| faithfulness | 0.968 | 0.973 | **0.984** |
+| refusal_correctness | 0.952 | 0.946 | **1.000** |
+| citation_accuracy | 0.841 | 0.846 | 0.848 |
+| recall@5 / MRR | 0.936 / 0.926 | 0.929 / 0.917 | 1.000 / 0.989 |
+| chitchat without retrieval | 2/7 | 7/7 | 7/7 |
+| latency p50 / p95 | 3.2 s / 5.9 s | 14.1 s / 200.8 s | **8.7 s / 35.1 s** |
+The bounded LLM calls removed the stalls: the 7 chitchat replies took 20 s in total (484 s in `ag_full3`). One exact-term
+case (q_030) still exceeded the 300 s client timeout: calls are bounded individually, not per request (logged as a
+known limitation). Tokens: 126,308 in + 7,702 out over 62 queries ≈ 2,160 per query; 88 retrievals for 55 retrieval
+queries (1.6 per query). Part of the refusal gain comes from identifier pinning, which also helps the non-agent
+path; a judged non-agent run with pinning would separate the two and needs another day's quota.
+
+**Threshold:** faithfulness 0.984 ≥ 0.90 — met. Definition of done: faithfulness and refusal_correctness improved over
+the non-agent run, chitchat completes without retrieval, loop cap tested, latency reported — **met. Phase 4 complete
+after 3 iterations.**
+
+**Defaults flipped:** `ENABLE_AGENTIC_LOOP`, `ENABLE_GROUNDEDNESS_CHECK`, `ENABLE_VERIFIED_CITATIONS` now default to
+true (accuracy up on every judged metric; the cost is p50 +5.5 s, p95 +29 s and ~2.4× the tokens, stated in the
+README). New config keys this phase: `ENABLE_AGENTIC_LOOP`, `MAX_RETRIEVAL_LOOPS`, `MIN_RELEVANT_CHUNKS`,
+`ENABLE_GROUNDEDNESS_CHECK`, `ENABLE_VERIFIED_CITATIONS`, `AGENT_MODEL`, `AGENT_MAX_TOKENS`, `LLM_TIMEOUT_S`,
+`LLM_MAX_RETRIES`.
+
