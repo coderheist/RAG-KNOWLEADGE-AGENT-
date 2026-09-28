@@ -23,6 +23,14 @@ Build AI-powered knowledge assistants capable of ingesting, indexing, retrieving
 
 ---
 
+<p align="center">
+  <img src="docs/demo.gif" width="800" alt="A question streams an answer with an inline citation; the citation popover highlights the supporting sentence in the source passage">
+</p>
+
+<p align="center"><i>A real query against the running stack: the agent retrieves, grades and answers, the answer is checked against its sources, and the citation opens the passage with the supporting sentence highlighted.</i></p>
+
+---
+
 # 📊 Results
 
 Every retrieval or generation change is measured on a 62-case golden set (`backend/evals/datasets/golden_v1.jsonl`)
@@ -340,8 +348,9 @@ set `LLM_PRICE_*_PER_MTOK` and read `rag_llm_cost_usd_total` from `/metrics`.
   through the Gemini SDK directly: their tokens are counted in `/metrics`, and their node spans appear in
   Langfuse, but not as separate LLM generations.
 * **The golden set is synthetic** (62 questions over purpose-built documents with look-alike identifiers). It is
-  good at catching regressions, not a claim about accuracy on your documents; use the feedback loop to grow it
-  from real questions.
+  good at catching regressions, not a claim about accuracy on your documents, and retrieval now reaches 1.000
+  recall@5 on it, so it no longer separates retrieval changes. It needs harder cases; the feedback loop is how
+  real questions get into it.
 
 # 📸 Application Preview
 
