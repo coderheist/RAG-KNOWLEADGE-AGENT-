@@ -31,6 +31,7 @@ from app.config import get_settings
 from app.db.models import Document, DocumentStatus
 from app.db.postgres import get_db_session
 from app.schemas.document import DocumentResult, UploadResponse
+from app.services import metrics
 from app.services.chunker import build_chunks
 from app.services.embedding_service import embed_batch_with_retry
 from app.services.parsers import get_parser_for_file
@@ -264,6 +265,8 @@ async def _process_single_file(
             status=DocumentStatus.COMPLETED,
             current_stage="completed"
         )
+        metrics.INGESTED_DOCUMENTS.labels("completed").inc()
+        metrics.INGESTED_CHUNKS.inc(len(chunks))
 
         return DocumentResult(
             document_id=doc.id,
@@ -277,6 +280,7 @@ async def _process_single_file(
 
     except Exception as exc:
         logger.exception("Failed to process '%s': %s", filename, exc)
+        metrics.INGESTED_DOCUMENTS.labels("failed").inc()
 
         if doc is not None:
             await _update_document(

@@ -1,0 +1,44 @@
+# Prometheus + Grafana for the RAG backend (Phase 6).
+#
+#   docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
+#
+# Grafana: http://localhost:3001 (anonymous read-only viewer; the "RAG Agent" dashboard is provisioned)
+# Prometheus: http://localhost:9090 — scrapes backend:8000/metrics every 15 s
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: rag_prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - rag_net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    container_name: rag_grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - rag_net
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:

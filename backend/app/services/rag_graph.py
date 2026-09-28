@@ -24,6 +24,7 @@ Conversation memory:
 
 from __future__ import annotations
 
+import time
 import uuid
 from typing import AsyncGenerator, TypedDict
 
@@ -32,6 +33,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 
 from app.config import get_settings
+from app.services import metrics
 from app.services.agent_steps import (
     UNGROUNDED_CAVEAT,
     build_retry_prompt,
@@ -507,9 +509,11 @@ async def stream_rag(
         "answer": "",
     }
 
-    verified = get_settings().ENABLE_VERIFIED_CITATIONS
+    settings = get_settings()
+    verified = settings.ENABLE_VERIFIED_CITATIONS
     extractor = AnswerStreamExtractor()
     total_chars = 0
+    started, route, outcome, attempts = time.perf_counter(), "needs_retrieval", "ok", 0
 
     try:
         async for event in graph.astream_events(initial_state, version="v2"):
@@ -531,6 +535,9 @@ async def stream_rag(
             # ── After retrieve node: emit sources (again on every retry) ────────
             elif kind == "on_chain_end" and name == "retrieve":
                 output = event["data"].get("output", {})
+                attempts = output.get("retrieval_attempt", attempts)
+                for stage, ms in (output.get("timings_ms") or {}).items():
+                    metrics.STAGE_SECONDS.labels(stage.removesuffix("_ms")).observe(ms / 1000)
                 sources: list[dict] = output.get("sources", [])
                 yield {
                     "type": "sources",
@@ -554,8 +561,17 @@ async def stream_rag(
                 if verdict:
                     yield {"type": "groundedness", **verdict}
                     if verdict.get("grounded") is False:
+                        outcome = "ungrounded"
                         total_chars += len(UNGROUNDED_CAVEAT)
                         yield {"type": "chunk", "content": UNGROUNDED_CAVEAT}
+
+            # ── Token usage of the LangChain calls (generate / direct_response) ──
+            elif kind == "on_chat_model_end":
+                usage = getattr(event["data"].get("output"), "usage_metadata", None) or {}
+                metrics.record_llm_usage(
+                    settings.GEMINI_MODEL, event.get("metadata", {}).get("langgraph_node", "llm"),
+                    usage.get("input_tokens", 0), usage.get("output_tokens", 0),
+                )
 
             # ── LLM token streaming (answer tokens only, never helper models) ───
             elif kind == "on_chat_model_stream" and event.get("metadata", {}).get("langgraph_node") in (
@@ -599,8 +615,14 @@ async def stream_rag(
             "total_chars": total_chars,
         }
     except Exception as e:
+        outcome = "error"
         logger.error(f"Error during RAG generation: {e}")
         yield {
             "type": "error",
             "message": f"Generation failed: {str(e)}"
         }
+    finally:
+        metrics.QUERIES.labels(route, outcome).inc()
+        metrics.QUERY_SECONDS.labels(route).observe(time.perf_counter() - started)
+        if attempts:
+            metrics.RETRIEVAL_ATTEMPTS.observe(attempts)

@@ -14,6 +14,8 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
+from app.services.metrics import record_sdk_usage
+
 T = TypeVar("T", bound=BaseModel)
 
 # An injectable structured-output call: (prompt, schema) -> validated instance. Steps take one of these so
@@ -43,6 +45,7 @@ def gemini_structured_llm(model: str, api_key: str, max_output_tokens: int) -> S
                 "response_mime_type": "application/json",
             },
         )
+        record_sdk_usage(model, "agent", response)
         return response.text
 
     async def llm(prompt: str, schema: type[T]) -> T:

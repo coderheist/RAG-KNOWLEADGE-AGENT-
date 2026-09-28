@@ -52,3 +52,5 @@ backend/evals/.cache/
 # ── Local tooling ─────────────────────────────────────────────────
 .claude/# feedback-derived eval candidates contain real user questions; reviewed cases go into golden_v*.jsonl
 backend/evals/datasets/candidates/
+# session-id file some library writes when given the ':memory:' path
+backend/*memory*.ses

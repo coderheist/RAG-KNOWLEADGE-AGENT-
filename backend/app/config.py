@@ -66,6 +66,11 @@ class Settings(BaseSettings):
     AGENT_MODEL: str = "gemini-flash-lite-latest"   # router / grader / groundedness checker
     AGENT_MAX_TOKENS: int = 512
 
+    # ── Observability (Phase 6) ──────────────────────────────────────────────
+    # USD per 1M tokens for the rag_llm_cost_usd_total metric. 0 = free tier; set from your plan's price sheet.
+    LLM_PRICE_INPUT_PER_MTOK: float = 0.0
+    LLM_PRICE_OUTPUT_PER_MTOK: float = 0.0
+
     # ── Embedding Resiliency ──────────────────────────────────────────────────
     MAX_EMBED_RETRIES: int = 5
     INITIAL_BACKOFF: float = 1.0

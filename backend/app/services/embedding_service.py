@@ -12,8 +12,8 @@ import re
 from google.api_core import exceptions as google_exc
 
 from app.config import get_settings
+from app.services import metrics
 from app.services.embeddings import get_embedding_provider
-from app.services.metrics import metrics
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -73,7 +73,7 @@ async def embed_batch_with_retry(
     retries = 0
     
     while True:
-        metrics.record_attempt()
+        metrics.EMBED_REQUESTS.inc()
         try:
             return await asyncio.to_thread(provider.embed_batch, texts, task_type)
             
@@ -86,14 +86,14 @@ async def embed_batch_with_retry(
             # ResourceExhausted is the concrete class for 429 in gRPC/Google APIs
             if isinstance(exc, google_exc.ResourceExhausted):
                 is_retryable = True
-                metrics.record_429()
+                metrics.EMBED_RATE_LIMITED.inc()
                 retry_after = _extract_retry_after(exc)
             elif isinstance(exc, google_exc.GoogleAPIError):
                 code = getattr(exc, "code", None)
                 if code in {429, 500, 502, 503, 504}:
                     is_retryable = True
                 if code == 429:
-                    metrics.record_429()
+                    metrics.EMBED_RATE_LIMITED.inc()
                 retry_after = _extract_retry_after(exc)
 
             # Generic network errors
@@ -101,13 +101,14 @@ async def embed_batch_with_retry(
                 is_retryable = True
                 
             if not is_retryable or retries >= settings.MAX_EMBED_RETRIES:
-                metrics.record_failure(retries)
+                metrics.EMBED_FAILURES.inc()
                 if is_retryable:
                     logger.error("Embedding permanently failed after exhausting %d retries.", retries)
                 raise RuntimeError(f"Embedding failed: {exc}") from exc
                 
             # Calculate backoff for next attempt
             retries += 1
+            metrics.EMBED_RETRIES.inc()
             if retry_after is not None and retry_after > 0:
                 sleep_time = retry_after
                 logger.warning(

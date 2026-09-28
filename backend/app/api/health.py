@@ -2,7 +2,8 @@
 Health API router.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.schemas.health import HealthResponse
 from app.services.health_service import get_health
@@ -21,3 +22,9 @@ router = APIRouter(tags=["Health"])
 )
 async def health_check() -> HealthResponse:
     return await get_health()
+
+
+@router.get("/metrics", include_in_schema=False)
+async def prometheus_metrics() -> Response:
+    """Prometheus scrape endpoint (see docker-compose.observability.yml)."""
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
