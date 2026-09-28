@@ -265,6 +265,67 @@ graph TD;
 
 ---
 
+# 🧭 Engineering decisions
+
+**Reciprocal Rank Fusion instead of score normalisation.** Dense cosine similarity and BM25 scores live on
+unrelated scales, and BM25's range shifts with the query length and the corpus statistics. Normalising and
+adding them needs a weight that has to be re-tuned whenever the corpus changes. RRF (k = 60) only uses ranks, so
+it has no parameter worth tuning, and it is what lifted exact-term questions (error codes, SKUs): recall@5 for
+that category went from 0.583 to 0.750 with hybrid on, and overall recall@5 from 0.894 to 0.936, for about 4 ms of
+extra retrieval time. The score floor and gap cut-off still run on the dense cosine score after fusion, because
+that is the only score with a stable meaning.
+
+**A local cross-encoder instead of a paid rerank API, and off by default.** Reranking is pluggable
+(`RERANKER_PROVIDER`), and the local `ms-marco-MiniLM-L-6-v2` keeps queries and document text on the machine
+with no per-call cost. It measurably helps (recall@5 0.936 → 0.978, MRR 0.926 → 0.967) but adds about 3.5 s p50 on
+this laptop's CPU, far over the ~150 ms budget, so it ships behind `ENABLE_RERANKING`. On a GPU or with a hosted
+reranker the trade changes; the flag and the eval harness make that a measurement rather than a debate.
+
+**The retrieval loop is capped.** The agent grades what it retrieved and may rewrite the query and search again,
+at most `MAX_RETRIEVAL_LOOPS = 2` times. An uncapped loop turns one bad question into unbounded LLM spend. The
+cap is enforced in the graph and covered by a test in which the grader always answers "weak". The first version
+also threw away a good first retrieval when a retry drifted; the final context is now chosen across all
+attempts, and retries must keep identifiers such as error codes (see PROGRESS.md, Phase 4).
+
+**Every helper step fails open.** Router, grader, groundedness check, query rewrite, tracing and metrics can each
+fail (quota, timeout, malformed JSON) without failing the answer: the pipeline falls back to the plain
+retrieve-and-generate path and logs the failure. The helpers use the Gemini SDK's JSON mode, not LangChain chat
+models, so their tokens never leak into the streamed answer.
+
+# 🔭 Observability
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
+```
+
+* **Metrics:** `GET /metrics` (Prometheus): queries by route and outcome, end-to-end and per-stage latency,
+  retrievals per query, LLM tokens by model and step, cost at the prices set in `LLM_PRICE_*_PER_MTOK`, embedding
+  requests, retries and 429s, and ingestion throughput. Grafana at http://localhost:3001 ships a provisioned
+  "RAG Agent" dashboard.
+* **Tracing:** self-hosted Langfuse at http://localhost:3002 (`LANGFUSE_ENABLED=true`): one trace per query with a
+  span per graph node, tagged with the active feature flags so configurations can be compared side by side.
+* **Feedback loop:** thumbs up/down in the chat UI is stored by `POST /feedback` together with the retrieved chunk
+  ids and the active flags. `python scripts/feedback_to_eval.py` turns thumbs-down answers into golden-set
+  candidates for human review: production failure → eval case → fix → measured improvement.
+
+![Grafana dashboard](docs/screenshots/grafana-dashboard.png)
+
+# ⚠️ Known limitations
+
+* **Free-tier Gemini quotas shape everything.** The free tier allows about 500 requests per day per model. A full
+  judged run of the agent (about 6 LLM calls per question, including the judge) fits into one day at most, and
+  runs must be paced to stay under the per-minute limit. Latency numbers include those retry waits.
+* **Ingestion is synchronous.** Upload parses, chunks, embeds and indexes inside the request; there is no
+  background queue, so the UI cannot show a per-stage progress bar and very large files hold the request open.
+* **No authentication or multi-tenancy.** Every user sees every document and collection. Do not expose the API
+  publicly.
+* **Traces cover LangChain calls in full, SDK helper calls as timings.** Router, grader and groundedness calls go
+  through the Gemini SDK directly: their tokens are counted in `/metrics`, and their node spans appear in
+  Langfuse, but not as separate LLM generations.
+* **The golden set is synthetic** (62 questions over purpose-built documents with look-alike identifiers). It is
+  good at catching regressions, not a claim about accuracy on your documents; use the feedback loop to grow it
+  from real questions.
+
 # 📸 Application Preview
 
 Captured from the production build (`npm run build && npm start`) in light and dark mode; mobile shots at 390 px.
