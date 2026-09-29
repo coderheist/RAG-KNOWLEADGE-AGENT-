@@ -46,12 +46,16 @@ const statusConfig: Record<
   already_exists: { label: "Already Indexed", variant: "success" },
 };
 
+const PAGE_SIZE = 25;
+
 export function DocumentsList() {
   const { refresh } = useApp();
   const { documents, setDocuments, loading, error } = useDocuments({
     pollProcessing: true,
   });
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Render in pages: all rows at once (each with its own dialog) blocked the main thread for >2 s on mobile.
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   // Optimistic: the row disappears at once and comes back if the API refuses.
   const handleDelete = async (id: string, name: string) => {
@@ -102,7 +106,7 @@ export function DocumentsList() {
           </p>
         ) : (
           <ul className="divide-y divide-border/60">
-            {documents.map((doc, index) => {
+            {documents.slice(0, visible).map((doc) => {
               const Icon = typeIcons[doc.type] ?? FileText;
               const status = statusConfig[doc.status];
 
@@ -149,6 +153,16 @@ export function DocumentsList() {
                 </li>
               );
             })}
+            {documents.length > visible && (
+              <li className="flex items-center justify-between px-6 py-3 text-sm text-muted-foreground">
+                <span>
+                  Showing {visible} of {documents.length}
+                </span>
+                <Button variant="outline" size="sm" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
+                  Show more
+                </Button>
+              </li>
+            )}
           </ul>
         )}
       </CardContent>

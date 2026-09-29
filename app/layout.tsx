@@ -5,14 +5,18 @@ import { AppProvider } from "@/lib/context/app-context";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
+// "optional": use Geist if it is ready almost immediately (cached, fast network), otherwise keep the
+// metric-matched fallback. With "swap" the late repaint became the LCP on slow mobile connections.
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "optional",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "optional",
 });
 
 export const metadata: Metadata = {
