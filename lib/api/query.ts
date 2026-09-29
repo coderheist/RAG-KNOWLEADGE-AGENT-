@@ -55,7 +55,8 @@ function handleEvent(data: string, h: StreamHandlers, finish: (id?: string) => v
 
   switch (String(p.type ?? "")) {
     case "route":
-      if (p.route !== "needs_retrieval") h.onStatus?.("generating", "Answering directly, no document search needed");
+      if (p.route === "needs_retrieval") h.onStatus?.("searching", "Searching your documents…");
+      else h.onStatus?.("generating", "Answering directly, no document search needed");
       break;
     case "query_rewrite":
       h.onQueryRewrite?.(String(p.original ?? ""), String(p.rewritten ?? ""));
@@ -65,11 +66,12 @@ function handleEvent(data: string, h: StreamHandlers, finish: (id?: string) => v
       const sources = normalizeSources(p.sources);
       h.onSources(sources, (p.timings_ms as Record<string, number> | undefined) ?? undefined);
       const n = sources.length;
-      h.onStatus?.("generating", n ? `Found ${n} passage${n === 1 ? "" : "s"}, writing the answer` : "No matching passages found");
+      h.onStatus?.("generating", n ? `Found ${n} passage${n === 1 ? "" : "s"}` : "No matching passages found");
       break;
     }
     case "chunk_grades":
       if (p.weak) h.onStatus?.("searching", "Results looked weak, trying a different search");
+      else h.onStatus?.("generating", "Writing the answer…");
       break;
     case "chunk": {
       const token = String(p.content ?? "");

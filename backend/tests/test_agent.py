@@ -1,4 +1,5 @@
 """Unit tests for the agentic graph (Phase 4): decision steps, retry policy, and loop termination. No network."""
+import asyncio
 from types import SimpleNamespace
 
 import pytest
@@ -243,3 +244,41 @@ async def test_a_good_first_hit_survives_a_retry(graph_env, monkeypatch) -> None
 
     assert graph_env["retrieve"] == 3
     assert [c.chunk_id for c in final["chunks"]] == ["a0-0"]   # the first attempt's partial hit is kept
+
+
+class _ScriptedGraph:
+    """Stands in for the compiled graph: yields scripted (delay_s, event) pairs."""
+
+    def __init__(self, script):
+        self.script = script
+
+    async def astream_events(self, *args, **kwargs):
+        for delay, event in self.script:
+            await asyncio.sleep(delay)
+            yield event
+
+
+def _token(text: str) -> dict:
+    return {"event": "on_chat_model_stream", "name": "llm", "metadata": {"langgraph_node": "direct_response"},
+            "data": {"chunk": AIMessage(content=text)}}
+
+
+def _deadline(monkeypatch, graph, seconds: float) -> None:
+    base = rag_graph.get_settings()
+    monkeypatch.setattr(rag_graph, "get_rag_graph", lambda: graph)
+    monkeypatch.setattr(rag_graph.tracing, "start_trace", lambda *a: None)   # hermetic: never reach Langfuse
+    monkeypatch.setattr(rag_graph, "get_settings", lambda: base.model_copy(update={"REQUEST_DEADLINE_S": seconds}))
+
+
+async def test_request_deadline_ends_a_stalled_query(monkeypatch) -> None:
+    _deadline(monkeypatch, _ScriptedGraph([(5.0, _token("too late"))]), 0.1)
+    events = [e async for e in rag_graph.stream_rag("q", "c", [], 5)]
+    assert events[-1]["type"] == "error" and "slowly" in events[-1]["message"]
+    assert not any(e["type"] == "done" for e in events)
+
+
+async def test_a_streaming_answer_may_finish_after_the_deadline(monkeypatch) -> None:
+    _deadline(monkeypatch, _ScriptedGraph([(0.0, _token("Hello")), (0.3, _token(" world"))]), 0.1)
+    events = [e async for e in rag_graph.stream_rag("q", "c", [], 5)]
+    assert "".join(e.get("content", "") for e in events if e["type"] == "chunk") == "Hello world"
+    assert events[-1]["type"] == "done"

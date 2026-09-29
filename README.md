@@ -337,9 +337,9 @@ set `LLM_PRICE_*_PER_MTOK` and read `rag_llm_cost_usd_total` from `/metrics`.
 * **Free-tier Gemini quotas shape everything.** The free tier allows about 500 requests per day per model. A full
   judged run of the agent (about 6 LLM calls per question, including the judge) fits into one day at most, and
   runs must be paced to stay under the per-minute limit. Latency numbers include those retry waits.
-* **LLM calls are bounded one by one, not per request.** Each call has a 45 s timeout and the answering model
-  retries at most twice, but there is no overall deadline: during a provider stall one agent query can still take
-  minutes (1 of 62 eval cases exceeded 300 s). The fix is a request-level deadline that skips optional steps.
+* **Slow providers still mean slow answers.** Each LLM call has a 45 s timeout (`LLM_TIMEOUT_S`) and a query
+  that has not started answering after `REQUEST_DEADLINE_S` (120 s) ends with a clear error; once the answer
+  is streaming it is allowed to finish. Before these bounds, 1 of 62 eval cases took over 300 s.
 * **Ingestion is synchronous.** Upload parses, chunks, embeds and indexes inside the request; there is no
   background queue, so the UI cannot show a per-stage progress bar and very large files hold the request open.
 * **No authentication or multi-tenancy.** Every user sees every document and collection. Do not expose the API

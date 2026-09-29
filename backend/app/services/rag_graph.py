@@ -24,6 +24,7 @@ Conversation memory:
 
 from __future__ import annotations
 
+import asyncio
 import time
 import uuid
 from typing import AsyncGenerator, TypedDict
@@ -520,105 +521,110 @@ async def stream_rag(
     trace = tracing.start_trace(query, conversation_id)
 
     try:
-        async for event in graph.astream_events(
-            initial_state, version="v2", config={"callbacks": tracing.langchain_callbacks(trace)}
-        ):
-            kind: str = event["event"]
-            name: str = event.get("name", "")
+        # Bound the wait for the first answer token; each LLM call is bounded too (LLM_TIMEOUT_S), but a chain
+        # of slow helper calls could otherwise hold a request for minutes.
+        async with asyncio.timeout(settings.REQUEST_DEADLINE_S) as deadline:
+            async for event in graph.astream_events(
+                initial_state, version="v2", config={"callbacks": tracing.langchain_callbacks(trace)}
+            ):
+                kind: str = event["event"]
+                name: str = event.get("name", "")
 
-            # ── After router: report a non-retrieval route ─────────────────────
-            if kind == "on_chain_end" and name == "router":
-                route = event["data"].get("output", {}).get("route", "needs_retrieval")
-                if route != "needs_retrieval":
+                # ── After router: report a non-retrieval route ─────────────────────
+                if kind == "on_chain_end" and name == "router":
+                    route = event["data"].get("output", {}).get("route", "needs_retrieval")
                     yield {"type": "route", "route": route}
 
-            # ── After rewrite node: tell the client what was actually searched ──
-            elif kind == "on_chain_end" and name == "rewrite_query":
-                output = event["data"].get("output", {})
-                if output.get("rewrite_applied"):
-                    yield {"type": "query_rewrite", "original": query, "rewritten": output["search_query"]}
+                # ── After rewrite node: tell the client what was actually searched ──
+                elif kind == "on_chain_end" and name == "rewrite_query":
+                    output = event["data"].get("output", {})
+                    if output.get("rewrite_applied"):
+                        yield {"type": "query_rewrite", "original": query, "rewritten": output["search_query"]}
 
-            # ── After retrieve node: emit sources (again on every retry) ────────
-            elif kind == "on_chain_end" and name == "retrieve":
-                output = event["data"].get("output", {})
-                attempts = output.get("retrieval_attempt", attempts)
-                for stage, ms in (output.get("timings_ms") or {}).items():
-                    metrics.STAGE_SECONDS.labels(stage.removesuffix("_ms")).observe(ms / 1000)
-                sources: list[dict] = output.get("sources", [])
-                yield {
-                    "type": "sources",
-                    "sources": sources,
-                    "retrieved_count": len(sources),
-                    "timings_ms": output.get("timings_ms", {}),
-                }
+                # ── After retrieve node: emit sources (again on every retry) ────────
+                elif kind == "on_chain_end" and name == "retrieve":
+                    output = event["data"].get("output", {})
+                    attempts = output.get("retrieval_attempt", attempts)
+                    for stage, ms in (output.get("timings_ms") or {}).items():
+                        metrics.STAGE_SECONDS.labels(stage.removesuffix("_ms")).observe(ms / 1000)
+                    sources: list[dict] = output.get("sources", [])
+                    yield {
+                        "type": "sources",
+                        "sources": sources,
+                        "retrieved_count": len(sources),
+                        "timings_ms": output.get("timings_ms", {}),
+                    }
 
-            # ── After grading: per-chunk grades and whether a retry follows ─────
-            elif kind == "on_chain_end" and name == "grade_chunks":
-                output = event["data"].get("output", {})
-                yield {"type": "chunk_grades", "grades": output.get("chunk_grades", []),
-                       "weak": output.get("retrieval_weak", False)}
-                if "sources" in output:  # the final context: [Source N] in the answer refers to this list
-                    yield {"type": "sources", "sources": output["sources"], "retrieved_count": len(output["sources"]),
-                           "timings_ms": {}}
+                # ── After grading: per-chunk grades and whether a retry follows ─────
+                elif kind == "on_chain_end" and name == "grade_chunks":
+                    output = event["data"].get("output", {})
+                    yield {"type": "chunk_grades", "grades": output.get("chunk_grades", []),
+                           "weak": output.get("retrieval_weak", False)}
+                    if "sources" in output:  # the final context: [Source N] in the answer refers to this list
+                        final = output["sources"]
+                        yield {"type": "sources", "sources": final, "retrieved_count": len(final), "timings_ms": {}}
 
-            # ── After the groundedness check: verdict, plus a visible caveat if unsupported ──
-            elif kind == "on_chain_end" and name == "check_grounded":
-                verdict = event["data"].get("output", {}).get("groundedness")
-                grounded = verdict.get("grounded") if verdict else None
-                if verdict:
-                    yield {"type": "groundedness", **verdict}
-                    if verdict.get("grounded") is False:
-                        outcome = "ungrounded"
-                        total_chars += len(UNGROUNDED_CAVEAT)
-                        yield {"type": "chunk", "content": UNGROUNDED_CAVEAT}
+                # ── After the groundedness check: verdict, plus a visible caveat if unsupported ──
+                elif kind == "on_chain_end" and name == "check_grounded":
+                    verdict = event["data"].get("output", {}).get("groundedness")
+                    grounded = verdict.get("grounded") if verdict else None
+                    if verdict:
+                        yield {"type": "groundedness", **verdict}
+                        if verdict.get("grounded") is False:
+                            outcome = "ungrounded"
+                            total_chars += len(UNGROUNDED_CAVEAT)
+                            yield {"type": "chunk", "content": UNGROUNDED_CAVEAT}
 
-            # ── Final answer text (for the trace) ───────────────────────────────
-            elif kind == "on_chain_end" and (name == "direct_response" or (name == "generate" and not verified)):
-                answer = event["data"].get("output", {}).get("answer", "") or answer
+                # ── Final answer text (for the trace) ───────────────────────────────
+                elif kind == "on_chain_end" and (name == "direct_response" or (name == "generate" and not verified)):
+                    answer = event["data"].get("output", {}).get("answer", "") or answer
 
-            # ── Token usage of the LangChain calls (generate / direct_response) ──
-            elif kind == "on_chat_model_end":
-                usage = getattr(event["data"].get("output"), "usage_metadata", None) or {}
-                metrics.record_llm_usage(
-                    settings.GEMINI_MODEL, event.get("metadata", {}).get("langgraph_node", "llm"),
-                    usage.get("input_tokens", 0), usage.get("output_tokens", 0),
-                )
-
-            # ── LLM token streaming (answer tokens only, never helper models) ───
-            elif kind == "on_chat_model_stream" and event.get("metadata", {}).get("langgraph_node") in (
-                "generate",
-                "direct_response",
-            ):
-                chunk = event["data"].get("chunk")
-                if chunk is None:
-                    continue
-
-                # AIMessageChunk.content can be str or list[dict] (multimodal)
-                raw = chunk.content if hasattr(chunk, "content") else ""
-                if isinstance(raw, list):
-                    token = "".join(
-                        part.get("text", "") if isinstance(part, dict) else str(part)
-                        for part in raw
+                # ── Token usage of the LangChain calls (generate / direct_response) ──
+                elif kind == "on_chat_model_end":
+                    usage = getattr(event["data"].get("output"), "usage_metadata", None) or {}
+                    metrics.record_llm_usage(
+                        settings.GEMINI_MODEL, event.get("metadata", {}).get("langgraph_node", "llm"),
+                        usage.get("input_tokens", 0), usage.get("output_tokens", 0),
                     )
-                else:
-                    token = str(raw)
 
-                # Structured mode: the model emits JSON, so stream only the decoded "answer" text.
-                if verified and event["metadata"]["langgraph_node"] == "generate":
-                    token = extractor.feed(token)
-                if token:
-                    total_chars += len(token)
-                    yield {"type": "chunk", "content": token}
+                # ── LLM token streaming (answer tokens only, never helper models) ───
+                elif kind == "on_chat_model_stream" and event.get("metadata", {}).get("langgraph_node") in (
+                    "generate",
+                    "direct_response",
+                ):
+                    chunk = event["data"].get("chunk")
+                    if chunk is None:
+                        continue
 
-            # ── Generation finished: validated citations, and a fallback if nothing streamed ──
-            elif kind == "on_chain_end" and name == "generate" and verified:
-                output = event["data"].get("output", {})
-                answer = output.get("answer", "") or answer
-                if not extractor.started and output.get("answer"):
-                    total_chars += len(output["answer"])          # plain-text answer: emit it in one piece
-                    yield {"type": "chunk", "content": output["answer"]}
-                if output.get("structured"):
-                    yield {"type": "citations", **output["citations"]}
+                    # AIMessageChunk.content can be str or list[dict] (multimodal)
+                    raw = chunk.content if hasattr(chunk, "content") else ""
+                    if isinstance(raw, list):
+                        token = "".join(
+                            part.get("text", "") if isinstance(part, dict) else str(part)
+                            for part in raw
+                        )
+                    else:
+                        token = str(raw)
+
+                    # Structured mode: the model emits JSON, so stream only the decoded "answer" text.
+                    if verified and event["metadata"]["langgraph_node"] == "generate":
+                        token = extractor.feed(token)
+                    if token:
+                        total_chars += len(token)
+                        yield {"type": "chunk", "content": token}
+
+                # ── Generation finished: validated citations, and a fallback if nothing streamed ──
+                elif kind == "on_chain_end" and name == "generate" and verified:
+                    output = event["data"].get("output", {})
+                    answer = output.get("answer", "") or answer
+                    if not extractor.started and output.get("answer"):
+                        total_chars += len(output["answer"])          # plain-text answer: emit it in one piece
+                        yield {"type": "chunk", "content": output["answer"]}
+                    if output.get("structured"):
+                        yield {"type": "citations", **output["citations"]}
+
+                if total_chars and deadline.when() is not None:
+                    deadline.reschedule(None)   # the answer has started streaming: let it finish
 
         # ── Graph complete ─────────────────────────────────────────────────────────
         yield {
@@ -626,6 +632,10 @@ async def stream_rag(
             "conversation_id": conversation_id,
             "total_chars": total_chars,
         }
+    except TimeoutError:
+        outcome = "timeout"
+        logger.warning("Query exceeded REQUEST_DEADLINE_S=%s before answering", settings.REQUEST_DEADLINE_S)
+        yield {"type": "error", "message": "The model is responding very slowly right now. Please try again."}
     except Exception as e:
         outcome = "error"
         logger.error(f"Error during RAG generation: {e}")

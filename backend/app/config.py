@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     # Bound every LLM call: a provider stall must not hold a request for minutes (seen: 200+ s with defaults).
     LLM_TIMEOUT_S: float = 45.0
     LLM_MAX_RETRIES: int = 2
+    # Max seconds to wait for the first answer token; after that a streaming answer may finish.
+    REQUEST_DEADLINE_S: float = 120.0
 
     # ── Observability (Phase 6) ──────────────────────────────────────────────
     # USD per 1M tokens for the rag_llm_cost_usd_total metric. 0 = free tier; set from your plan's price sheet.
