@@ -38,3 +38,11 @@ export function bestSupportingLine(lines: string[], claims: string[]): number {
   return best;
 }
 
+/**
+ * Split a passage line into sentences so evidence can be highlighted precisely. Only breaks after ., ! or ?
+ * followed by whitespace and a capital letter or digit, so versions ("3.2.1") and "e.g. x" stay intact.
+ */
+export function splitSentences(line: string): string[] {
+  return line.split(/(?<=[.!?])\s+(?=[A-Z0-9])/).map((s) => s.trim()).filter(Boolean);
+}
+

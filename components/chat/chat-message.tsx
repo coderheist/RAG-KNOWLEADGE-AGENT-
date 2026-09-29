@@ -14,7 +14,7 @@ import {
   ThumbsDown,
   ThumbsUp,
 } from "lucide-react";
-import { bestSupportingLine, linkCitations } from "@/lib/citations";
+import { bestSupportingLine, linkCitations, splitSentences } from "@/lib/citations";
 import type { ChatMessage as Message, QuerySource } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -44,17 +44,22 @@ function PassageLine({ line }: { line: string }) {
 /** The sentence of a source that best supports what the answer says about it (for the margin note). */
 function evidenceFor(source: QuerySource, claims: string[], answer: string): string | null {
   if (!source.chunkText) return null;
-  const lines = passageLines(source.chunkText).filter((l) => !l.startsWith("#"));
-  const best = bestSupportingLine(lines, claims.length ? claims : [answer]);
-  return best >= 0 ? lines[best] : lines[0] ?? null;
+  const sentences = passageLines(source.chunkText)
+    .filter((l) => !l.startsWith("#"))
+    .flatMap(splitSentences);
+  const best = bestSupportingLine(sentences, claims.length ? claims : [answer]);
+  return best >= 0 ? sentences[best] : sentences[0] ?? null;
 }
 
-/** The cited chunk with the line that best supports the claims highlighted and scrolled into view. */
+/** The cited chunk, with the sentence that best supports the claims marked in place and scrolled into view. */
 function Passage({ text, claims }: { text: string; claims: string[] }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLElement>(null);
-  const lines = passageLines(text);
-  const best = bestSupportingLine(lines, claims);
+  const paragraphs = passageLines(text).map((line) =>
+    /^#{1,6}\s/.test(line) ? { heading: line, sentences: [] as string[] } : { heading: null, sentences: splitSentences(line) }
+  );
+  const flat = paragraphs.flatMap((p) => p.sentences);
+  const best = bestSupportingLine(flat, claims);
 
   useEffect(() => {
     const box = boxRef.current;
@@ -62,15 +67,25 @@ function Passage({ text, claims }: { text: string; claims: string[] }) {
     if (box && mark) box.scrollTop = mark.offsetTop - box.offsetTop - box.clientHeight / 3;
   }, []);
 
+  let index = -1;
   return (
-    <div ref={boxRef} className="relative mt-2 max-h-48 space-y-1 overflow-y-auto text-xs leading-relaxed text-muted-foreground">
-      {lines.map((line, i) =>
-        i === best ? (
-          <mark key={i} ref={markRef} className="block rounded-sm bg-highlight px-1 text-highlight-foreground">
-            {line}
-          </mark>
+    <div ref={boxRef} className="relative mt-2 max-h-48 space-y-1.5 overflow-y-auto text-xs leading-relaxed text-muted-foreground">
+      {paragraphs.map((p, i) =>
+        p.heading ? (
+          <PassageLine key={i} line={p.heading} />
         ) : (
-          <PassageLine key={i} line={line} />
+          <p key={i}>
+            {p.sentences.map((sentence, j) => {
+              index += 1;
+              return index === best ? (
+                <mark key={j} ref={markRef} className="rounded-sm bg-highlight px-0.5 text-highlight-foreground">
+                  {sentence}{" "}
+                </mark>
+              ) : (
+                <span key={j}>{sentence} </span>
+              );
+            })}
+          </p>
         )
       )}
     </div>
