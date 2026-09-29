@@ -11,8 +11,9 @@
 # testing
 /coverage
 
-# next.js
+# next.js (NEXT_DIST_DIR can point builds at /.next-<name>/)
 /.next/
+/.next-*/
 /out/
 
 # production
@@ -50,7 +51,9 @@ backend/evals/corpus/
 backend/evals/.cache/
 
 # ── Local tooling ─────────────────────────────────────────────────
-.claude/# feedback-derived eval candidates contain real user questions; reviewed cases go into golden_v*.jsonl
+.claude/
+
+# feedback-derived eval candidates contain real user questions; reviewed cases go into golden_v*.jsonl
 backend/evals/datasets/candidates/
 # session-id file some library writes when given the ':memory:' path
 backend/*memory*.ses
