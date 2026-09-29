@@ -373,20 +373,22 @@ Captured from the production build (`npm run build && npm start`) in light and d
 ## Lighthouse
 
 Production build (`npm run build && npm start`), median of three runs per page, Lighthouse 12 in headless Chrome
-on the development laptop (a slow machine by Lighthouse's CPU benchmark, so the throttled mobile profile is
-pessimistic).
+on the development laptop.
 
 | Profile | Page | Performance | Accessibility | Best practices | LCP | CLS |
 |---|---|---|---|---|---|---|
-| Desktop | /chat | 100 | 100 | 100 | 0.7 s | 0.011 |
-| Desktop | /dashboard | 94 | 100 | 100 | 0.8 s | 0.005 |
-| Desktop | /documents | 99 | 100 | 100 | 0.6 s | 0.005 |
-| Mobile | /chat | 91 | 100 | 100 | 2.8 s | 0.025 |
-| Mobile | /dashboard | 75 | 100 | 100 | 2.8 s | 0.000 |
-| Mobile | /documents | 64 | 100 | 100 | 3.0 s | 0.000 |
+| Desktop | /chat | 99 | 100 | 100 | 0.9 s | 0.011 |
+| Desktop | /dashboard | 100 | 100 | 100 | 0.7 s | 0.000 |
+| Desktop | /documents | 100 | 100 | 100 | 0.7 s | 0.005 |
+| Mobile | /chat | 89 | 100 | 100 | 2.9 s | 0.026 |
+| Mobile | /dashboard | 90 | 100 | 100 | 3.0 s | 0.000 |
+| Mobile | /documents | 85 | 100 | 100 | 3.0 s | 0.000 |
 
-Accessibility is 100 on every page in both profiles. Mobile performance on the dashboard and documents pages is
-below the 85 target and LCP is above 2.5 s on the throttled profile; single runs vary by up to 20 points here.
+Accessibility and best practices are 100 everywhere. Mobile LCP stays around 3 s (above the 2.5 s target): the
+largest paint is server-rendered text held back by hydration work on the throttled CPU, so the next step is less
+client JavaScript. Scores on this laptop swing by 20+ points between sessions as its CPU speed varies (Lighthouse's
+benchmark index ranged from ~500 to ~1,500), so changes were judged with interleaved A/B runs instead: paginating the
+documents list cut mobile blocking time from 1,083 to 657 ms; switching to the Geist font was neutral.
 
 ---
 

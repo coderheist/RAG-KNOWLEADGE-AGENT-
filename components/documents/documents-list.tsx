@@ -123,7 +123,7 @@ export function DocumentsList() {
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                       <span>{doc.type}</span>
                       <span>{formatBytes(doc.size)}</span>
-                      <span>{doc.chunks} chunks</span>
+                      <span>{doc.chunks} chunk{doc.chunks === 1 ? "" : "s"}</span>
                       <span className="flex items-center gap-1">
                         <Clock className="size-3" />
                         {formatRelativeTime(doc.uploadedAt)}

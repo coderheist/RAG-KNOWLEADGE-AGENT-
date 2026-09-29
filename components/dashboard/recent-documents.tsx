@@ -122,7 +122,7 @@ export function RecentDocuments({
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span>{doc.type}</span>
                         <span>{formatBytes(doc.size)}</span>
-                        <span>{doc.chunks} chunks</span>
+                        <span>{doc.chunks} chunk{doc.chunks === 1 ? "" : "s"}</span>
                       </div>
                     </div>
                     <div className="hidden shrink-0 items-center gap-3 sm:flex">

@@ -204,7 +204,7 @@ export function ChatInterface() {
       loading: `Uploading ${files.length === 1 ? files[0].name : `${files.length} files`}…`,
       success: (docs) => {
         refresh();
-        return docs.map((d) => (d.status === "already_exists" ? `${d.name} is already indexed` : `Indexed ${d.name} · ${d.chunks} chunks`)).join(" · ");
+        return docs.map((d) => (d.status === "already_exists" ? `${d.name} is already indexed` : `Indexed ${d.name} · ${d.chunks} chunk${d.chunks === 1 ? "" : "s"}`)).join(" · ");
       },
       error: (err) => `Upload failed: ${err instanceof Error ? err.message : "unknown error"}`,
     });
