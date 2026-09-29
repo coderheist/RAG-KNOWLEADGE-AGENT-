@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AppProvider } from "@/lib/context/app-context";
 import { Toaster } from "@/components/ui/sonner";
@@ -19,9 +19,16 @@ const geistMono = Geist_Mono({
   display: "optional",
 });
 
+// Answers are reading material, so they are set in a text serif; the interface stays in Geist.
+const reading = Source_Serif_4({
+  variable: "--font-reading",
+  subsets: ["latin"],
+  display: "optional",
+});
+
 export const metadata: Metadata = {
   title: "RAG Agent",
-  description: "Manage documents and knowledge base",
+  description: "Ask questions about your documents and check every answer against its sources",
 };
 
 export default function RootLayout({
@@ -32,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${reading.variable} font-sans antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AppProvider>

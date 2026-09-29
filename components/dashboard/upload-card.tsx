@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { CloudUpload, FileUp, Loader2, Sparkles } from "lucide-react";
+import { FileUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { uploadDocuments } from "@/lib/api/upload";
 import { useApp } from "@/lib/context/app-context";
@@ -140,20 +140,10 @@ export function UploadCard({ disabled, onUploadComplete }: UploadCardProps) {
     <div
       id="upload"
     >
-      <Card className="relative overflow-hidden border-dashed">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5" />
+      <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <CloudUpload className="size-4" />
-            </div>
-            <div>
-              <CardTitle>Upload Documents</CardTitle>
-              <CardDescription>
-                Drop files here or browse from your device
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle>Add documents</CardTitle>
+          <CardDescription>Each file is split into passages and indexed, so answers can cite it.</CardDescription>
         </CardHeader>
         <CardContent>
           <input
@@ -172,49 +162,37 @@ export function UploadCard({ disabled, onUploadComplete }: UploadCardProps) {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             className={cn(
-              "relative flex min-h-[180px] flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-all duration-300",
-              isDragging
-                ? "border-primary bg-primary/5 scale-[1.01]"
-                : "border-border/80 hover:border-primary/40 hover:bg-muted/30",
+              "flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center transition-colors",
+              isDragging ? "border-primary bg-accent" : "border-input hover:border-primary/50",
               isDisabled && "pointer-events-none opacity-60"
             )}
           >
-            <div
-              className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"
-            >
-              {uploading || processing ? (
-                <Loader2 className="size-7 animate-spin" />
-              ) : (
-                <FileUp className="size-7" />
-              )}
-            </div>
+            {uploading || processing ? (
+              <Loader2 className="mb-3 size-6 animate-spin text-primary" aria-hidden />
+            ) : (
+              <FileUp className="mb-3 size-6 text-muted-foreground" aria-hidden />
+            )}
             <p className="text-sm font-medium">
               {uploading
                 ? `Uploading… ${uploadProgress}%`
                 : processing
-                  ? "Processing documents…"
+                  ? "Indexing your documents…"
                   : isDragging
-                    ? "Release to upload"
-                    : "Drag & drop your files"}
+                    ? "Release to add these files"
+                    : "Drop files here"}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              PDF, DOCX, PPTX, XLSX, CSV, TXT, MD files — up to 50 MB each
+            <p className="mt-1 max-w-[40ch] text-xs text-muted-foreground">
+              PDF, Word, PowerPoint, Excel, CSV, Markdown or text, up to 50 MB each. Images are read with OCR.
             </p>
             {(uploading || processing) && (
               <Progress
                 aria-label="Upload progress"
                 value={uploading ? uploadProgress : undefined}
-                className="mt-4 h-2 w-full max-w-xs"
+                className="mt-4 h-1.5 w-full max-w-xs"
               />
             )}
-            <Button
-              className="mt-5"
-              size="sm"
-              disabled={isDisabled}
-              onClick={() => inputRef.current?.click()}
-            >
-              <Sparkles className="size-3.5" />
-              Browse Files
+            <Button className="mt-5" variant="outline" size="sm" disabled={isDisabled} onClick={() => inputRef.current?.click()}>
+              Choose files
             </Button>
           </div>
         </CardContent>

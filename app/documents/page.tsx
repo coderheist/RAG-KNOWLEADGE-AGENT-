@@ -5,12 +5,8 @@ export default function DocumentsPage() {
   return (
     <AppShell activePath="/documents">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Documents
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          View and manage all uploaded documents
-        </p>
+        <h1 className="text-3xl font-semibold tracking-tight">Documents</h1>
+        <p className="mt-2 text-muted-foreground">Everything in your library. Deleting a file also removes it from answers.</p>
       </div>
 
       <DocumentsList />

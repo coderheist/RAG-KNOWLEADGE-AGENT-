@@ -3,8 +3,6 @@
 import Link from "next/link";
 import {
   AlertCircle,
-  ArrowRight,
-  Clock,
   FileSpreadsheet,
   FileText,
   FileType,
@@ -63,21 +61,11 @@ export function RecentDocuments({
     >
       <Card>
         <CardHeader>
-          <CardTitle>Recent Documents</CardTitle>
-          <CardDescription>
-            Your latest uploads and their indexing status
-          </CardDescription>
+          <CardTitle>Recently added</CardTitle>
+          <CardDescription>Files appear here as soon as they are indexed.</CardDescription>
           <CardAction>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground"
-              asChild
-            >
-              <Link href="/documents">
-                View all
-                <ArrowRight className="size-3.5" />
-              </Link>
+            <Button variant="link" size="sm" className="px-0" asChild>
+              <Link href="/documents">All documents</Link>
             </Button>
           </CardAction>
         </CardHeader>
@@ -101,11 +89,11 @@ export function RecentDocuments({
             </div>
           ) : recent.length === 0 ? (
             <p className="px-6 py-8 text-center text-sm text-muted-foreground">
-              No documents yet. Upload your first PDF to get started.
+              Nothing yet. Files you add appear here.
             </p>
           ) : (
-            <ul className="divide-y divide-border/60">
-              {recent.map((doc, index) => {
+            <ul className="divide-y">
+              {recent.map((doc) => {
                 const Icon = typeIcons[doc.type] ?? FileText;
                 const status = statusConfig[doc.status];
 
@@ -125,19 +113,15 @@ export function RecentDocuments({
                         <span>{doc.chunks} chunk{doc.chunks === 1 ? "" : "s"}</span>
                       </div>
                     </div>
-                    <div className="hidden shrink-0 items-center gap-3 sm:flex">
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="size-3" />
-                        {formatRelativeTime(doc.uploadedAt)}
-                      </span>
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                    </div>
-                    <Badge
-                      variant={status.variant}
-                      className="shrink-0 sm:hidden"
-                    >
-                      {status.label}
-                    </Badge>
+                    <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
+                      {formatRelativeTime(doc.uploadedAt)}
+                    </span>
+                    {/* Status only when it needs attention: an indexed file is the normal case. */}
+                    {doc.status !== "indexed" && doc.status !== "already_exists" && (
+                      <Badge variant={status.variant} className="shrink-0">
+                        {status.label}
+                      </Badge>
+                    )}
                   </li>
                 );
               })}

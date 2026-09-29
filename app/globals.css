@@ -4,7 +4,12 @@
 
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-reading), ui-serif, Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -29,47 +34,57 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* "Answers with marginalia": quiet paper-and-ink surfaces, teal for actions, and a highlighter
+   yellow reserved for evidence (citations and the sentences that support them). */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.985 0.002 247);
-  --foreground: oklch(0.145 0.02 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.02 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.02 265);
-  --primary: oklch(0.45 0.18 265);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.96 0.01 265);
-  --secondary-foreground: oklch(0.25 0.03 265);
-  --muted: oklch(0.96 0.008 265);
-  --muted-foreground: oklch(0.5 0.02 265);
-  --accent: oklch(0.94 0.02 265);
-  --accent-foreground: oklch(0.25 0.03 265);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.01 265);
-  --input: oklch(0.91 0.01 265);
-  --ring: oklch(0.45 0.18 265);
+  --radius: 0.5rem;
+  --background: #f5f6f7;          /* paper */
+  --foreground: #16191d;          /* ink */
+  --card: #ffffff;                /* sheet */
+  --card-foreground: #16191d;
+  --popover: #ffffff;
+  --popover-foreground: #16191d;
+  --primary: #0e6b63;             /* teal: actions, links, focus */
+  --primary-foreground: #ffffff;
+  --secondary: #eceef0;
+  --secondary-foreground: #16191d;
+  --muted: #eceef0;
+  --muted-foreground: #5b6470;    /* graphite */
+  --accent: #e3f0ee;
+  --accent-foreground: #0b4f49;
+  --destructive: #b42318;
+  --border: #dde1e5;              /* rule */
+  --input: #cfd5da;
+  --ring: #0e6b63;
+  --highlight: #ffe58a;           /* evidence only */
+  --highlight-foreground: #16191d;
+  --success: #1f7a4d;
+  --warning: #9a6200;
 }
 
 .dark {
-  --background: oklch(0.13 0.02 265);
-  --foreground: oklch(0.97 0.005 265);
-  --card: oklch(0.17 0.025 265);
-  --card-foreground: oklch(0.97 0.005 265);
-  --popover: oklch(0.17 0.025 265);
-  --popover-foreground: oklch(0.97 0.005 265);
-  --primary: oklch(0.65 0.2 265);
-  --primary-foreground: oklch(0.13 0.02 265);
-  --secondary: oklch(0.22 0.03 265);
-  --secondary-foreground: oklch(0.97 0.005 265);
-  --muted: oklch(0.22 0.03 265);
-  --muted-foreground: oklch(0.65 0.02 265);
-  --accent: oklch(0.25 0.04 265);
-  --accent-foreground: oklch(0.97 0.005 265);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.28 0.03 265);
-  --input: oklch(0.28 0.03 265);
-  --ring: oklch(0.65 0.2 265);
+  --background: #101317;
+  --foreground: #e8eaed;
+  --card: #171b21;
+  --card-foreground: #e8eaed;
+  --popover: #1c2128;
+  --popover-foreground: #e8eaed;
+  --primary: #4fb3a6;
+  --primary-foreground: #0b1f1c;
+  --secondary: #222831;
+  --secondary-foreground: #e8eaed;
+  --muted: #1f252d;
+  --muted-foreground: #98a1ac;
+  --accent: #173430;
+  --accent-foreground: #bfe6e0;
+  --destructive: #f97066;
+  --border: #2a3038;
+  --input: #353c46;
+  --ring: #4fb3a6;
+  --highlight: rgb(232 190 74 / 0.32);
+  --highlight-foreground: #fbeec4;
+  --success: #5fce95;
+  --warning: #e7b24c;
 }
 
 @layer base {
@@ -139,8 +154,31 @@
 }
 
 .prose th {
-  background: color-mix(in oklch, var(--muted) 80%, transparent);
+  background: var(--secondary);
   font-weight: 600;
+}
+
+/* Answer text: set for reading, not as a chat bubble. */
+.answer {
+  /* @theme inline tokens are not emitted as CSS variables, so use the next/font variable directly. */
+  font-family: var(--font-reading), ui-serif, Georgia, serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  max-width: 68ch;
+  color: var(--foreground);
+}
+
+.answer p {
+  margin-bottom: 0.75rem;
+}
+
+.answer :where(code, pre, table) {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.875rem;
+}
+
+.answer pre code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 summary::-webkit-details-marker {

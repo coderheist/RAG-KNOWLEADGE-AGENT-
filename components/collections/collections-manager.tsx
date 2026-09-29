@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export function CollectionsManager() {
   const { activeCollectionId, setActiveCollectionId, refresh } = useApp();
@@ -104,22 +104,19 @@ export function CollectionsManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          Organize documents into collections and switch active context
-        </p>
+      <div className="flex justify-end">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
-              <Plus className="size-4" />
-              New Collection
+              <Plus className="size-4" aria-hidden />
+              New collection
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create Collection</DialogTitle>
+              <DialogTitle>New collection</DialogTitle>
               <DialogDescription>
-                Group related documents for targeted queries
+                Group related documents, then ask questions that search only that group.
               </DialogDescription>
             </DialogHeader>
             <div className="flex gap-2">
@@ -168,11 +165,10 @@ export function CollectionsManager() {
               >
                 <Card
                   className={cn(
-                    "relative overflow-hidden transition-colors",
-                    isActive && "border-primary/50 ring-1 ring-primary/20"
+                    "transition-colors",
+                    isActive && "border-primary ring-1 ring-primary/30"
                   )}
                 >
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 to-violet-500/5" />
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
@@ -184,15 +180,14 @@ export function CollectionsManager() {
                             {collection.name}
                           </CardTitle>
                           <CardDescription>
-                            {collection.documentCount} documents ·{" "}
-                            {formatRelativeTime(collection.createdAt)}
+                            {collection.documentCount} document{collection.documentCount === 1 ? "" : "s"}
                           </CardDescription>
                         </div>
                       </div>
                       {isActive && (
                         <Badge variant="success">
-                          <Check className="size-3" />
-                          Active
+                          <Check className="size-3" aria-hidden />
+                          In use
                         </Badge>
                       )}
                     </div>
@@ -200,13 +195,13 @@ export function CollectionsManager() {
                   <CardContent className="flex gap-2">
                     <Button
                       size="sm"
-                      variant={isActive ? "secondary" : "default"}
+                      variant="outline"
                       className="flex-1"
                       onClick={() =>
                         setActiveCollectionId(isActive ? null : collection.id)
                       }
                     >
-                      {isActive ? "Clear Active" : "Set Active"}
+                      {isActive ? "Search all documents" : "Search only this collection"}
                     </Button>
                     <ConfirmDelete
                       title={`Delete collection "${collection.name}"?`}
@@ -237,10 +232,8 @@ export function CollectionsManager() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Assign Documents</CardTitle>
-          <CardDescription>
-            Link uploaded documents to a collection
-          </CardDescription>
+          <CardTitle>Assign documents</CardTitle>
+          <CardDescription>Choose which collection each document belongs to.</CardDescription>
         </CardHeader>
         <CardContent className="px-0">
           {documentsLoading ? (
@@ -254,45 +247,29 @@ export function CollectionsManager() {
               Upload documents first to assign them to collections.
             </p>
           ) : (
-            <ul className="divide-y divide-border/60">
+            <ul className="divide-y">
               {documents.map((doc) => (
                 <li
                   key={doc.id}
                   className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{doc.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {doc.collectionId
-                        ? `In collection ${doc.collectionId}`
-                        : "Not assigned"}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={assigningId === doc.id}
-                      onClick={() => handleAssign(doc.id, null)}
-                    >
-                      Unassigned
-                    </Button>
+                  <label htmlFor={`coll-${doc.id}`} className="min-w-0 truncate text-sm font-medium">
+                    {doc.name}
+                  </label>
+                  <select
+                    id={`coll-${doc.id}`}
+                    value={doc.collectionId ?? ""}
+                    disabled={assigningId === doc.id}
+                    onChange={(e) => handleAssign(doc.id, e.target.value || null)}
+                    className="h-11 w-full rounded-md border bg-background px-2 text-sm sm:h-9 sm:w-64"
+                  >
+                    <option value="">Not in a collection</option>
                     {collections.map((collection) => (
-                      <Button
-                        key={collection.id}
-                        size="sm"
-                        variant={
-                          doc.collectionId === collection.id
-                            ? "default"
-                            : "outline"
-                        }
-                        disabled={assigningId === doc.id}
-                        onClick={() => handleAssign(doc.id, collection.id)}
-                      >
+                      <option key={collection.id} value={collection.id}>
                         {collection.name}
-                      </Button>
+                      </option>
                     ))}
-                  </div>
+                  </select>
                 </li>
               ))}
             </ul>

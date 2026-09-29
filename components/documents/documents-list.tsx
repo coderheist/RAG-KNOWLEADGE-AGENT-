@@ -77,10 +77,8 @@ export function DocumentsList() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>All Documents</CardTitle>
-        <CardDescription>
-          Manage uploaded files and indexing status
-        </CardDescription>
+        <CardTitle>{loading ? "Files" : `${documents.length} file${documents.length === 1 ? "" : "s"}`}</CardTitle>
+        <CardDescription>A status appears only when a file needs attention.</CardDescription>
       </CardHeader>
       <CardContent className="px-0">
         {error ? (
@@ -105,7 +103,7 @@ export function DocumentsList() {
             No documents uploaded yet.
           </p>
         ) : (
-          <ul className="divide-y divide-border/60">
+          <ul className="divide-y">
             {documents.slice(0, visible).map((doc) => {
               const Icon = typeIcons[doc.type] ?? FileText;
               const status = statusConfig[doc.status];
@@ -130,7 +128,9 @@ export function DocumentsList() {
                       </span>
                     </div>
                   </div>
-                  <Badge variant={status.variant}>{status.label}</Badge>
+                  {doc.status !== "indexed" && doc.status !== "already_exists" && (
+                    <Badge variant={status.variant}>{status.label}</Badge>
+                  )}
                   <ConfirmDelete
                     title={`Delete "${doc.name}"?`}
                     description="The document and its indexed chunks are removed. Answers will no longer cite it."

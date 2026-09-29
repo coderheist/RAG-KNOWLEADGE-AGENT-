@@ -1,61 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Database,
-  Server,
-  Sparkles,
-  XCircle,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { getApiBase } from "@/lib/api/client";
 import { useHealth } from "@/lib/hooks/use-health";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
-function StatusBadge({ status }: { status: string }) {
-  const normalized = status.toLowerCase();
-  const isHealthy =
-    normalized.includes("connected") ||
-    normalized.includes("healthy") ||
-    normalized.includes("ok") ||
-    normalized === "true";
+type State = "connected" | "unavailable" | "checking";
 
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium",
-        isHealthy
-          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-          : "bg-destructive/10 text-destructive"
-      )}
-    >
-      {isHealthy ? (
-        <CheckCircle2 className="size-3" />
-      ) : (
-        <XCircle className="size-3" />
-      )}
-      {status}
-    </span>
-  );
+function stateOf(raw: string | undefined): State {
+  const s = String(raw ?? "").toLowerCase();
+  if (["connected", "ok", "healthy", "true"].some((w) => s.includes(w))) return "connected";
+  if (!s || s === "unknown") return "checking";
+  return "unavailable";
 }
 
+const LABEL: Record<State, string> = { connected: "Connected", unavailable: "Unavailable", checking: "Checking" };
+
 const services = [
-  { key: "gemini", label: "Gemini API", icon: Sparkles },
-  { key: "backend", label: "Backend", icon: Server },
-  { key: "qdrant", label: "Qdrant", icon: Database },
-  { key: "postgres", label: "Postgres", icon: Database },
+  { key: "backend", label: "API server", role: "Answers questions and indexes files" },
+  { key: "gemini", label: "Google Gemini", role: "Embeddings and answers" },
+  { key: "qdrant", label: "Qdrant", role: "Passage search" },
+  { key: "postgres", label: "PostgreSQL", role: "Documents, conversations and feedback" },
 ] as const;
 
 export function SettingsPanel() {
@@ -69,100 +40,87 @@ export function SettingsPanel() {
   const handleSaveUrl = () => {
     if (!urlInput.trim()) return;
     localStorage.setItem("rag_backend_url", urlInput.trim());
-    toast.success("API URL updated successfully");
+    toast.success("API address saved");
     refetch();
   };
 
   return (
-    <div className="space-y-6">
+    <div className="grid max-w-3xl gap-6">
       {error && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-          <button
-            className="text-xs underline"
-            onClick={() => refetch()}
-          >
-            Retry
-          </button>
-        </div>
+        <p className="flex items-center gap-2 rounded-lg border border-destructive/30 px-4 py-3 text-sm text-destructive" role="alert">
+          <AlertCircle className="size-4 shrink-0" aria-hidden />
+          Could not reach the API: {error}
+        </p>
       )}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        {services.map((service, index) => {
-          const Icon = service.icon;
-          const status =
-            health?.[service.key as keyof typeof health]?.toString() ??
-            "unknown";
-
-          return (
-            <div
-              key={service.key}
-            >
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Icon className="size-4" />
-                    </div>
-                    <CardTitle className="text-sm font-medium">
-                      {service.label}
-                    </CardTitle>
-                  </div>
-                  {loading ? (
-                    <Skeleton className="h-5 w-20" />
-                  ) : (
-                    <StatusBadge status={status} />
-                  )}
-                </CardHeader>
-              </Card>
-            </div>
-          );
-        })}
-      </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Environment Settings</CardTitle>
-          <CardDescription>Runtime configuration and system info</CardDescription>
+          <CardTitle>Services</CardTitle>
+          <CardDescription>Everything an answer depends on.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
-          {loading ? (
-            <Skeleton className="h-24 w-full" />
-          ) : (
-            <>
-              <div className="flex flex-col gap-2 border-b border-border/60 pb-3">
-                <span className="text-muted-foreground font-medium">API Base URL</span>
-                <div className="flex gap-2 max-w-md">
-                  <Input
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    placeholder="http://localhost:8000"
-                    className="font-mono text-xs"
-                  />
-                  <Button size="sm" onClick={handleSaveUrl}>
-                    Save
-                  </Button>
+        <CardContent>
+          <dl className="divide-y border-y">
+            {services.map((service) => {
+              const state = stateOf(health?.[service.key]?.toString());
+              return (
+                <div key={service.key} className="flex items-center justify-between gap-4 py-3">
+                  <dt className="min-w-0">
+                    <span className="block text-sm font-medium">{service.label}</span>
+                    <span className="block text-xs text-muted-foreground">{service.role}</span>
+                  </dt>
+                  <dd className="flex shrink-0 items-center gap-2 text-sm">
+                    {loading ? (
+                      <Skeleton className="h-5 w-24" />
+                    ) : (
+                      <>
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "size-2 rounded-full",
+                            state === "connected" && "bg-success",
+                            state === "unavailable" && "bg-destructive",
+                            state === "checking" && "bg-warning"
+                          )}
+                        />
+                        <span className={state === "unavailable" ? "text-destructive" : undefined}>{LABEL[state]}</span>
+                      </>
+                    )}
+                  </dd>
                 </div>
-              </div>
-              <div className="flex justify-between border-b border-border/60 py-2">
-                <span className="text-muted-foreground">Environment</span>
-                <span>{health?.environment ?? "unknown"}</span>
-              </div>
-              <div className="flex justify-between border-b border-border/60 py-2">
-                <span className="text-muted-foreground">Backend Status</span>
-                <StatusBadge status={health?.status ?? "unknown"} />
-              </div>
-              {health?.version && (
-                <div className="flex justify-between py-2">
-                  <span className="text-muted-foreground">Version</span>
-                  <span>{health.version}</span>
-                </div>
-              )}
-            </>
-          )}
+              );
+            })}
+          </dl>
+          <Button variant="outline" size="sm" className="mt-4" onClick={refetch} disabled={loading}>
+            <RefreshCw className={cn("size-3.5", loading && "animate-spin")} aria-hidden /> Check again
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Connection</CardTitle>
+          <CardDescription>Where this app sends requests. The default works when the API runs alongside it.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5 text-sm">
+          <div className="space-y-2">
+            <label htmlFor="api-url" className="font-medium">
+              API address
+            </label>
+            <div className="flex max-w-md gap-2">
+              <Input id="api-url" value={urlInput} onChange={(e) => setUrlInput(e.target.value)} placeholder="http://localhost:8000" />
+              <Button onClick={handleSaveUrl}>Save</Button>
+            </div>
+          </div>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-2">
+            <dt className="text-muted-foreground">Environment</dt>
+            <dd>{loading ? <Skeleton className="h-4 w-24" /> : health?.environment ?? "Unknown"}</dd>
+            {health?.version && (
+              <>
+                <dt className="text-muted-foreground">Version</dt>
+                <dd>{health.version}</dd>
+              </>
+            )}
+          </dl>
         </CardContent>
       </Card>
     </div>

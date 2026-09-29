@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, type ComponentProps, type ReactNode } from "react";
-import ReactMarkdown from "react-markdown";
+import { useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { Check, Copy } from "lucide-react";
@@ -40,18 +40,27 @@ export function Markdown({
   /** Renders "[n](#cite-n)" links (see lib/citations.ts) as citation chips. */
   renderCitation?: (n: number) => ReactNode;
 }) {
+  // The components object must keep its identity across renders: a new `a` component each render would
+  // remount every citation chip (closing its popover) whenever the parent re-renders, e.g. on hover.
+  const renderRef = useRef(renderCitation);
+  renderRef.current = renderCitation;
+  const components = useMemo<Components>(
+    () => ({
+      pre: CodeBlock,
+      a: ({ node: _node, href, ...props }) => {
+        const cite = href?.match(/^#cite-(\d+)$/);
+        if (cite && renderRef.current) return renderRef.current(Number(cite[1]));
+        return <a href={href} target="_blank" rel="noreferrer" {...props} />;
+      },
+    }),
+    []
+  );
+
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[[rehypeHighlight, { detect: true }]]}
-      components={{
-        pre: CodeBlock,
-        a: ({ node: _node, href, ...props }) => {
-          const cite = href?.match(/^#cite-(\d+)$/);
-          if (cite && renderCitation) return renderCitation(Number(cite[1]));
-          return <a href={href} target="_blank" rel="noreferrer" {...props} />;
-        },
-      }}
+      components={components}
     >
       {children}
     </ReactMarkdown>

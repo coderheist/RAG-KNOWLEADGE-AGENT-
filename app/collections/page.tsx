@@ -5,11 +5,9 @@ export default function CollectionsPage() {
   return (
     <AppShell activePath="/collections">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Collections
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Create and manage document collections
+        <h1 className="text-3xl font-semibold tracking-tight">Collections</h1>
+        <p className="mt-2 max-w-[62ch] text-muted-foreground">
+          Group documents so a question searches only the set you choose. The collection in use applies to chat.
         </p>
       </div>
 

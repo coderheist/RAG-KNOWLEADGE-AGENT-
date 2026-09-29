@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   AlertCircle,
-  Bot,
   Check,
   Copy,
   FileSearch,
@@ -14,11 +13,9 @@ import {
   ShieldCheck,
   ThumbsDown,
   ThumbsUp,
-  User,
 } from "lucide-react";
 import { bestSupportingLine, linkCitations } from "@/lib/citations";
 import type { ChatMessage as Message, QuerySource } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -33,11 +30,30 @@ function sourceLabel(s: QuerySource) {
   return `${s.documentName ?? "Unknown document"}${s.page ? `, page ${s.page}` : ""}`;
 }
 
+function passageLines(text: string) {
+  return text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+}
+
+/** One passage line; markdown headings ("## Limits") render as small section labels, not raw syntax. */
+function PassageLine({ line }: { line: string }) {
+  const heading = line.match(/^#{1,6}\s+(.*)$/);
+  if (heading) return <p className="pt-1 font-medium text-foreground/80">{heading[1]}</p>;
+  return <p>{line}</p>;
+}
+
+/** The sentence of a source that best supports what the answer says about it (for the margin note). */
+function evidenceFor(source: QuerySource, claims: string[], answer: string): string | null {
+  if (!source.chunkText) return null;
+  const lines = passageLines(source.chunkText).filter((l) => !l.startsWith("#"));
+  const best = bestSupportingLine(lines, claims.length ? claims : [answer]);
+  return best >= 0 ? lines[best] : lines[0] ?? null;
+}
+
 /** The cited chunk with the line that best supports the claims highlighted and scrolled into view. */
 function Passage({ text, claims }: { text: string; claims: string[] }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLElement>(null);
-  const lines = text.split(/\n+/).filter((l) => l.trim());
+  const lines = passageLines(text);
   const best = bestSupportingLine(lines, claims);
 
   useEffect(() => {
@@ -47,30 +63,32 @@ function Passage({ text, claims }: { text: string; claims: string[] }) {
   }, []);
 
   return (
-    <div ref={boxRef} className="relative mt-2 max-h-48 space-y-1 overflow-y-auto text-xs text-muted-foreground">
+    <div ref={boxRef} className="relative mt-2 max-h-48 space-y-1 overflow-y-auto text-xs leading-relaxed text-muted-foreground">
       {lines.map((line, i) =>
         i === best ? (
-          <mark key={i} ref={markRef} className="block rounded bg-primary/15 px-1 text-foreground">
+          <mark key={i} ref={markRef} className="block rounded-sm bg-highlight px-1 text-highlight-foreground">
             {line}
           </mark>
         ) : (
-          <p key={i}>{line}</p>
+          <PassageLine key={i} line={line} />
         )
       )}
     </div>
   );
 }
 
-/** Superscript chip for an inline citation; the popover shows the passage it points at. */
+/** Citation number set like a highlighter mark; the popover shows the passage it points at. */
 function CitationChip({
   n,
   source,
   claims,
+  onActive,
   onShowInPanel,
 }: {
   n: number;
   source: QuerySource;
   claims: string[];
+  onActive: (n: number | null) => void;
   onShowInPanel: () => void;
 }) {
   return (
@@ -79,19 +97,25 @@ function CitationChip({
         <button
           type="button"
           aria-label={`Source ${n}: ${sourceLabel(source)}`}
-          className="mx-0.5 inline-flex h-4 min-w-4 -translate-y-1 items-center justify-center rounded bg-primary/15 px-1 align-baseline font-mono text-[10px] font-semibold leading-none text-primary hover:bg-primary/25"
+          onMouseEnter={() => onActive(n)}
+          onMouseLeave={() => onActive(null)}
+          onFocus={() => onActive(n)}
+          onBlur={() => onActive(null)}
+          className="mx-0.5 inline-flex h-[1.15em] min-w-[1.15em] -translate-y-[0.35em] items-center justify-center rounded-sm bg-highlight px-1 align-baseline font-sans text-[0.7em] font-semibold tabular-nums leading-none text-highlight-foreground transition-shadow hover:shadow-[0_0_0_2px_var(--highlight)]"
         >
           {n}
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <p className="break-words font-medium">{sourceLabel(source)}</p>
-        <p className="text-xs text-muted-foreground">
-          {[source.heading || source.section, source.score !== undefined && `relevance ${source.score.toFixed(2)}`,
-            source.rerankScore !== undefined && `rerank ${source.rerankScore.toFixed(2)}`]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
+        <p className="break-words text-sm font-medium">{sourceLabel(source)}</p>
+        {(source.heading || source.section || source.score !== undefined) && (
+          <p className="text-xs text-muted-foreground">
+            {source.heading || source.section}
+            {(source.heading || source.section) && source.score !== undefined && ", "}
+            {source.score !== undefined && `relevance ${source.score.toFixed(2)}`}
+            {source.rerankScore !== undefined && `, rerank ${source.rerankScore.toFixed(2)}`}
+          </p>
+        )}
         {source.chunkText && <Passage text={source.chunkText} claims={claims} />}
         {claims.length > 0 && (
           <div className="mt-2 border-t pt-2">
@@ -104,14 +128,62 @@ function CitationChip({
           </div>
         )}
         <button type="button" onClick={onShowInPanel} className="mt-2 text-xs font-medium text-primary hover:underline">
-          Show in sources
+          Show the full passage
         </button>
       </PopoverContent>
     </Popover>
   );
 }
 
-/** Ranked retrieved passages; doubles as the "show raw context" view. */
+/** Wide screens: the evidence for each source sits in the margin beside the answer, like an annotated page. */
+function Margin({
+  sources,
+  claimsFor,
+  answer,
+  active,
+}: {
+  sources: QuerySource[];
+  claimsFor: (n: number) => string[];
+  answer: string;
+  active: number | null;
+}) {
+  return (
+    <aside aria-label="Sources for this answer" className="hidden xl:block">
+      <ol className="space-y-4 border-l border-border pl-5">
+        {sources.map((s, i) => {
+          const n = i + 1;
+          const evidence = evidenceFor(s, claimsFor(n), answer);
+          return (
+            <li
+              key={s.chunkId ?? i}
+              className={cn(
+                "rounded-md p-2 -m-2 transition-colors",
+                active === n && "bg-highlight/40 dark:bg-highlight"
+              )}
+            >
+              <p className="flex items-baseline gap-2 text-sm">
+                <span className="inline-flex min-w-5 justify-center rounded-sm bg-highlight px-1 text-xs font-semibold tabular-nums text-highlight-foreground">
+                  {n}
+                </span>
+                <span className="min-w-0 truncate font-medium">{s.documentName ?? "Unknown document"}</span>
+                {s.page ? <span className="shrink-0 text-xs text-muted-foreground">p. {s.page}</span> : null}
+              </p>
+              {evidence && (
+                <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+                  <mark className="box-decoration-clone rounded-sm bg-highlight/70 px-0.5 text-highlight-foreground dark:bg-highlight">
+                    {evidence}
+                  </mark>
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </aside>
+  );
+}
+
+/** Ranked retrieved passages in full; the "show raw context" view on every screen size. */
 function SourcesPanel({
   id,
   sources,
@@ -125,33 +197,37 @@ function SourcesPanel({
 }) {
   const top = Math.max(...sources.map((s) => s.score ?? 0), 0.0001);
   return (
-    <details
-      open={open}
-      onToggle={(e) => onToggle(e.currentTarget.open)}
-      className="group rounded-lg border bg-background/60"
-    >
-      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-xs font-medium text-muted-foreground sm:min-h-9">
-        <FileSearch className="size-3.5" aria-hidden />
-        Sources · {sources.length} passage{sources.length === 1 ? "" : "s"}
-        <span className="ml-auto group-open:hidden">Show</span>
-        <span className="ml-auto hidden group-open:inline">Hide</span>
+    <details open={open} onToggle={(e) => onToggle(e.currentTarget.open)} className="group max-w-[68ch] rounded-lg border bg-card">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-sm text-muted-foreground hover:text-foreground sm:min-h-9">
+        <FileSearch className="size-4" aria-hidden />
+        {sources.length} source passage{sources.length === 1 ? "" : "s"}
+        <span className="ml-auto text-xs group-open:hidden">Show</span>
+        <span className="ml-auto hidden text-xs group-open:inline">Hide</span>
       </summary>
-      <ol aria-label="Retrieved passages" className="space-y-2 border-t px-3 py-2">
+      <ol aria-label="Retrieved passages" className="space-y-3 border-t px-3 py-3">
         {sources.map((s, i) => (
-          <li key={s.chunkId ?? i} id={`${id}-src-${i + 1}`} className="scroll-mt-4 rounded-md p-1 text-xs">
+          <li key={s.chunkId ?? i} id={`${id}-src-${i + 1}`} className="scroll-mt-4 text-sm">
             <div className="flex items-center gap-2">
-              <span className="font-mono font-semibold text-primary">{i + 1}</span>
+              <span className="inline-flex min-w-5 justify-center rounded-sm bg-highlight px-1 text-xs font-semibold tabular-nums text-highlight-foreground">
+                {i + 1}
+              </span>
               <span className="min-w-0 flex-1 truncate font-medium">{sourceLabel(s)}</span>
               {s.score !== undefined && (
-                <span className="flex items-center gap-1.5 text-muted-foreground" title="Relevance">
-                  <span className="h-1.5 w-12 overflow-hidden rounded-full bg-muted" aria-hidden>
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Relevance to the question">
+                  <span className="h-1 w-12 overflow-hidden rounded-full bg-muted" aria-hidden>
                     <span className="block h-full rounded-full bg-primary" style={{ width: `${(s.score / top) * 100}%` }} />
                   </span>
                   {s.score.toFixed(2)}
                 </span>
               )}
             </div>
-            {s.chunkText && <p className="mt-1 whitespace-pre-line pl-5 text-muted-foreground">{s.chunkText}</p>}
+            {s.chunkText && (
+              <div className="mt-1.5 space-y-1 pl-7 text-[13px] leading-relaxed text-muted-foreground">
+                {passageLines(s.chunkText).map((line, j) => (
+                  <PassageLine key={j} line={line} />
+                ))}
+              </div>
+            )}
           </li>
         ))}
       </ol>
@@ -173,17 +249,15 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
   const [panelOpen, setPanelOpen] = useState(false);
   const [askingWhy, setAskingWhy] = useState(false);
   const [why, setWhy] = useState("");
+  const [active, setActive] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   if (message.role === "user") {
     return (
-      <div className="flex justify-end gap-3">
-        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-xl bg-primary px-4 py-3 text-base text-primary-foreground sm:text-sm">
+      <div className="flex justify-end">
+        <p className="max-w-[70%] whitespace-pre-wrap break-words rounded-lg bg-secondary px-4 py-2.5 text-[15px] leading-relaxed text-secondary-foreground">
           {message.content}
-        </div>
-        <div className="hidden size-8 shrink-0 items-center justify-center rounded-lg bg-muted sm:flex">
-          <User className="size-4 text-muted-foreground" aria-hidden />
-        </div>
+        </p>
       </div>
     );
   }
@@ -209,12 +283,11 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const confidence = message.citations?.confidence;
+
   return (
-    <div ref={rootRef} className="flex gap-3">
-      <div className="hidden size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:flex">
-        <Bot className="size-4" aria-hidden />
-      </div>
-      <div className="min-w-0 max-w-full flex-1 space-y-3 sm:max-w-[85%]">
+    <div ref={rootRef} className="grid gap-x-10 gap-y-4 xl:grid-cols-[minmax(0,68ch)_minmax(0,1fr)]">
+      <div className="min-w-0 space-y-4">
         {message.isStreaming && !message.content && (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -223,11 +296,17 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
         )}
 
         {message.content && (
-          <div className="prose prose-sm max-w-none break-words rounded-xl bg-muted px-4 py-3 text-base dark:prose-invert sm:text-sm">
+          <div className="answer prose break-words">
             <Markdown
               renderCitation={(n) =>
                 sources[n - 1] ? (
-                  <CitationChip n={n} source={sources[n - 1]} claims={claimsFor(n)} onShowInPanel={() => showInPanel(n)} />
+                  <CitationChip
+                    n={n}
+                    source={sources[n - 1]}
+                    claims={claimsFor(n)}
+                    onActive={setActive}
+                    onShowInPanel={() => showInPanel(n)}
+                  />
                 ) : null
               }
             >
@@ -244,23 +323,27 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
           </p>
         )}
 
-        {done && (message.grounded !== undefined || message.citations?.confidence || message.rewrite) && (
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+        {done && (message.grounded !== undefined || confidence || message.rewrite) && (
+          <div className="space-y-1 text-sm">
             {message.grounded === true && (
-              <Badge variant="success">
-                <ShieldCheck aria-hidden /> Checked against sources
-              </Badge>
+              <p className="flex items-center gap-2 text-success">
+                <ShieldCheck className="size-4 shrink-0" aria-hidden />
+                <span>
+                  Checked against its sources{confidence ? `, ${confidence} confidence` : ""}.
+                </span>
+              </p>
             )}
             {message.grounded === false && (
-              <Badge variant="warning">
-                <ShieldAlert aria-hidden /> Not fully supported by sources
-              </Badge>
+              <p className="flex items-center gap-2 text-warning">
+                <ShieldAlert className="size-4 shrink-0" aria-hidden />
+                <span>Parts of this answer are not supported by the sources. Check them before relying on it.</span>
+              </p>
             )}
-            {message.citations?.confidence && (
-              <Badge variant="outline">Confidence: {message.citations.confidence}</Badge>
+            {message.grounded === undefined && confidence && (
+              <p className="text-muted-foreground">Confidence: {confidence}.</p>
             )}
             {message.rewrite && message.rewrite.rewritten !== message.rewrite.original && (
-              <span className="text-muted-foreground">Searched for “{message.rewrite.rewritten}”</span>
+              <p className="text-muted-foreground">Searched for “{message.rewrite.rewritten}”</p>
             )}
           </div>
         )}
@@ -270,7 +353,7 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
         )}
 
         {done && (
-          <div className="flex items-center gap-0.5 text-muted-foreground">
+          <div className="-ml-2 flex items-center gap-0.5 text-muted-foreground">
             {message.content && (
               <Button variant="ghost" size="icon" className={actionClass} aria-label={copied ? "Copied" : "Copy answer"} onClick={copy}>
                 {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
@@ -317,7 +400,7 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
 
         {askingWhy && !message.feedback && onFeedback && (
           <form
-            className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center"
+            className="flex max-w-[68ch] flex-col gap-2 rounded-lg border bg-card p-3 sm:flex-row sm:items-center"
             onSubmit={(e) => {
               e.preventDefault();
               onFeedback("down", why.trim());
@@ -341,6 +424,10 @@ export function ChatMessage({ message, onRegenerate, onFeedback }: ChatMessagePr
           </form>
         )}
       </div>
+
+      {sources.length > 0 && message.content && (
+        <Margin sources={sources} claimsFor={claimsFor} answer={message.content} active={active} />
+      )}
     </div>
   );
 }

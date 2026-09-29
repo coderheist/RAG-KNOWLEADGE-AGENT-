@@ -1,91 +1,59 @@
 "use client";
 
-import { CheckCircle2, XCircle, RefreshCw, Server } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useHealth } from "@/lib/hooks/use-health";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
+type State = "online" | "offline" | "checking";
+
+function stateOf(value: string | undefined): State {
+  const s = String(value ?? "").toLowerCase();
+  if (["connected", "ok", "healthy"].includes(s)) return "online";
+  if (["not_connected", "disconnected", "failed", "error"].includes(s)) return "offline";
+  return "checking";
+}
+
+/** One quiet line: a dot per service, and words only when something needs attention. */
 export function HealthStatus() {
-  const { health, loading, error, refetch } = useHealth();
+  const { health, loading, refetch } = useHealth();
 
   const services = [
-    { name: "Backend API", key: "backend", value: health?.backend },
-    { name: "Google Gemini", key: "gemini", value: health?.gemini },
-    { name: "PostgreSQL", key: "postgres", value: health?.postgres },
-    { name: "Qdrant Vector DB", key: "qdrant", value: health?.qdrant },
-  ];
-
-  const getStatusColor = (val: string | undefined) => {
-    const status = String(val ?? "unknown").toLowerCase();
-    if (status === "connected" || status === "ok" || status === "healthy") {
-      return "text-emerald-500 bg-emerald-500/10 border-emerald-500/20";
-    }
-    if (status === "not_connected" || status === "disconnected" || status === "failed") {
-      return "text-rose-500 bg-rose-500/10 border-rose-500/20";
-    }
-    return "text-amber-500 bg-amber-500/10 border-amber-500/20";
-  };
-
-  const getStatusIcon = (val: string | undefined) => {
-    const status = String(val ?? "unknown").toLowerCase();
-    if (status === "connected" || status === "ok" || status === "healthy") {
-      return <CheckCircle2 className="size-4" />;
-    }
-    if (status === "not_connected" || status === "disconnected" || status === "failed") {
-      return <XCircle className="size-4" />;
-    }
-    return <RefreshCw className="size-4 animate-spin" />;
-  };
+    { name: "API", value: health?.backend },
+    { name: "Gemini", value: health?.gemini },
+    { name: "Postgres", value: health?.postgres },
+    { name: "Qdrant", value: health?.qdrant },
+  ].map((s) => ({ ...s, state: stateOf(s.value) }));
+  const allOnline = services.every((s) => s.state === "online");
 
   return (
-    <div
-    >
-      <Card className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5" />
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle className="text-base font-bold">System Health</CardTitle>
-            <CardDescription>
-              Status of backend services and dependencies
-            </CardDescription>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={refetch}
-            aria-label="Refresh service health"
-            disabled={loading}
-            className="size-8"
-          >
-            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-          </Button>
-        </CardHeader>
-        <CardContent className="mt-2 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-          {services.map((service) => (
-            <div
-              key={service.key}
-              className={`flex items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm transition-all duration-300 ${getStatusColor(
-                service.value
-              )}`}
-            >
-              <div className="flex items-center gap-2">
-                <Server className="size-4 opacity-70" />
-                <span className="font-medium text-foreground">{service.name}</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-semibold capitalize">
-                {getStatusIcon(service.value)}
-                <span className="text-xs">
-                  {service.value === "connected" || service.value === "ok" || service.value === "healthy"
-                    ? "Online"
-                    : service.value === "not_connected" || service.value === "disconnected" || service.value === "failed"
-                      ? "Offline"
-                      : "Unknown"}
-                </span>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+      <span className="sr-only">Service status: </span>
+      {services.map((s) => (
+        <span key={s.name} className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className={cn(
+              "size-2 rounded-full",
+              s.state === "online" && "bg-success",
+              s.state === "offline" && "bg-destructive",
+              s.state === "checking" && "bg-warning"
+            )}
+          />
+          {s.name}
+          {s.state !== "online" && (
+            <span className={s.state === "offline" ? "text-destructive" : undefined}>
+              {s.state === "offline" ? "offline" : "checking"}
+            </span>
+          )}
+          <span className="sr-only">{s.state === "online" ? "online" : ""}</span>
+        </span>
+      ))}
+      {!allOnline && !loading && (
+        <Button variant="ghost" size="sm" className="h-7 px-2" onClick={refetch}>
+          <RefreshCw className="size-3.5" aria-hidden /> Check again
+        </Button>
+      )}
     </div>
   );
 }

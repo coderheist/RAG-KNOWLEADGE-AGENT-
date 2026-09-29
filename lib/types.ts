@@ -89,38 +89,6 @@ export interface ChatMessage {
   timingsMs?: Record<string, number>;
   feedback?: "up" | "down";
 }
-
-export const quickActions = [
-  {
-    id: "upload",
-    label: "Upload Document",
-    description: "Add PDFs, docs, or text files",
-    icon: "upload" as const,
-    href: "/dashboard#upload",
-  },
-  {
-    id: "chat",
-    label: "Start Chat",
-    description: "Ask questions about your docs",
-    icon: "message" as const,
-    href: "/chat",
-  },
-  {
-    id: "search",
-    label: "Semantic Search",
-    description: "Find content across all files",
-    icon: "search" as const,
-    href: "/chat",
-  },
-  {
-    id: "settings",
-    label: "Manage Index",
-    description: "Re-index or remove documents",
-    icon: "settings" as const,
-    href: "/collections",
-  },
-] as const;
-
 export const suggestedQuestions = [
   "What documents are in my knowledge base?",
   "Summarize the key points from my uploaded files.",

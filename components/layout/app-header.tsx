@@ -1,12 +1,13 @@
-import { Brain, LayoutDashboard, FileStack, MessageSquare, Settings } from "lucide-react";
+import { FileStack, FolderTree, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Documents", href: "/documents", icon: FileStack },
   { label: "Chat", href: "/chat", icon: MessageSquare },
+  { label: "Documents", href: "/documents", icon: FileStack },
+  { label: "Collections", href: "/collections", icon: FolderTree },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -38,13 +39,11 @@ function NavLinks({ activePath, compact }: { activePath: string; compact?: boole
 
 export function AppHeader({ activePath }: { activePath: string }) {
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <Brain className="size-4" aria-hidden />
-          </div>
-          <span className="text-lg font-semibold tracking-tight">RAG Agent</span>
+    <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link href="/dashboard" className="rounded-sm text-[17px] font-semibold tracking-tight" aria-label="RAG Agent, home">
+          {/* The brand is the product's one idea: a highlighter stroke over evidence. */}
+          <span className="bg-[linear-gradient(transparent_58%,var(--highlight)_58%)] px-0.5">RAG Agent</span>
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
