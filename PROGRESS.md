@@ -492,3 +492,22 @@ everywhere (desktop and mobile). Performance: desktop 100 on every page; mobile 
 (limit 0.1). **Phase 5 thresholds met** (accessibility >= 95, performance >= 85 on every page); remaining gap: mobile LCP
 above 2.5 s on /chat and /dashboard. This supersedes the earlier mobile figures (64 to 91) measured on the pre-redesign UI.
 
+
+
+### Release · Acceptance check · 2026-10-01
+
+| # | Criterion | Evidence |
+|---|---|---|
+| 1 | The app runs end to end from a single `docker compose up` after copying `.env.example` | Added the missing web-app container (`Dockerfile`, `frontend` service, root `docker-compose.yml`). Verified on a brand-new project with empty volumes: `docker compose -p fresh up -d --build` from the repo root brought up API, Postgres, Qdrant and the web app (all healthy); an upload through the web app's `/api` proxy was indexed, and a question about it returned a cited answer with margin evidence and "Checked against its sources". Found and fixed on the way: the frontend healthcheck used `localhost` (IPv6 in the container) against an IPv4-only server and would never have passed |
+| 2 | `pytest backend/tests -q` passes | 107 passed, 13 integration tests deselected (they need the live stack); ruff and mypy clean |
+| 3 | CI green on every push: lint, types, unit tests, smoke eval on PRs | CI green on `main` (see the Actions tab); `ci_reference_20261001_040644.json` (20 stratified cases, default config, 0 errors) is committed for the PR smoke eval to compare against. The smoke eval itself triggers only on pull requests (none opened yet) and needs a `GOOGLE_API_KEY` repository secret, whose presence I cannot see from here; it has not run on GitHub |
+| 4 | Every retrieval/generation change has before-and-after eval numbers | README results table and the entries above; Phase 4 includes the `jd_pin` control that corrected the agent's claimed gain |
+| 5 | No secrets in git history; `.env.example` complete | Full-history scan (3.1 M characters, all refs): no API keys, tokens or private keys, and none of the values in the real `.env` other than model names, a URL and the placeholder Postgres default from `.env.example`. `.env.example` lists all 63 settings (nine were missing); `tests/test_env_example.py` keeps it that way |
+| 6 | Lighthouse accessibility >= 95 on the chat page | 100 (median of 3, desktop and mobile; all five pages) |
+| 7 | README opens with a demo GIF, an architecture diagram and the results table | Yes: GIF first, then the results table; the Mermaid graph and system diagram are in Architecture |
+
+**Phase status:** 0 to 6 complete. Open items, all recorded in the README's Known limitations or Roadmap: mobile LCP
+2.5 to 3.1 s (target 2.5 s); the PR smoke eval has never run on GitHub (no pull request yet; needs a repository secret); ingestion is synchronous
+(no per-stage progress); no authentication; the golden set is saturated on retrieval (recall 1.000) and needs harder
+cases from the feedback loop; the agent is on by default although the control run shows most of the accuracy gain came
+from identifier pinning.
