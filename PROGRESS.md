@@ -484,3 +484,11 @@ metric" because of the agent: that comparison credited the agent with pinning's 
 Phase 4 goals include chitchat without retrieval and a visible groundedness verdict, and the CI reference was recorded
 with it; `=false` is the documented fast path. A reader who values latency or free-tier quota should switch it off.
 
+### Phase 5 · Final measurement after the redesign · 2026-10-01
+
+Production build, Lighthouse 12, median of 3 per page, all five pages. Accessibility 100 and best practices 100
+everywhere (desktop and mobile). Performance: desktop 100 on every page; mobile 89 /chat, 88 /dashboard, 88 /documents,
+92 /collections, 91 /settings. LCP 0.6 to 0.7 s on desktop, 2.5 to 3.1 s on mobile; mobile CLS 0.099 on /dashboard
+(limit 0.1). **Phase 5 thresholds met** (accessibility >= 95, performance >= 85 on every page); remaining gap: mobile LCP
+above 2.5 s on /chat and /dashboard. This supersedes the earlier mobile figures (64 to 91) measured on the pre-redesign UI.
+

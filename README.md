@@ -297,18 +297,22 @@ on the development laptop.
 
 | Profile | Page | Performance | Accessibility | Best practices | LCP | CLS |
 |---|---|---|---|---|---|---|
-| Desktop | /chat | 99 | 100 | 100 | 0.9 s | 0.011 |
-| Desktop | /dashboard | 100 | 100 | 100 | 0.7 s | 0.000 |
-| Desktop | /documents | 100 | 100 | 100 | 0.7 s | 0.005 |
-| Mobile | /chat | 89 | 100 | 100 | 2.9 s | 0.026 |
-| Mobile | /dashboard | 90 | 100 | 100 | 3.0 s | 0.000 |
-| Mobile | /documents | 85 | 100 | 100 | 3.0 s | 0.000 |
+| Desktop | /chat | 100 | 100 | 100 | 0.7 s | 0.007 |
+| Desktop | /dashboard | 100 | 100 | 100 | 0.6 s | 0.001 |
+| Desktop | /documents | 100 | 100 | 100 | 0.6 s | 0.005 |
+| Desktop | /collections | 100 | 100 | 100 | 0.7 s | 0.010 |
+| Desktop | /settings | 100 | 100 | 100 | 0.6 s | 0.000 |
+| Mobile | /chat | 89 | 100 | 100 | 3.0 s | 0.045 |
+| Mobile | /dashboard | 88 | 100 | 100 | 3.1 s | 0.099 |
+| Mobile | /documents | 88 | 100 | 100 | 2.5 s | 0.000 |
+| Mobile | /collections | 92 | 100 | 100 | 2.7 s | 0.022 |
+| Mobile | /settings | 91 | 100 | 100 | 2.5 s | 0.004 |
 
-Accessibility and best practices are 100 everywhere. Mobile LCP stays around 3 s (above the 2.5 s target): the
-largest paint is server-rendered text held back by hydration work on the throttled CPU, so the next step is less
-client JavaScript. Scores on this laptop swing by 20+ points between sessions as its CPU speed varies (Lighthouse's
-benchmark index ranged from ~500 to ~1,500), so changes were judged with interleaved A/B runs instead: paginating the
-documents list cut mobile blocking time from 1,083 to 657 ms; switching to the Geist font was neutral.
+Accessibility and best practices are 100 on every page in both profiles, and mobile performance is 88 to 92 (target
+85). Mobile LCP is 2.5 to 3.1 s against a 2.5 s target on the throttled profile, and the dashboard's mobile CLS of
+0.099 is just inside the 0.1 limit. Single runs on this laptop swing by 10 to 20 points because its CPU speed varies
+(Lighthouse's benchmark index ranged from ~500 to ~1,700), so changes were judged with interleaved A/B runs: paginating
+the documents list cut mobile blocking time from 1,083 to 657 ms; switching to the Geist font was neutral.
 
 ---
 
