@@ -1,0 +1,35 @@
+# Render Blueprint: the API plus its Postgres. Qdrant lives on Qdrant Cloud (see DEPLOY.md).
+# The frontend is deployed separately on Vercel.
+services:
+  - type: web
+    name: rag-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: standard # 2 GB RAM: the local BM25 and reranker models need more than the 512 MB free tier
+    healthCheckPath: /health
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false # paste in the Render dashboard
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false # e.g. ["https://your-app.vercel.app"]
+      - key: POSTGRES_HOST
+        fromDatabase: { name: rag-db, property: host }
+      - key: POSTGRES_PORT
+        fromDatabase: { name: rag-db, property: port }
+      - key: POSTGRES_USER
+        fromDatabase: { name: rag-db, property: user }
+      - key: POSTGRES_PASSWORD
+        fromDatabase: { name: rag-db, property: password }
+      - key: POSTGRES_DB
+        fromDatabase: { name: rag-db, property: database }
+
+databases:
+  - name: rag-db
+    plan: basic-256mb
+    databaseName: ragdb
+    user: raguser

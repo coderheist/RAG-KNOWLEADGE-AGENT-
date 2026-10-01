@@ -116,10 +116,11 @@ class Settings(BaseSettings):
     QDRANT_PORT: int = 6333
     QDRANT_API_KEY: str | None = None        # optional; required for Qdrant Cloud
     QDRANT_COLLECTION: str = "documents"
+    QDRANT_URL: str | None = None            # full URL (e.g. https://xyz.cloud.qdrant.io:6333); overrides host/port
 
     @property
     def qdrant_url(self) -> str:
-        return f"http://{self.QDRANT_HOST}:{self.QDRANT_PORT}"
+        return self.QDRANT_URL or f"http://{self.QDRANT_HOST}:{self.QDRANT_PORT}"
 
     # ── Upload limits ──────────────────────────────────────────────────────────
     MAX_UPLOAD_SIZE_MB: int = 50            # per-file size limit
