@@ -21,7 +21,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 
 // Markdown + highlight.js are only needed once an answer arrives, so keep them out of the page's first load.
-const Markdown = dynamic(() => import("@/components/chat/markdown").then((m) => m.Markdown), {
+// If the chunk cannot load (typically a tab left open across an update), show plain text instead of crashing.
+function PlainText({ children }: { children: string; renderCitation?: unknown }) {
+  return <p className="whitespace-pre-wrap">{children.replace(/\[(\d+)\]\(#cite-\d+\)/g, "[$1]")}</p>;
+}
+
+const Markdown = dynamic(() => import("@/components/chat/markdown").then((m) => m.Markdown).catch(() => PlainText), {
   ssr: false,
   loading: () => null,
 });

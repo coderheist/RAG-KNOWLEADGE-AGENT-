@@ -113,7 +113,11 @@ export function ChatInterface() {
       if (!query || isStreaming) return;
       // Load the markdown renderer now, while the answer is being prepared: loading it on mount slowed the
       // page's first paint on mobile, and loading it lazily on the first token left a blank bubble.
-      void import("@/components/chat/markdown");
+      import("@/components/chat/markdown").catch(() =>
+        toast.error("This page is out of date, so answers will show as plain text.", {
+          action: { label: "Reload", onClick: () => window.location.reload() },
+        })
+      );
 
       const assistantId = createId();
       const assistant: Message = {
