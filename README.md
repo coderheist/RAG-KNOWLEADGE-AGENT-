@@ -43,16 +43,19 @@ change is measured, and a change that does not help is reported as such.
 | + query rewriting | 0.894 | 0.846 | 0.952 | 0.833 | 3.1 s |
 | + hybrid search (default) | 0.936 | 0.926 | 0.968 | 0.841 | 3.2 s |
 | + cross-encoder rerank (off by default)¹ | 0.978 | 0.967 | 0.982 | 0.822 | 6.9 s |
-| + identifier pinning (retrieval-only run)² | 1.000 | 0.938 | — | — | — |
-| + agentic self-correction (default) | 1.000 | 0.989 | 0.984 | 0.848 | 8.7 s |
+| + identifier pinning² | 1.000 | 0.938 | 0.984 | 0.872 | 2.7 s |
+| + agentic self-correction (default)³ | 1.000 | 0.989 | 0.984 | 0.848 | 8.7 s |
 
-Each row adds to the one above and is a full judged run (`jd_*` result files). ¹ Rerank helps retrieval but adds
-~3.5 s p50 on CPU (p95 32 s under load), so it ships disabled; 6 of 62 cases in that run hit the Gemini free-tier
-quota and are excluded from its averages. ² BM25's top hit is kept for queries containing an error code, SKU or
-version (RRF was fusing exact matches out of the top 5); measured without the LLM, so judged columns are empty.
-The agent row includes it. Agent vs. hybrid: refusal correctness 0.952 → 1.000, chitchat answered without
-retrieval 2/7 → 7/7, at p95 5.9 s → 35 s and ≈2,160 LLM tokens per query (≈880 without the agent, from a 4-query sample; $0 on the
-free tier).
+Every row except the rerank side-measurement adds to the one above and is a full judged run (`jd_*` and `ag_*` result
+files, the same flash-lite judge throughout). ¹ Rerank helps retrieval but adds ~3.5 s p50 on CPU (p95 32 s under load),
+so it ships disabled; 6 of 62 cases in that run hit the Gemini free-tier quota and are excluded from its averages.
+² BM25's top hit is kept for queries containing an error code, SKU or version (RRF was fusing exact matches out of the
+top 5). ³ **Most of the accuracy gain came from pinning, not from the agent.** Against the pinning-only run the agent
+changes: faithfulness 0.984 → 0.984, refusal correctness 0.984 → 1.000 (one chitchat question), citation accuracy
+0.872 → 0.848, context precision 0.537 → 0.738, chitchat answered without a search 2/7 → 7/7, and latency p50 2.7 s →
+8.7 s, p95 4.3 s → 35 s, at about 2,160 LLM tokens per query. It stays on by default for the cleaner context and the
+chitchat shortcut; `ENABLE_AGENTIC_LOOP=false` (with the two flags beside it) is the fast path and keeps the
+accuracy shown in the pinning row.
 
 Baseline weak spots (recall@5 by category) were exact terms 0.583 and follow-up questions 0.300, against 1.000 for factual
 and multi-hop lookups; with the final configuration both reach 1.000 (`ag_full4`). Corpus: ~90 chunks of synthetic documents

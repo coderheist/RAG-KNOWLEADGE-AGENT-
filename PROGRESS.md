@@ -457,3 +457,30 @@ tags, seeded headlessly from `.env`; tracing and metrics fail open.
 **Cost per query:** ≈2,040 input + 124 output tokens with the agent on (`ag_full4`), $0 on the free tier.
 **Threshold:** traces + metrics + feedback live — met.
 
+### Phase 4 · Control run (`jd_pin`) · 2026-10-01
+
+**Why:** the Phase 4 comparison (iteration 3) was against `jd_hybrid`, which predates the identifier-pinning fix, so it
+could not separate the agent's contribution from pinning's. `jd_pin` is the missing control: the same configuration as
+`ag_full4` (hybrid + rewriting + pinning) with all three agent flags off, the same flash-lite judge, 62 cases, 0 errors,
+0 quota errors.
+
+| metric | jd_hybrid | jd_pin (no agent) | ag_full4 (agent) |
+|---|---|---|---|
+| recall@5 / MRR | 0.936 / 0.926 | 1.000 / 0.938 | 1.000 / 0.989 |
+| faithfulness | 0.968 | 0.984 | 0.984 |
+| refusal_correctness | 0.952 | 0.984 | 1.000 |
+| citation_accuracy | 0.841 | 0.872 | 0.848 |
+| context_precision | 0.536 | 0.537 | 0.738 |
+| answer_relevance | 0.968 | 0.976 | 0.984 |
+| latency p50 / p95 | 3.2 s / 5.9 s | 2.7 s / 4.3 s | 8.7 s / 35.1 s |
+
+**Finding (a negative result for the agent):** pinning alone delivers the accuracy improvement. The only refusal
+difference between `jd_pin` and `ag_full4` is one chitchat question (q_062). The agent's measurable benefits are cleaner
+context (precision 0.537 → 0.738), the chitchat shortcut (7/7 answered without a search vs 2/7) and a slightly higher
+MRR measured on its graded context; its costs are 3× the p50, 8× the p95, about 2.4× the tokens and slightly lower
+citation accuracy (0.872 → 0.848). This **corrects the iteration-3 statement** that accuracy was "up on every judged
+metric" because of the agent: that comparison credited the agent with pinning's gain. The README now states it.
+**Default kept on** (`ENABLE_AGENTIC_LOOP`, `ENABLE_GROUNDEDNESS_CHECK`, `ENABLE_VERIFIED_CITATIONS`) because the spec's
+Phase 4 goals include chitchat without retrieval and a visible groundedness verdict, and the CI reference was recorded
+with it; `=false` is the documented fast path. A reader who values latency or free-tier quota should switch it off.
+
