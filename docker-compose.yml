@@ -1,0 +1,4 @@
+# One command from the repo root: docker compose up --build   (starts the API, Postgres, Qdrant and the web app)
+# Copy backend/.env.example to backend/.env and set GOOGLE_API_KEY first.
+include:
+  - backend/docker-compose.yml

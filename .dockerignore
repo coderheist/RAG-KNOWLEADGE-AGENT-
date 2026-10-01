@@ -1,0 +1,9 @@
+node_modules
+.next
+.next-*
+.git
+.claude
+backend
+docs
+*.md
+tsconfig.tsbuildinfo

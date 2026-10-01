@@ -54,144 +54,81 @@ The agent row includes it. Agent vs. hybrid: refusal correctness 0.952 → 1.000
 retrieval 2/7 → 7/7, at p95 5.9 s → 35 s and ≈2,160 LLM tokens per query (≈880 without the agent, from a 4-query sample; $0 on the
 free tier).
 
-Baseline weak spots (recall@5 by category): exact terms 0.583, follow-up questions 0.300, versus 1.000 for factual and
-multi-hop lookups. Those two categories are what the next changes target. Corpus: ~90 chunks of synthetic documents
+Baseline weak spots (recall@5 by category) were exact terms 0.583 and follow-up questions 0.300, against 1.000 for factual
+and multi-hop lookups; with the final configuration both reach 1.000 (`ag_full4`). Corpus: ~90 chunks of synthetic documents
 with deliberately look-alike identifiers (near-identical error codes and SKUs), so retrieval is not trivially easy.
 
 ---
 
 # 📖 Overview
 
-Production RAG Agent is a full-stack enterprise-ready Retrieval-Augmented Generation (RAG) system designed to build intelligent AI assistants over private documents.
+Production RAG Agent answers questions about your own documents and shows its evidence. Upload PDFs, Office files,
+spreadsheets, text or images; ask in plain language; every answer cites the passages it came from, is checked against
+them, and opens the supporting sentence in one click.
 
-Instead of relying only on an LLM's internal knowledge, the application retrieves relevant information from your uploaded documents using semantic search, injects that context into the prompt, and generates grounded responses with source citations.
-
-The project emphasizes production engineering practices including resilient document ingestion, deterministic chunking, duplicate detection, retry handling, crash recovery, and scalable vector search.
+It started as a FastAPI + Next.js + Postgres + Qdrant + Gemini + LangGraph app with a linear retrieve-and-generate
+pipeline. This repository takes it further and measures every step: an evaluation harness with a golden set, query
+rewriting, hybrid (dense + BM25) search, an agentic LangGraph with a capped self-correction loop and verified
+citations, a redesigned interface, and observability (metrics, traces, a feedback loop). [PROGRESS.md](PROGRESS.md)
+records each iteration with the numbers behind it.
 
 ---
 
 # ⭐ Highlights
 
-- Enterprise-grade RAG Architecture
-- Multi-format Document Ingestion
-- Google Gemini Integration
-- LangGraph-based AI Pipeline
-- FastAPI Backend
-- Next.js + TypeScript Frontend
-- PostgreSQL Metadata Storage
-- Qdrant Vector Database
-- Adaptive Semantic Chunking
-- Duplicate Document Detection
-- Resume-safe Indexing
-- Streaming AI Chat
-- Source Citations
-- Docker Deployment
-- Production Health Monitoring
+- **Measured, not assumed:** 62-question golden set, retrieval and LLM-judged metrics, results table above
+- **Hybrid search:** dense + BM25 fused with Reciprocal Rank Fusion; exact codes and SKUs stay findable
+- **Agentic graph:** router, chunk grading, capped retry loop, groundedness check, verified citations
+- **Evidence-first UI:** citation chips, a margin of supporting sentences, streaming status, dark mode
+- **Observability:** Prometheus metrics, Grafana dashboard, Langfuse traces, thumbs feedback turned into eval cases
+- **Resilient ingestion:** deterministic chunk ids, duplicate detection, resumable indexing, embedding retries
+- **Runs with one command:** `docker compose up --build` (API, Postgres, Qdrant, web app)
+- **CI:** lint, types, unit tests and a frontend build on every push; a smoke eval on pull requests
 
 ---
 
 # ✨ Features
 
-## 📂 Document Processing
+## 📂 Document processing
 
-Supports uploading and indexing:
+PDF, Word, PowerPoint, Excel, CSV, Markdown, plain text, JSON and logs, plus images (read with OCR). Each file is
+validated, parsed, chunked, embedded and indexed; re-uploading the same file is detected and skipped.
 
-- PDF
-- DOCX
-- PPTX
-- XLSX
-- CSV
-- TXT
-- Markdown
+## 🧠 Chunking
 
-Each uploaded document is automatically:
+Block-aware recursive splitting with configurable size and overlap (`MIN_CHUNK_SIZE`, `MAX_CHUNK_SIZE`,
+`CHUNK_OVERLAP`), deterministic chunk ids (so evals can name the right chunk and re-indexing is idempotent), and
+resumable indexing after a crash.
 
-- Validated
-- Parsed
-- Chunked
-- Embedded
-- Indexed
-- Stored
+## 🤖 Question answering
 
----
+1. The **router** sends greetings and clarifications straight to a short reply with no search.
+2. Follow-up questions are **rewritten** into standalone search queries using the conversation.
+3. **Hybrid retrieval** combines dense and BM25 results; an exact error code, SKU or version keeps its best lexical match.
+4. **Chunk grading** drops irrelevant passages and, when results are weak, retries with a different query (at most twice).
+5. Gemini writes the answer as **structured output**: claims with source ids, which the server validates.
+6. A **groundedness check** flags answers the sources do not support.
 
-## 🧠 Adaptive Semantic Chunking
+Every step is behind a flag and fails open to the plain pipeline.
 
-Production-friendly chunking pipeline featuring:
+## 💬 Chat
 
-- Recursive chunk splitting
-- Configurable chunk size
-- Chunk overlap
-- Deterministic Chunk IDs
-- Duplicate detection
-- Resume interrupted indexing
+Streaming answers with a live status line, conversation memory, inline citation chips, a margin of supporting
+sentences, the full retrieved passages ("show raw context"), copy, regenerate and thumbs up/down with an optional
+comment, `/new` and `/upload` commands, drag-and-drop upload onto the composer, and example questions drawn from your
+own documents.
 
----
+## 📁 Library and collections
 
-## 🤖 Retrieval-Augmented Generation
+Upload with progress and duplicate detection, a paged document list, optimistic delete with confirmation, and
+collections that scope a question to a chosen set of documents.
 
-Instead of sending the whole document to the LLM:
+## 🩺 Dashboard and settings
 
-1. User asks a question.
-2. Semantic search retrieves relevant chunks.
-3. LangGraph constructs context.
-4. Google Gemini generates grounded answers.
-5. Sources are returned alongside the response.
+A one-line library summary, recently added files, and service status (API, Gemini, PostgreSQL, Qdrant).
 
----
-
-## ⚡ Resilient Embedding Pipeline
-
-Designed to work reliably with external AI providers.
-
-Features include:
-
-- Dynamic Batch Sizing
-- Exponential Backoff
-- Retry with Jitter
-- Adaptive Batch Reduction
-- Concurrency Control
-- Duplicate-safe Processing
-
-> **Note:** When using the Google Gemini Free Tier, very large documents may require several minutes to finish embedding due to provider quota limits. Background asynchronous processing is planned in a future release.
-
----
-
-## 💬 AI Chat
-
-Supports:
-
-- Conversational RAG
-- Streaming Responses
-- Markdown Rendering
-- Code Blocks
-- Copy Response
-- Source Citations
-
----
-
-## 📁 Document Management
-
-- Upload Documents
-- Delete Documents
-- Duplicate Detection
-- Already Indexed Detection
-- Chunk Statistics
-- Document Metadata
-
----
-
-## 📊 Dashboard
-
-Real-time monitoring for:
-
-- Backend API
-- Google Gemini
-- PostgreSQL
-- Qdrant
-- Document Count
-- Chunk Count
-- Storage Usage
+> **Note:** On the Gemini free tier, very large documents can take several minutes to embed because of provider quota
+> limits; ingestion is synchronous (see Known limitations).
 
 ---
 
@@ -246,35 +183,15 @@ graph TD;
 
 # ⚙ Technology Stack
 
-## Frontend
-
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-
-## Backend
-
-- FastAPI
-- LangGraph
-- SQLAlchemy
-- Pydantic
-
-## AI
-
-- Google Gemini
-- Semantic Embeddings
-- Retrieval-Augmented Generation
-
-## Databases
-
-- PostgreSQL
-- Qdrant Vector Database
-
-## DevOps
-
-- Docker
-- Docker Compose
+| Layer | Technology |
+|---|---|
+| Web app | Next.js 15, React 19, TypeScript, Tailwind CSS 4, Radix UI, next-themes, cmdk |
+| API | FastAPI, async SQLAlchemy, Pydantic, Alembic |
+| AI | Google Gemini (answers, embeddings, judge), LangGraph, fastembed (BM25 and a local cross-encoder) |
+| Data | PostgreSQL (documents, conversations, feedback), Qdrant (dense + sparse vectors) |
+| Quality | pytest, ruff, mypy, a custom eval harness, GitHub Actions |
+| Observability | Prometheus, Grafana, Langfuse (self-hosted) |
+| Packaging | Docker, Docker Compose |
 
 ---
 
@@ -394,145 +311,110 @@ documents list cut mobile blocking time from 1,083 to 657 ms; switching to the G
 
 # 🚀 Getting Started
 
-## Clone Repository
+## Run everything with Docker
 
 ```bash
-git clone https://github.com/rounakkumarsah/Production-RAG-Agent.git
+git clone https://github.com/coderheist/RAG-KNOWLEADGE-AGENT-.git
+cd RAG-KNOWLEADGE-AGENT-
 
-cd Production-RAG-Agent
-```
-
----
-
-## Configure Environment
-
-Create:
-
-```
-.env
-
-backend/.env
-```
-
-Copy values from:
-
-```
-.env.example
-
-backend/.env.example
-```
-
-Configure:
-
-- Google Gemini API Key
-- PostgreSQL
-- Qdrant
-
----
-
-## Start Backend
-
-```bash
-cd backend
-
+cp backend/.env.example backend/.env      # then set GOOGLE_API_KEY in backend/.env
 docker compose up --build
 ```
 
----
+| Service | URL |
+|---|---|
+| Web app | http://localhost:3000 |
+| API and Swagger docs | http://localhost:8000/docs |
 
-## Start Frontend
+Upload a document on the dashboard, then ask about it in Chat. Every setting is documented in
+`backend/.env.example`.
+
+## Develop the web app without Docker
 
 ```bash
-cd ..
-
-npm install
-
-npm run dev
+cd backend && docker compose up --build postgres qdrant backend   # API on :8000
+cd .. && cp .env.example .env && npm install && npm run dev       # web app on :3000
 ```
 
----
+## Observability (optional)
 
-Open:
-
-Frontend
-
-```
-http://localhost:3000
+```bash
+cd backend
+docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
 ```
 
-Backend
+Grafana http://localhost:3001, Prometheus http://localhost:9090, Langfuse http://localhost:3002 (set the
+`LANGFUSE_*` values in `backend/.env`; `LANGFUSE_ENABLED=true` turns tracing on).
 
-```
-http://localhost:8000
+## Tests and evaluation
+
+```bash
+cd backend
+pytest tests -q -m "not integration"               # unit tests (CI runs these)
+python -m evals.setup_corpus --dataset golden_v1   # index the fixture corpus (needs the stack and a key)
+python -m evals.run_eval --dataset golden_v1 --tag mytry --compare baseline
 ```
 
-Swagger API
-
-```
-http://localhost:8000/docs
-```
+`--no-judge` scores retrieval only (no LLM judge calls); `--delay` paces requests for rate-limited keys. Results
+are written to `backend/evals/results/`.
 
 ---
 
 # 📂 Project Structure
 
 ```
-Production-RAG-Agent/
-
-├── app/
+├── app/, components/, lib/     Next.js web app (App Router)
+├── Dockerfile                  web app image
+├── docker-compose.yml          root entry point (includes backend/docker-compose.yml)
 ├── backend/
 │   ├── app/
-│   ├── services/
-│   ├── api/
-│   ├── docker-compose.yml
-│   └── requirements.txt
-│
-├── components/
-├── lib/
-├── public/
-├── package.json
-├── next.config.ts
-└── README.md
+│   │   ├── api/                routes: /query (SSE), /upload, /documents, /collections, /feedback, /health, /metrics
+│   │   ├── services/           rag_graph, retrieval, fusion, reranking, agent steps, citations, tracing, metrics
+│   │   └── db/, schemas/       models and request/response types
+│   ├── evals/                  golden set, metrics, runner, recorded results
+│   ├── scripts/                reindex_hybrid.py, feedback_to_eval.py
+│   ├── observability/          Prometheus and Grafana configuration, dashboard JSON
+│   ├── docker-compose.yml, docker-compose.observability.yml
+│   └── tests/
+├── docs/                       screenshots and demo GIF
+├── PROGRESS.md                 iteration log with every number's source
+└── .github/workflows/          CI and the pull-request smoke eval
 ```
 
 ---
 
 # 🔥 Production Engineering Features
 
-✅ Deterministic Chunk IDs
+✅ Evaluation harness with a golden set and a CI smoke eval
 
-✅ Duplicate Document Detection
+✅ Hybrid search with Reciprocal Rank Fusion and a rollout guard for older collections
 
-✅ Resume Interrupted Indexing
+✅ Capped agentic loop, per-call timeouts and a request deadline
 
-✅ Adaptive Batch Embedding
+✅ Verified citations (source ids checked against what was retrieved)
 
-✅ Exponential Backoff & Retry
+✅ Deterministic chunk ids, duplicate detection, resumable indexing
 
-✅ Dynamic Batch Reduction
+✅ Embedding retries with exponential backoff and jitter
 
-✅ Similarity Threshold Filtering
+✅ Metrics, traces and a feedback loop into new eval cases
 
-✅ Streaming Responses
+✅ Accessibility 100 and best practices 100 (Lighthouse), light and dark themes
 
-✅ Health Monitoring
-
-✅ Dockerized Deployment
+✅ One-command Docker deployment
 
 ---
 
 # 📈 Roadmap
 
-- [ ] Background Workers
-- [ ] Async Upload Queue
-- [ ] Redis Cache
-- [ ] User Authentication
-- [ ] Multi-Tenant Support
-- [ ] Role Based Access Control
-- [ ] Observability Dashboard
-- [ ] Kubernetes Deployment
-- [ ] CI/CD Pipeline
-- [ ] Automated Evaluation Suite
+- [x] Automated evaluation suite
+- [x] CI/CD pipeline
+- [x] Observability dashboard
+- [ ] Background workers and an async upload queue (with per-stage progress)
+- [ ] Authentication, multi-tenancy and role-based access control
+- [ ] A harder, larger golden set grown from real feedback
+- [ ] Redis cache
+- [ ] Kubernetes deployment
 
 ---
 
@@ -572,24 +454,12 @@ This project is licensed under the MIT License.
 
 ---
 
-# 👨‍💻 Author
+# 👨‍💻 Credits
 
-## Rounak Kumar Sah
+This repository builds on the open-source **Production RAG Agent** by **Rounak Kumar Sah** (original ingestion
+pipeline, FastAPI backend and Next.js app). The evaluation harness, query rewriting, hybrid search, agentic graph,
+interface redesign, observability and CI described above were added on top; PROGRESS.md logs each step.
 
-**AI Automation Engineer | AI Agent Developer | GenAI Engineer**
-
-### Tech Stack
-
-- Python
-- FastAPI
-- LangGraph
-- Next.js
-- TypeScript
-- PostgreSQL
-- Qdrant
-- Docker
-- Google Gemini
-- n8n Automation
 
 ---
 
