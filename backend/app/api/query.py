@@ -43,12 +43,13 @@ import json
 import uuid
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 from app.schemas.query import HistoryTurn, QueryRequest, SSEThinking
 from app.services.conversation_service import get_or_create_conversation, load_history
+from app.services.library_service import collection_exists
 from app.services.rag_graph import stream_rag
 from app.utils.logging import get_logger
 
@@ -77,6 +78,7 @@ async def _generate_sse(
     conversation_id: uuid.UUID | None,
     top_k: int,
     client_history: list[HistoryTurn] | None = None,
+    collection_id: uuid.UUID | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Async generator that drives the entire RAG pipeline and yields raw SSE
@@ -115,6 +117,7 @@ async def _generate_sse(
             conversation_id=str(conv_id),
             history_messages=history,
             top_k=top_k,
+            collection_id=str(collection_id) if collection_id else None,
         ):
             # Check for client disconnect on each event to stop early
             if await request.is_disconnected():
@@ -163,6 +166,9 @@ async def query_endpoint(
     body: QueryRequest,
     request: Request,
 ) -> StreamingResponse:
+    if body.collection_id is not None and not await collection_exists(body.collection_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found.")
+
     logger.info(
         "POST /query | conv=%s top_k=%d query=%r",
         body.conversation_id,
@@ -177,6 +183,7 @@ async def query_endpoint(
             conversation_id=body.conversation_id,
             top_k=body.top_k,
             client_history=body.history,
+            collection_id=body.collection_id,
         ),
         media_type="text/event-stream",
         headers={

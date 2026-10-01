@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUp, CornerDownRight, Plus, Square, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { ApiError } from "@/lib/api/client";
+import { getCollections } from "@/lib/api/collections";
 import { getDocuments } from "@/lib/api/documents";
 import { sendFeedback } from "@/lib/api/feedback";
 import { uploadDocuments } from "@/lib/api/upload";
@@ -20,7 +22,16 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function EmptyState({ documents, onAsk }: { documents: Document[] | null; onAsk: (q: string) => void }) {
+function EmptyState({
+  documents,
+  scope,
+  onAsk,
+}: {
+  documents: Document[] | null;
+  /** Name of the collection the chat is scoped to, if any. */
+  scope: string | null;
+  onAsk: (q: string) => void;
+}) {
   if (documents === null) {
     return (
       <div className="w-full max-w-[68ch] space-y-3" aria-hidden>
@@ -33,6 +44,19 @@ function EmptyState({ documents, onAsk }: { documents: Document[] | null; onAsk:
   }
 
   const indexed = documents.filter((d) => d.status === "indexed");
+  if (indexed.length === 0 && scope) {
+    return (
+      <div className="max-w-[68ch]">
+        <h2 className="text-2xl font-semibold tracking-tight">No documents in “{scope}” yet.</h2>
+        <p className="mt-2 text-muted-foreground">
+          Move documents into it from the Collections page, or search all your documents instead.
+        </p>
+        <Button asChild className="mt-6">
+          <Link href="/collections">Open collections</Link>
+        </Button>
+      </div>
+    );
+  }
   if (indexed.length === 0) {
     return (
       <div className="max-w-[68ch]">
@@ -57,7 +81,9 @@ function EmptyState({ documents, onAsk }: { documents: Document[] | null; onAsk:
   return (
     <div className="w-full max-w-[68ch]">
       <h2 className="text-2xl font-semibold tracking-tight text-balance">
-        Ask anything about your {indexed.length} document{indexed.length === 1 ? "" : "s"}.
+        {scope
+          ? `Ask anything about the ${indexed.length} document${indexed.length === 1 ? "" : "s"} in “${scope}”.`
+          : `Ask anything about your ${indexed.length} document${indexed.length === 1 ? "" : "s"}.`}
       </h2>
       <p className="mt-2 text-muted-foreground">
         Every answer cites the passage it came from and is checked against it, so you can verify it in one click.
@@ -81,7 +107,8 @@ function EmptyState({ documents, onAsk }: { documents: Document[] | null; onAsk:
 }
 
 export function ChatInterface() {
-  const { activeCollectionId, refreshKey, refresh } = useApp();
+  const { activeCollectionId, setActiveCollectionId, refreshKey, refresh } = useApp();
+  const [activeName, setActiveName] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -99,6 +126,24 @@ export function ChatInterface() {
       .then((r) => setDocuments(r.documents))
       .catch(() => setDocuments([]));
   }, [activeCollectionId, refreshKey]);
+
+  // Resolve the active collection's name; if it no longer exists, fall back to searching everything.
+  useEffect(() => {
+    if (!activeCollectionId) {
+      setActiveName(null);
+      return;
+    }
+    getCollections()
+      .then((list) => {
+        const found = list.find((c) => c.id === activeCollectionId);
+        if (found) setActiveName(found.name);
+        else {
+          setActiveCollectionId(null);
+          toast.info("The collection you were searching no longer exists. Searching all documents.");
+        }
+      })
+      .catch(() => setActiveName(null));
+  }, [activeCollectionId, refreshKey, setActiveCollectionId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -168,6 +213,12 @@ export function ChatInterface() {
         });
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
+        if (err instanceof ApiError && err.status === 404 && activeCollectionId) {
+          setActiveCollectionId(null);
+          toast.error("That collection no longer exists. Ask again to search all documents.");
+          patch(assistantId, () => ({ isStreaming: false, status: "error", error: "Collection not found." }));
+          return;
+        }
         const message = err instanceof Error ? err.message : "Failed to get response";
         toast.error(message);
         patch(assistantId, () => ({ isStreaming: false, status: "error", error: message }));
@@ -179,7 +230,7 @@ export function ChatInterface() {
         }
       }
     },
-    [activeCollectionId, conversationId, isStreaming]
+    [activeCollectionId, conversationId, isStreaming, setActiveCollectionId]
   );
 
   const stopGeneration = () => {
@@ -245,7 +296,22 @@ export function ChatInterface() {
         <div className="min-w-0">
           <h1 className="text-base font-semibold">Ask your documents</h1>
           <p className="text-sm text-muted-foreground">
-            {conversationId ? "Follow-up questions remember this conversation." : "Answers cite the passages they come from."}
+            {activeName ? (
+              <>
+                Searching only “{activeName}”.{" "}
+                <button
+                  type="button"
+                  className="font-medium text-primary hover:underline"
+                  onClick={() => setActiveCollectionId(null)}
+                >
+                  Search all documents
+                </button>
+              </>
+            ) : conversationId ? (
+              "Follow-up questions remember this conversation."
+            ) : (
+              "Answers cite the passages they come from."
+            )}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={newChat} disabled={messages.length === 0}>
@@ -256,7 +322,7 @@ export function ChatInterface() {
       <div className="min-h-0 flex-1 overflow-y-auto py-8" aria-label="Conversation" role="log">
         {messages.length === 0 ? (
           <div className="flex h-full items-center">
-            <EmptyState documents={documents} onAsk={(q) => sendQuery(q)} />
+            <EmptyState documents={documents} scope={activeName} onAsk={(q) => sendQuery(q)} />
           </div>
         ) : (
           <div className="space-y-12">

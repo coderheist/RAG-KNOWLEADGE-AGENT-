@@ -6,7 +6,7 @@ import { useApp } from "@/lib/context/app-context";
 import type { DashboardStats, Document } from "@/lib/types";
 
 export function useDocuments(options?: { pollProcessing?: boolean }) {
-  const { refreshKey, activeCollectionId } = useApp();
+  const { refreshKey } = useApp();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalDocuments: 0,
@@ -20,7 +20,7 @@ export function useDocuments(options?: { pollProcessing?: boolean }) {
   const refetch = useCallback(async () => {
     setError(null);
     try {
-      const data = await getDocuments(activeCollectionId);
+      const data = await getDocuments(); // the whole library, never scoped
       setDocuments(data.documents);
       setStats(data.stats);
     } catch (err) {
@@ -28,7 +28,7 @@ export function useDocuments(options?: { pollProcessing?: boolean }) {
     } finally {
       setLoading(false);
     }
-  }, [activeCollectionId]);
+  }, []);
 
   useEffect(() => {
     setLoading(true);

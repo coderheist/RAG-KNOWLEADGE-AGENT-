@@ -23,6 +23,7 @@ class DocumentSummary(BaseModel):
     chunk_count: int
     file_size_bytes: int
     error: str | None = None
+    collection_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
 

@@ -81,8 +81,17 @@ async def _cosine_scores(client, coll: str, ids: list[str], query_vector: list[f
     return scores
 
 
+def collection_filter(collection_id: str | None) -> qmodels.Filter | None:
+    """Qdrant filter restricting a search to one user collection; None searches everything."""
+    if not collection_id:
+        return None
+    return qmodels.Filter(
+        must=[qmodels.FieldCondition(key="collection_id", match=qmodels.MatchValue(value=str(collection_id)))]
+    )
+
+
 async def _hybrid_candidates(
-    client, coll: str, query: str, query_vector: list[float], top_k: int, settings
+    client, coll: str, query: str, query_vector: list[float], top_k: int, settings, query_filter=None
 ) -> list[_Hit]:
     """Dense (+ optional BM25) retrieval, Reciprocal Rank Fusion, then optional cross-encoder rerank."""
     n = top_k * settings.CANDIDATE_MULTIPLIER
@@ -95,9 +104,12 @@ async def _hybrid_candidates(
             query_vector=qmodels.NamedSparseVector(name=sparse.SPARSE_VECTOR_NAME, vector=sparse_query),
             limit=n,
             with_payload=True,
+            query_filter=query_filter,
         )
 
-    dense_task = client.search(collection_name=coll, query_vector=query_vector, limit=n, with_payload=True)
+    dense_task = client.search(
+        collection_name=coll, query_vector=query_vector, limit=n, with_payload=True, query_filter=query_filter
+    )
     if settings.ENABLE_HYBRID_SEARCH:
         dense_hits, sparse_hits = await asyncio.gather(dense_task, sparse_search())
     else:
@@ -153,6 +165,7 @@ async def retrieve_chunks(
     top_k: int = 5,
     score_threshold: float = 0.0,
     collection_name: str | None = None,
+    collection_id: str | None = None,
 ) -> list[RetrievedChunk]:
     """
     Embed *query* and return the top-k most semantically similar chunks.
@@ -163,6 +176,7 @@ async def retrieve_chunks(
         score_threshold:  Minimum cosine similarity to include a result.
                           Set to 0.0 to accept all results.
         collection_name:  Override the default collection from settings.
+        collection_id:    Restrict the search to the documents of one user collection.
 
     Returns:
         List of RetrievedChunk, sorted by score descending.
@@ -175,11 +189,14 @@ async def retrieve_chunks(
     vectors = await embed_batch_with_retry([query], task_type="RETRIEVAL_QUERY")
     query_vector = vectors[0]
 
+    query_filter = collection_filter(collection_id)
     use_hybrid = hybrid_enabled(settings, coll)
     reordered = use_hybrid or settings.ENABLE_RERANKING
     if reordered:
         effective = settings.model_copy(update={"ENABLE_HYBRID_SEARCH": use_hybrid})
-        search_results = await _hybrid_candidates(client, coll, query, query_vector, top_k, effective)
+        search_results = await _hybrid_candidates(
+            client, coll, query, query_vector, top_k, effective, query_filter
+        )
     else:
         t_start = time.perf_counter()
         # ScoredPoint and _Hit share .id/.payload/.score; Any lets both branches feed the code below.
@@ -188,6 +205,7 @@ async def retrieve_chunks(
             query_vector=query_vector,
             limit=top_k,
             with_payload=True,
+            query_filter=query_filter,
         ))
         _STAGE_TIMINGS.set({"search_ms": round((time.perf_counter() - t_start) * 1000, 1)})
 

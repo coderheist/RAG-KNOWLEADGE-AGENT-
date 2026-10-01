@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   Check,
@@ -55,6 +56,14 @@ export function CollectionsManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [assigningId, setAssigningId] = useState<string | null>(null);
+  const router = useRouter();
+
+  // A stored choice can outlive its collection (deleted elsewhere): fall back to searching everything.
+  useEffect(() => {
+    if (!collectionsLoading && activeCollectionId && !collections.some((c) => c.id === activeCollectionId)) {
+      setActiveCollectionId(null);
+    }
+  }, [collections, collectionsLoading, activeCollectionId, setActiveCollectionId]);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -76,9 +85,13 @@ export function CollectionsManager() {
   const handleDeleteCollection = async (id: string, name: string) => {
     setDeletingId(id);
     try {
-      await deleteCollection(id);
+      const released = await deleteCollection(id);
       if (activeCollectionId === id) setActiveCollectionId(null);
-      toast.success(`Collection "${name}" deleted`);
+      toast.success(
+        released
+          ? `Deleted "${name}". Its ${released} document${released === 1 ? " stays" : "s stay"} in your library.`
+          : `Deleted "${name}".`
+      );
       refresh();
       refetchCollections();
     } catch (err) {
@@ -92,7 +105,9 @@ export function CollectionsManager() {
     setAssigningId(documentId);
     try {
       await assignDocumentToCollection(documentId, collectionId);
-      toast.success("Document assigned");
+      const docName = documents.find((d) => d.id === documentId)?.name ?? "Document";
+      const target = collections.find((c) => c.id === collectionId)?.name;
+      toast.success(target ? `Moved ${docName} to "${target}"` : `Removed ${docName} from its collection`);
       refresh();
       refetchDocuments();
     } catch (err) {
@@ -203,9 +218,23 @@ export function CollectionsManager() {
                     >
                       {isActive ? "Search all documents" : "Search only this collection"}
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setActiveCollectionId(collection.id);
+                        router.push("/chat");
+                      }}
+                    >
+                      Ask in chat
+                    </Button>
                     <ConfirmDelete
                       title={`Delete collection "${collection.name}"?`}
-                      description="This permanently deletes the collection and every indexed chunk stored in it. It cannot be undone."
+                      description={`The collection is removed. ${
+                        collection.documentCount
+                          ? `Its ${collection.documentCount} document${collection.documentCount === 1 ? " stays" : "s stay"} in your library, no longer in a collection.`
+                          : "It has no documents."
+                      }`}
                       onConfirm={() => handleDeleteCollection(collection.id, collection.name)}
                     >
                       <Button

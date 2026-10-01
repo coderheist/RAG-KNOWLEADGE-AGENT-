@@ -5,11 +5,16 @@ POST /upload  — Accept 1–N PDF files, run the ingestion pipeline,
                 return per-file status.
 """
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+import uuid
+from typing import Annotated
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
 from app.config import get_settings
+from app.db.models import DocumentStatus
 from app.schemas.document import UploadResponse
 from app.services.document_service import process_uploads
+from app.services.library_service import assign_document, collection_exists
 from app.utils.file_utils import validate_document_upload
 from app.utils.logging import get_logger
 
@@ -38,8 +43,15 @@ async def upload_documents(
         ...,
         description="One or more files (max 50 MB each).",
     ),
+    collection_id: Annotated[
+        uuid.UUID | None,
+        Form(description="Add the uploaded documents to this collection."),
+    ] = None,
 ) -> UploadResponse:
     settings = get_settings()
+
+    if collection_id is not None and not await collection_exists(collection_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found.")
 
     # ── Guard: file count ─────────────────────────────────────────────────────
     if not files:
@@ -82,6 +94,18 @@ async def upload_documents(
     # ── Run the ingestion pipeline ─────────────────────────────────────────────
     logger.info("Starting ingestion pipeline for %d file(s)", len(file_payloads))
     response = await process_uploads(file_payloads)
+
+    if collection_id is not None:
+        for item in response.documents:
+            if item.document_id is None or item.status not in (DocumentStatus.COMPLETED, DocumentStatus.ALREADY_EXISTS):
+                continue
+            try:
+                # A file that was already indexed keeps its collection; only unassigned ones are claimed.
+                await assign_document(
+                    item.document_id, collection_id, only_if_unassigned=item.status == DocumentStatus.ALREADY_EXISTS
+                )
+            except Exception as exc:
+                logger.warning("Could not add '%s' to collection %s: %s", item.filename, collection_id, exc)
 
     logger.info(
         "Upload complete — total=%d succeeded=%d failed=%d",

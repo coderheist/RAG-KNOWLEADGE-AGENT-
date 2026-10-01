@@ -21,16 +21,18 @@ from app.api.document_management import router as document_management_router
 from app.api.documents import router as documents_router
 from app.api.feedback import router as feedback_router
 from app.api.health import router as health_router
+from app.api.library import router as library_router
 from app.api.query import router as query_router
 from app.config import get_settings
 from app.db import (
     conversation_models,  # noqa: F401 — registers Phase 4 tables
     feedback_models,  # noqa: F401 — registers the feedback table
+    library_models,  # noqa: F401 — registers the user collections table
     models,  # noqa: F401 — registers Phase 2 tables with Base.metadata
 )
 from app.db.postgres import Base, dispose_engine, get_engine
 from app.db.qdrant import close_qdrant_client
-from app.services.vector_service import ensure_collection
+from app.services.vector_service import ensure_collection, ensure_collection_id_index
 from app.utils.logging import get_logger, setup_logging
 
 # ── Bootstrap logging immediately (before any other import that logs) ─────────
@@ -53,10 +55,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # create_all never alters an existing table: bring databases created before collections up to date.
+        await conn.exec_driver_sql(
+            "ALTER TABLE documents ADD COLUMN IF NOT EXISTS collection_id UUID "
+            "REFERENCES document_collections(id) ON DELETE SET NULL"
+        )
+        await conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_documents_collection_id ON documents (collection_id)")
     logger.info("PostgreSQL tables verified / created")
 
     # ── Startup: ensure Qdrant collection exists ──────────────────────────────
     await ensure_collection()
+    await ensure_collection_id_index()
 
     # ── Startup: recover stuck documents ──────────────────────────────────────
     from app.services.document_service import recover_stuck_documents
@@ -119,7 +128,8 @@ def create_app() -> FastAPI:
     app.include_router(health_router)            # Phase 1
     app.include_router(documents_router)         # Phase 2 — POST /upload
     app.include_router(document_management_router)  # Phase 3 — GET/DELETE /documents
-    app.include_router(collections_router)       # Phase 3 — /collections CRUD
+    app.include_router(library_router)           # /collections (user collections) and PATCH /documents/{id}
+    app.include_router(collections_router)       # /admin/vector-collections (vector store administration)
     app.include_router(query_router)             # Phase 4 — POST /query SSE
     app.include_router(feedback_router)          # POST /feedback
 

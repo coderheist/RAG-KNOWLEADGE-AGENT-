@@ -16,6 +16,8 @@ export async function createCollection(name: string): Promise<Collection> {
   return normalizeCollection(raw);
 }
 
-export async function deleteCollection(id: string): Promise<void> {
-  await apiFetch<void>(`/collections/${id}`, { method: "DELETE" });
+/** Deletes a collection; its documents stay in the library. Returns how many were released. */
+export async function deleteCollection(id: string): Promise<number> {
+  const res = await apiFetch<{ documents_released?: number }>(`/collections/${id}`, { method: "DELETE" });
+  return res?.documents_released ?? 0;
 }

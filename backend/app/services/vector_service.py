@@ -112,6 +112,18 @@ async def ensure_collection() -> None:
     )
 
 
+async def ensure_collection_id_index() -> None:
+    """Index payload.collection_id so collection-scoped searches filter inside Qdrant. Idempotent; never fatal."""
+    try:
+        await get_qdrant_client().create_payload_index(
+            collection_name=get_settings().QDRANT_COLLECTION,
+            field_name="collection_id",
+            field_schema=qmodels.PayloadSchemaType.KEYWORD,
+        )
+    except Exception as exc:
+        logger.warning("Could not index payload.collection_id (filters still work, just slower): %s", exc)
+
+
 async def upsert_vectors(points: list[VectorPoint]) -> int:
     """
     Upsert a batch of vectors into the Qdrant collection.

@@ -48,8 +48,12 @@ async def list_documents_endpoint(
         DocumentStatus | None,
         Query(description="Filter by document status."),
     ] = None,
+    collection_id: Annotated[
+        uuid.UUID | None,
+        Query(description="Only documents in this collection."),
+    ] = None,
 ) -> DocumentListResponse:
-    return await list_documents(page=page, limit=limit, status=status)
+    return await list_documents(page=page, limit=limit, status=status, collection_id=collection_id)
 
 
 # ── DELETE /documents/{id} ────────────────────────────────────────────────────

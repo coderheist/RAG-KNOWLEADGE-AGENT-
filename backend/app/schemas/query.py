@@ -38,6 +38,10 @@ class QueryRequest(BaseModel):
         le=20,
         description="Number of document chunks to retrieve from the vector store.",
     )
+    collection_id: uuid.UUID | None = Field(
+        None,
+        description="Search only the documents of this collection. Omit to search the whole library.",
+    )
     history: list[HistoryTurn] | None = Field(
         None,
         description=(

@@ -511,3 +511,37 @@ above 2.5 s on /chat and /dashboard. This supersedes the earlier mobile figures 
 (no per-stage progress); no authentication; the golden set is saturated on retrieval (recall 1.000) and needs harder
 cases from the feedback loop; the agent is on by default although the control run shows most of the accuracy gain came
 from identifier pinning.
+
+### Collections · test and repair · 2026-10-01
+
+**Trigger:** "test the collections part and check if any test case fails so correct it." Probing the live API with
+the calls the Collections page makes found the feature was a facade, not a bug in one place:
+
+| Case | Result before |
+|---|---|
+| Assign a document (`PATCH /documents/{id}`) | 405: the route did not exist |
+| List documents filtered by `collection_id` | filter ignored (81 results for a made-up id) |
+| Chat with a collection selected | `/query` ignored `collection_id`: "search only this collection" did nothing |
+| Create a collection | created a raw **768-dimension Qdrant collection** (the app embeds at 3,072) that nothing ever searched; the response had no `id` |
+| Delete a collection in the UI | called `DELETE /collections/{name}` on the **vector store**; by that route's design only the one configured collection is protected, so the original `documents` collection was deletable |
+| Counts on the cards | always 0 (the API returned vector counts under different field names) |
+
+**Repair:** collections are now user-level records in PostgreSQL (`document_collections`, unique names ignoring case) with
+a nullable `documents.collection_id` (existing databases are upgraded at startup; an alembic migration is included).
+Assignment mirrors the id into each point's Qdrant payload; `/query` takes `collection_id` and filters both the dense and
+the BM25 search (404 for an unknown collection); upload accepts `collection_id`; deleting releases the documents. The old
+Qdrant administration API moved to `/admin/vector-collections`. UI: working counts, "Search only this collection", "Ask in
+chat", a scope line in chat, a stale stored selection falls back to all documents, and the library pages are never scoped
+(otherwise a document could not be moved into another collection while one is active).
+
+**Tests:** 5 unit tests (name validation, filter shape, the filter reaching both searches) and 8 integration tests against
+the live stack (create/duplicate/validation, 404s and ids, assign/filter/count/release, upload into a collection, an
+already-indexed file keeps its collection, scoped retrieval cannot see another collection's document, delete keeps
+documents, admin API moved): 8/8 pass. A 17-check browser run of the real UI (create, duplicate, assign via the page, scope
+chat, ask scoped and unscoped questions, delete, stale selection, no console errors): 17/17, plus a separate check that a
+dashboard upload lands in the collection in use. The first browser run exposed a wording bug ("Its 1 document stay"),
+fixed. Whole integration suite afterwards: 21 passed on the second run; on the first run `test_memory` (a follow-up
+question must recall a name from turn 1) failed once, then passed alone and in the second full run. It sends no collection
+and is not related to this change; it is intermittent and not yet diagnosed. The browser test is a scratch script, not
+committed (it needs Chrome and puppeteer); the API tests are committed.
+

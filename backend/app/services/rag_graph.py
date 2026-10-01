@@ -111,6 +111,7 @@ class RAGState(TypedDict):
     conversation_id: str           # always a str; uuid.UUID is not JSON-serialisable
     history_messages: list[BaseMessage]
     top_k: int
+    collection_id: str | None      # restrict retrieval to one user collection
     chunks: list[RetrievedChunk]
     sources: list[dict]            # serialisable dicts ready for SSE
     timings_ms: dict[str, float]   # per-stage retrieval timings (search / fuse / rerank)
@@ -229,7 +230,9 @@ async def _retrieve_node(state: RAGState) -> dict:
         chunks  — list[RetrievedChunk] for the generate node
         sources — serialisable list[dict] emitted in the SSE sources event
     """
-    chunks = await retrieve_chunks(query=state["search_query"], top_k=state["top_k"])
+    chunks = await retrieve_chunks(
+        query=state["search_query"], top_k=state["top_k"], collection_id=state.get("collection_id")
+    )
 
     sources = [_source_dict(c) for c in chunks]
 
@@ -471,6 +474,7 @@ async def stream_rag(
     conversation_id: str,
     history_messages: list[BaseMessage],
     top_k: int,
+    collection_id: str | None = None,
 ) -> AsyncGenerator[dict, None]:
     """
     Execute the RAG graph and yield typed event dicts for the SSE layer.
@@ -497,6 +501,7 @@ async def stream_rag(
         "conversation_id": conversation_id,
         "history_messages": history_messages,
         "top_k": top_k,
+        "collection_id": collection_id,
         "chunks": [],
         "sources": [],
         "timings_ms": {},

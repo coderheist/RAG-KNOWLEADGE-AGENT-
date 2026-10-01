@@ -123,8 +123,12 @@ own documents.
 
 ## 📁 Library and collections
 
-Upload with progress and duplicate detection, a paged document list, optimistic delete with confirmation, and
-collections that scope a question to a chosen set of documents.
+Upload with progress and duplicate detection, a paged document list, and optimistic delete with confirmation.
+
+**Collections** are named groups of documents. A document belongs to at most one; uploading while a collection is
+in use adds the file to it. Choosing "Search only this collection" makes chat search just that group: the collection
+id is stored on each document's vectors, so the filter runs inside the vector search (dense and BM25) rather than
+afterwards. Deleting a collection releases its documents; they stay indexed and searchable.
 
 ## 🩺 Dashboard and settings
 
@@ -262,6 +266,8 @@ set `LLM_PRICE_*_PER_MTOK` and read `rag_llm_cost_usd_total` from `/metrics`.
   is streaming it is allowed to finish. Before these bounds, 1 of 62 eval cases took over 300 s.
 * **Ingestion is synchronous.** Upload parses, chunks, embeds and indexes inside the request; there is no
   background queue, so the UI cannot show a per-stage progress bar and very large files hold the request open.
+* **One collection per document.** A document cannot belong to several collections, and the raw Qdrant administration
+  routes moved from `/collections` to `/admin/vector-collections` (the old path now means user collections).
 * **No authentication or multi-tenancy.** Every user sees every document and collection. Do not expose the API
   publicly.
 * **Traces cover LangChain calls in full, SDK helper calls as timings.** Router, grader and groundedness calls go
@@ -281,6 +287,7 @@ Captured from the production build (`npm run build && npm start`) in light and d
 | Dashboard | ![Dashboard, light](docs/screenshots/dashboard-desktop-light.png) | ![Dashboard, dark](docs/screenshots/dashboard-desktop-dark.png) |
 | Documents | ![Documents, light](docs/screenshots/documents-desktop-light.png) | ![Documents, dark](docs/screenshots/documents-desktop-dark.png) |
 | Chat | ![Chat, light](docs/screenshots/chat-desktop-light.png) | ![Chat, dark](docs/screenshots/chat-desktop-dark.png) |
+| Collections | ![Collections, light](docs/screenshots/collections-desktop-light.png) | ![Collections, dark](docs/screenshots/collections-desktop-dark.png) |
 
 <p>
 <img src="docs/screenshots/dashboard-mobile-light.png" width="200" alt="Dashboard on mobile">
@@ -375,7 +382,8 @@ are written to `backend/evals/results/`.
 ├── docker-compose.yml          root entry point (includes backend/docker-compose.yml)
 ├── backend/
 │   ├── app/
-│   │   ├── api/                routes: /query (SSE), /upload, /documents, /collections, /feedback, /health, /metrics
+│   │   ├── api/                routes: /query (SSE), /upload, /documents, /collections, /feedback, /health, /metrics,
+│   │   │                       /admin/vector-collections (raw Qdrant administration)
 │   │   ├── services/           rag_graph, retrieval, fusion, reranking, agent steps, citations, tracing, metrics
 │   │   └── db/, schemas/       models and request/response types
 │   ├── evals/                  golden set, metrics, runner, recorded results

@@ -31,6 +31,7 @@ async def list_documents(
     page: int = 1,
     limit: int = 20,
     status: DocumentStatus | None = None,
+    collection_id: uuid.UUID | None = None,
 ) -> DocumentListResponse:
     """
     Return a paginated list of all Document rows, optionally filtered by status.
@@ -53,6 +54,10 @@ async def list_documents(
         if status is not None:
             base_q = base_q.where(Document.status == status)
             count_q = count_q.where(Document.status == status)
+
+        if collection_id is not None:
+            base_q = base_q.where(Document.collection_id == collection_id)
+            count_q = count_q.where(Document.collection_id == collection_id)
 
         # ── Total count ───────────────────────────────────────────────────────
         total: int = (await session.execute(count_q)).scalar_one()
@@ -77,6 +82,7 @@ async def list_documents(
             chunk_count=row.chunk_count,
             file_size_bytes=row.file_size,
             error=row.error_message,
+            collection_id=row.collection_id,
             created_at=row.created_at,
             updated_at=row.updated_at,
         )

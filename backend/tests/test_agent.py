@@ -171,7 +171,8 @@ def graph_env(monkeypatch: pytest.MonkeyPatch):
 def initial_state() -> dict:
     return {
         "query": "what is the rate limit?", "search_query": "what is the rate limit?", "rewrite_applied": False,
-        "conversation_id": "c", "history_messages": [AIMessage(content="hi")], "top_k": 5, "chunks": [],
+        "conversation_id": "c", "history_messages": [AIMessage(content="hi")], "top_k": 5, "collection_id": None,
+        "chunks": [],
         "sources": [], "timings_ms": {}, "route": "needs_retrieval", "retrieval_attempt": 0,
         "retrieval_weak": False, "chunk_grades": [], "failed_queries": [], "pool": [], "groundedness": {}, "answer": "",
     }

@@ -1,11 +1,13 @@
 """
-Collections CRUD API router (Phase 3).
+Vector-store administration API (originally "collections", Phase 3).
+
+These endpoints manage raw Qdrant collections, not the user collections of the product (see api/library.py).
 
 Endpoints:
-  GET    /collections           — list all collections with stats
-  POST   /collections           — create a new collection
-  GET    /collections/{name}    — get single collection details
-  DELETE /collections/{name}    — delete a collection (primary collection protected)
+  GET    /admin/vector-collections           — list all Qdrant collections with stats
+  POST   /admin/vector-collections           — create a Qdrant collection
+  GET    /admin/vector-collections/{name}    — get single collection details
+  DELETE /admin/vector-collections/{name}    — delete a Qdrant collection (the configured one is protected)
 """
 
 from typing import Annotated
@@ -28,7 +30,7 @@ from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/collections", tags=["Collections"])
+router = APIRouter(prefix="/admin/vector-collections", tags=["Admin: vector store"])
 
 
 # ── GET /collections ──────────────────────────────────────────────────────────

@@ -52,8 +52,10 @@ class FakeRecord:
 class FakeClient:
     def __init__(self, dense: list[FakeHit], sparse: list[FakeHit], vectors: dict[str, list[float]]) -> None:
         self.dense, self.sparse, self.vectors = dense, sparse, vectors
+        self.filters: list = []
 
-    async def search(self, collection_name, query_vector, limit, with_payload):
+    async def search(self, collection_name, query_vector, limit, with_payload, query_filter=None):
+        self.filters.append(query_filter)
         return self.dense if isinstance(query_vector, list) else self.sparse
 
     async def retrieve(self, collection_name, ids, with_vectors, with_payload):

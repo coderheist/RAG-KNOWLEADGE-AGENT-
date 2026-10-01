@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import BigInteger, Boolean, DateTime, Enum, Integer, String, Text
+from sqlalchemy import BigInteger, Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -65,6 +65,14 @@ class Document(Base):
     )
 
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Optional user collection; deleting the collection releases the document (it is never deleted with it).
+    collection_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("document_collections.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     
     # New Multi-Format & OCR Metadata
     file_type: Mapped[str] = mapped_column(String(32), default="pdf", server_default="pdf", nullable=False)
